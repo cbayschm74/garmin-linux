@@ -10,10 +10,11 @@ Last updated: 2026-10-01
 - Edge 1000 inspected on Kubuntu with both USB volumes mounted read-only. See `docs/device-compatibility.md`. Re-detect volume paths before every later use.
 - fēnix 5X inspected on Kubuntu in Mass Storage mode, read-only. Its activity folder is singular (`Garmin/Activity`). The first USB connection was unstable; the user reports an aging cable connector.
 - `python3 -m garmin_companion scan` reports Garmin USB volumes and explains each match; `--json` provides the same data for future interfaces. Verified against the Edge 1000 on Kubuntu, both mounted and unmounted.
+- `inventory` and `backup` commands are implemented and verified on the Edge 1000 internal storage and SD card. Two private, complete backups are stored in `/home/cbayschm/GarminBackups`, outside Git.
 
 ## Next
 
-Milestone 1, next Kubuntu session: implement read-only inventory and timestamped backup of activity, course, and device metadata files. Preserve originals, verify each copy by hash, and leave no successful backup marker after a disconnect or partial copy. Test first with the connected Edge 1000. Separately, Omarchy 4.0.4-1 environment and detector validation remain pending; perform those when the laptop is available.
+Next Kubuntu session: start milestone 2 by reading activity metadata from the verified Edge backups, using a documented FIT parser and keeping personal files outside Git. The fēnix 5X backup remains pending until its USB connection is reliable. Omarchy environment and tool validation remain pending until the laptop is available.
 
 ## Completed
 
@@ -24,16 +25,27 @@ Milestone 1, next Kubuntu session: implement read-only inventory and timestamped
 - [x] Inspected Edge 1000 internal storage and SD card on Kubuntu, both mounted read-only.
 - [x] Inspected fēnix 5X storage on Kubuntu, mounted read-only.
 - [x] Built and verified the read-only Garmin USB volume detector on Kubuntu with the Edge 1000.
+- [x] Built read-only inventory and verified backup, then backed up both Edge 1000 volumes (105 selected files, 9,967,349 bytes total).
 
 ## Blockers / decisions needed
 
 - Access to the Omarchy laptop is needed to finish milestone 0 cross-desktop verification.
 - Cross-distro behavior of the new detector is unverified until it runs on Omarchy.
 - The fēnix 5X connection was unstable before entering Mass Storage mode, and the volume disappeared before orderly unmount after the read-only inspection. Use a reliable data cable/connector before implementing large backups or any device writes; backup code must detect and reject incomplete copies.
+- fēnix 5X backup and all Omarchy tests remain pending. The Edge backups are complete but maps, firmware, and other device folders are outside the current backup selection.
 - Repository working name is `garmin-linux`; MIT license chosen for project code and documentation.
 - Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
 
 ## Session log
+
+### 2026-10-01 — Edge inventory and verified backup
+
+- Added `inventory` and `backup` commands. They require an explicit Garmin volume, read selected activity/course/metadata files, check free space, verify copied SHA-256 hashes, and publish a `COMPLETE` backup only after every selected file passes. The mount instance is checked throughout so a disconnect or remount cannot mix files unnoticed.
+- Edge internal inventory: 11 files, 329,242 bytes. Edge SD inventory: 94 files, 9,638,107 bytes. Both volumes were mounted read-only and unmounted after backup; no device file was changed.
+- Backups saved privately under `/home/cbayschm/GarminBackups`: `Edge_1000_GARMIN_20261001T053610.665037Z` and `GARMIN_Card_GARMIN_SD_20261001T053614.456320Z`. Both directories have mode `700`. Independently rechecked all 105 saved file hashes and both `COMPLETE` markers.
+- Four synthetic tests passed, including failed copy, remount, destination-on-device, and successful publication paths. `git diff --check` and Python compilation passed.
+- Files changed: `garmin_companion/backup.py`, `garmin_companion/__main__.py`, `tests/test_backup.py`, `README.md`, `PLAN.md`, `STATUS.md`.
+- Next action: parse activity metadata from the verified Edge backups; later validate fēnix 5X backup with a stable connector and run the tool on Omarchy.
 
 ### 2026-10-01 — Read-only detector
 

@@ -17,6 +17,20 @@ python3 -m garmin_companion scan --json
 
 An unmounted Garmin USB volume is reported as a **candidate**. A mounted volume becomes **confirmed** when its `Garmin/GarminDevice.xml` description can be read. SD card volumes may remain candidates because they need not contain that file. Paths are reported for the current connection only.
 
+## Inventory and backup
+
+Mount one volume read-only using the current device path from `scan`, then inspect the proposed backup before copying it:
+
+```sh
+VOLUME=/dev/sdX  # replace with the current path shown by scan
+udisksctl mount -b "$VOLUME" -o ro
+python3 -m garmin_companion inventory --volume "$VOLUME"
+python3 -m garmin_companion backup --volume "$VOLUME" --dest "$HOME/GarminBackups"
+udisksctl unmount -b "$VOLUME"
+```
+
+Run this separately for each Garmin volume, including an SD card. The backup includes `Garmin/Activity` or `Garmin/Activities`, `Courses`, `GPX`, `NewFiles`, and `GarminDevice.xml` when present. It does not copy maps or firmware. Every file is checked by SHA-256 after copying. A successful backup has `manifest.json` and `COMPLETE`; if copying fails or the device disconnects, the private `.incomplete-*` directory is retained without `COMPLETE`. Backups contain personal activity data and device metadata, so keep them outside Git and restrict access to them.
+
 ## Privacy and device safety
 
 - Do not commit real activities, routes, device XML, serial numbers, credentials, maps, or firmware.
