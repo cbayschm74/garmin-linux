@@ -31,7 +31,8 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 
 ### 1. Safe device detection and backup
 
-- [ ] Build a small cross-distro command-line core that lists candidate Garmin mounts and explains why each was detected.
+- [x] Build a small command-line core that lists candidate Garmin USB volumes and explains why each was detected; verified on Kubuntu with Edge 1000.
+- [ ] Validate the detector on Omarchy and with the fēnix 5X after a reliable USB connection is available.
 - [ ] Implement read-only inventory and timestamped backup of activity, course, and device metadata files, preserving originals and checking copy integrity.
 - [ ] Refuse ambiguous mounts and writes by default; handle disconnects and insufficient disk space clearly.
 - **Done when:** both devices can be detected and backed up on Linux, with a restore-by-copy procedure documented. No device write is required for this milestone.

@@ -4,15 +4,16 @@ Last updated: 2026-10-01
 
 ## Current state
 
-- Git repository and documentation scaffold created. No application code or device files have been changed.
+- Git repository, documentation, and a read-only USB detector now exist. No device file has been changed.
 - Target desktops: Kubuntu on the current machine; Omarchy 4.0.4-1 on the laptop.
 - Target devices: Garmin Edge 1000 and fēnix 5X.
 - Edge 1000 inspected on Kubuntu with both USB volumes mounted read-only. See `docs/device-compatibility.md`. Re-detect volume paths before every later use.
 - fēnix 5X inspected on Kubuntu in Mass Storage mode, read-only. Its activity folder is singular (`Garmin/Activity`). The first USB connection was unstable; the user reports an aging cable connector.
+- `python3 -m garmin_companion scan` reports Garmin USB volumes and explains each match; `--json` provides the same data for future interfaces. Verified against the Edge 1000 on Kubuntu, both mounted and unmounted.
 
 ## Next
 
-Milestone 0, next session: on the Omarchy 4.0.4-1 laptop, record Python/Qt and shell versions, then inspect the Edge 1000 and fēnix 5X USB and mount behavior read-only as available. Update `docs/device-compatibility.md`. Once both desktops have been covered, close milestone 0 and start milestone 1 device detection. If the laptop is unavailable for a while, the cross-distro read-only detection core can be started on Kubuntu with Omarchy validation left open.
+Milestone 1, next Kubuntu session: implement read-only inventory and timestamped backup of activity, course, and device metadata files. Preserve originals, verify each copy by hash, and leave no successful backup marker after a disconnect or partial copy. Test first with the connected Edge 1000. Separately, Omarchy 4.0.4-1 environment and detector validation remain pending; perform those when the laptop is available.
 
 ## Completed
 
@@ -22,15 +23,25 @@ Milestone 0, next session: on the Omarchy 4.0.4-1 laptop, record Python/Qt and s
 - [x] Initialized a Git repository with README, MIT license, and ignore rules for personal Garmin data.
 - [x] Inspected Edge 1000 internal storage and SD card on Kubuntu, both mounted read-only.
 - [x] Inspected fēnix 5X storage on Kubuntu, mounted read-only.
+- [x] Built and verified the read-only Garmin USB volume detector on Kubuntu with the Edge 1000.
 
 ## Blockers / decisions needed
 
 - Access to the Omarchy laptop is needed to finish milestone 0 cross-desktop verification.
+- Cross-distro behavior of the new detector is unverified until it runs on Omarchy.
 - The fēnix 5X connection was unstable before entering Mass Storage mode, and the volume disappeared before orderly unmount after the read-only inspection. Use a reliable data cable/connector before implementing large backups or any device writes; backup code must detect and reject incomplete copies.
 - Repository working name is `garmin-linux`; MIT license chosen for project code and documentation.
 - Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
 
 ## Session log
+
+### 2026-10-01 — Read-only detector
+
+- Added `garmin_companion` Python command-line module with `scan` and `scan --json`. It uses `lsblk` and reads only the description and software version from `Garmin/GarminDevice.xml` when a volume is already mounted; it never mounts or writes a device.
+- Verified live against the reconnected Edge 1000. Unmounted: internal storage and SD card both appeared as candidates. With internal storage mounted read-only: internal storage was confirmed as `Edge 1000` with raw software field `1550`; SD card remained a candidate. Unmounted internal storage after verification.
+- Corrected the `lsblk` query to request `NAME`, which is needed for its JSON child-partition hierarchy; the first scan otherwise missed the Edge SD card.
+- Files changed: `garmin_companion/__init__.py`, `garmin_companion/__main__.py`, `garmin_companion/detector.py`, `README.md`, `PLAN.md`, `STATUS.md`.
+- Next action: implement inventory and verified backup for the Edge 1000. Validate scanner on Omarchy and fēnix 5X later.
 
 ### 2026-10-01 — fēnix 5X inspection
 

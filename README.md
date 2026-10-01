@@ -6,7 +6,16 @@ The project will start with safe USB detection, backups, activity files, and cou
 
 ## Current state
 
-Planning and read-only device inspection are underway. There is no application to install yet. See [STATUS.md](STATUS.md) for the next step and [docs/device-compatibility.md](docs/device-compatibility.md) for observed hardware details.
+Read-only device discovery and compatibility inspection are underway. There is no desktop application to install yet. See [STATUS.md](STATUS.md) for the next step and [docs/device-compatibility.md](docs/device-compatibility.md) for observed hardware details.
+
+From this repository directory, list connected Garmin USB volumes without mounting or changing them:
+
+```sh
+python3 -m garmin_companion scan
+python3 -m garmin_companion scan --json
+```
+
+An unmounted Garmin USB volume is reported as a **candidate**. A mounted volume becomes **confirmed** when its `Garmin/GarminDevice.xml` description can be read. SD card volumes may remain candidates because they need not contain that file. Paths are reported for the current connection only.
 
 ## Privacy and device safety
 
