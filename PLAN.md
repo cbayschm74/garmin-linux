@@ -25,7 +25,8 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 
 - [x] Create a Git repository with a short README, license choice, and ignore rules for personal data.
 - [ ] On Kubuntu and Omarchy, record Python/Qt availability and the installed Omarchy shell version.
-- [ ] Connect the Edge 1000 and fēnix 5X individually. Record USB mode, mount layout, visible Garmin directory structure, and free space without copying personal data into Git.
+- [x] Connect the Edge 1000 and fēnix 5X individually on Kubuntu. Record USB mode, mount layout, visible Garmin directory structure, and free space without copying personal data into Git.
+- [ ] Confirm USB and mount behavior for both models on Omarchy when the laptop is available.
 - **Done when:** a short device compatibility note exists for both models and both operating systems.
 
 ### 1. Safe device detection and backup

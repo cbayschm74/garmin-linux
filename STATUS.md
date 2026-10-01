@@ -8,10 +8,11 @@ Last updated: 2026-10-01
 - Target desktops: Kubuntu on the current machine; Omarchy 4.0.4-1 on the laptop.
 - Target devices: Garmin Edge 1000 and fēnix 5X.
 - Edge 1000 inspected on Kubuntu with both USB volumes mounted read-only. See `docs/device-compatibility.md`. Re-detect volume paths before every later use.
+- fēnix 5X inspected on Kubuntu in Mass Storage mode, read-only. Its activity folder is singular (`Garmin/Activity`). The first USB connection was unstable; the user reports an aging cable connector.
 
 ## Next
 
-Milestone 0, next session: inspect the fēnix 5X individually on Kubuntu using the same read-only approach, then update `docs/device-compatibility.md`. If working on the Omarchy laptop first, record its Python/Qt environment and inspect whichever Garmin device is available there. After both devices and both desktops are recorded, close milestone 0 and start milestone 1 device detection.
+Milestone 0, next session: on the Omarchy 4.0.4-1 laptop, record Python/Qt and shell versions, then inspect the Edge 1000 and fēnix 5X USB and mount behavior read-only as available. Update `docs/device-compatibility.md`. Once both desktops have been covered, close milestone 0 and start milestone 1 device detection. If the laptop is unavailable for a while, the cross-distro read-only detection core can be started on Kubuntu with Omarchy validation left open.
 
 ## Completed
 
@@ -20,14 +21,23 @@ Milestone 0, next session: inspect the fēnix 5X individually on Kubuntu using t
 - [x] Wrote the milestone plan in `PLAN.md`.
 - [x] Initialized a Git repository with README, MIT license, and ignore rules for personal Garmin data.
 - [x] Inspected Edge 1000 internal storage and SD card on Kubuntu, both mounted read-only.
+- [x] Inspected fēnix 5X storage on Kubuntu, mounted read-only.
 
 ## Blockers / decisions needed
 
-- The fēnix 5X is not currently visible by USB; only the previously inspected Edge 1000 is connected. Access to the fēnix 5X and Omarchy laptop is needed to finish milestone 0 hardware verification.
+- Access to the Omarchy laptop is needed to finish milestone 0 cross-desktop verification.
+- The fēnix 5X connection was unstable before entering Mass Storage mode, and the volume disappeared before orderly unmount after the read-only inspection. Use a reliable data cable/connector before implementing large backups or any device writes; backup code must detect and reject incomplete copies.
 - Repository working name is `garmin-linux`; MIT license chosen for project code and documentation.
 - Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
 
 ## Session log
+
+### 2026-10-01 — fēnix 5X inspection
+
+- USB initially exposed Garmin mode (`091e:0003`) without a storage volume, with one enumeration error `-71` and several disconnects. After the watch was set to Mass Storage and reconnected, it exposed one `fenix5x Flash` VFAT volume (`091e:2a2c`).
+- Mounted the volume read-only, confirmed the mount options, and inspected directory names, selected device XML fields, file counts, and free space. It identified as `fenix 5x`, raw software-version field `2500`; 14.6 GiB total, about 3.2 GiB free. No personal files or serial numbers were copied into Git. The device disconnected before orderly unmount; its mount was gone when checked.
+- Files changed: `docs/device-compatibility.md`, `PLAN.md`, `STATUS.md`.
+- Next action: Omarchy laptop environment and USB verification, or read-only detection core on Kubuntu if the laptop is unavailable.
 
 ### 2026-10-01 — Next-device check
 
