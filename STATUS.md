@@ -23,11 +23,18 @@ Milestone 0, next session: inspect the fēnix 5X individually on Kubuntu using t
 
 ## Blockers / decisions needed
 
-- Access to the Omarchy laptop and fēnix 5X is needed to finish milestone 0 hardware verification.
+- The fēnix 5X is not currently visible by USB; only the previously inspected Edge 1000 is connected. Access to the fēnix 5X and Omarchy laptop is needed to finish milestone 0 hardware verification.
 - Repository working name is `garmin-linux`; MIT license chosen for project code and documentation.
 - Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
 
 ## Session log
+
+### 2026-10-01 — Next-device check
+
+- Checked current USB block devices twice. Only the Edge 1000 internal storage and SD card were visible; the fēnix 5X was not available for read-only inspection.
+- Completed Kubuntu environment detail: Plasma workspace package 6.6.6, Qt 6.10.2, PyQt6 6.10.2. Updated `docs/device-compatibility.md`.
+- No Garmin volume was mounted or modified in this session.
+- Next action: connect the fēnix 5X by USB, confirm it appears, then inspect its volumes read-only and update the compatibility note.
 
 ### 2026-10-01 — Repository and Edge 1000 inspection
 

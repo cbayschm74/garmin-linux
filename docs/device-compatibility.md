@@ -17,5 +17,5 @@ Only observations made directly on the connected hardware are marked **Observed*
 
 ## Desktop environments
 
-- **Kubuntu machine, observed:** Ubuntu 26.04.1 LTS with KDE, Python 3.14.4, Git 2.53.0, Python `PyQt6` available. `PySide6` was not found in the active Python environment. Plasma version was not determined in the headless tool session.
+- **Kubuntu machine, observed:** Ubuntu 26.04.1 LTS with KDE Plasma workspace package 6.6.6, Python 3.14.4, Git 2.53.0, Qt 6.10.2 and PyQt6 6.10.2 available in the active Python environment. `PySide6` was not found. These were checked through command-line package and Python metadata; the Plasma GUI itself was not started in the tool session.
 - **Omarchy laptop, user reported:** Omarchy 4.0.4-1. Local Python/Qt availability and Garmin USB behavior have not yet been inspected.
