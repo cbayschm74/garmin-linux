@@ -87,7 +87,7 @@ udisksctl mount -b /dev/sdX -o rw
 .venv/bin/python -m garmin_companion import-fenix-course --volume /dev/sdX --file /path/to/course.fit
 ```
 
-The fēnix command verifies the FIT course with Garmin's decoder and uses the same fresh-backup, exclusive-copy, SHA-256, and safe-unmount checks as the Edge command. Disconnect the watch and check **START → Navigate → Courses**. A manual FIT transfer was verified on the physical watch; this new guarded command has passed synthetic tests and still needs a live course import. GPX-to-FIT conversion is not implemented yet.
+The fēnix command verifies the FIT course with Garmin's decoder and uses the same fresh-backup, exclusive-copy, SHA-256, and safe-unmount checks as the Edge command. Disconnect the watch and check **START → Navigate → Courses**. The guarded command passed synthetic tests and a live import of `Ruta Posible 1` on the physical watch. GPX-to-FIT conversion is not implemented yet.
 
 ## Privacy and device safety
 

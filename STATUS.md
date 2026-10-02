@@ -17,11 +17,12 @@ Last updated: 2026-10-02
 - A synthetic GPX course was copied to the Edge 1000 `Garmin/NewFiles` folder after a fresh backup, with matching SHA-256 and safe unmount. The user confirmed it appears under **Courses** after disconnecting and turning on the Edge. `GLinux Test` remains on the Edge until removed through its course menu. See `docs/course-compatibility.md`.
 - `import-edge-course --volume ... --file ...` implements guarded GPX transfer for a confirmed, writable Edge 1000 internal volume. Synthetic tests and a live import of a GPX derived from the user's backed-up Edge FIT course passed. The user confirmed `GLinux Replay` appears under **Courses**.
 - The fēnix 5X declares GPX and FIT course input through `Garmin/NewFiles` in its own device XML. A synthetic GPX was consumed without creating a visible course. A valid FIT course copied to the same inbox after a fresh backup appeared under **Courses** on the watch. Direct FIT course import is verified on this model; GPX-to-course conversion is not.
-- `import-fenix-course --volume ... --file ...` now checks and imports only FIT courses to the confirmed fēnix 5X. Synthetic tests pass; the guarded command itself has not yet made a live import.
+- `import-fenix-course --volume ... --file ...` checks and imports only FIT courses to the confirmed fēnix 5X. Synthetic tests pass and its first live copy passed backup, hash, and unmount checks.
+- The guarded fēnix command copied a distinct valid FIT course after a fresh verified backup and safe unmount. The user confirmed `Ruta Posible 1` appears under **Courses**.
 
 ## Next
 
-Next: validate `import-fenix-course` on the connected fēnix 5X with a distinct valid FIT course and confirm its appearance under **Courses**, avoiding a duplicate of `GLinux Test`. Then assess GPX-to-FIT conversion for user-supplied routes. Omarchy validation remains pending.
+Next: assess and implement GPX-to-FIT course conversion for user-supplied routes, so the verified fēnix FIT import path can accept a GPX source without Garmin Connect. Validate generated FIT files with Garmin's decoder before any device transfer. Omarchy validation remains pending.
 
 ## Completed
 
@@ -45,6 +46,13 @@ Next: validate `import-fenix-course` on the connected fēnix 5X with a distinct 
 - Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
 
 ## Session log
+
+### 2026-10-02 — Live guarded fēnix FIT course import
+
+- Mounted the connected watch read-only and confirmed it contained only `GLinux Test` under `Garmin/Courses`. Selected a different verified Edge FIT course, `Ruta Posible 1` (10,068 bytes, 556 records), from a complete private backup.
+- Remounted the confirmed watch volume read-write and ran `import-fenix-course`. The command made a fresh complete backup at `/home/cbayschm/GarminBackups/fenix_5x_GARMIN_20261002T124407.151739Z` (72 files, 2,295,703 bytes), copied the FIT course to `Garmin/NewFiles`, verified SHA-256 (`5af1101bef52` prefix), and safely unmounted. Independently rechecked every saved backup hash.
+- The user confirmed `Ruta Posible 1` appears under **Courses** on the disconnected watch. The route is personal and only appears in private backups and on the watch; no course content was committed to Git.
+- Files changed: `STATUS.md`, `PLAN.md`, `README.md`, `docs/course-compatibility.md`. Next action: assess GPX-to-FIT conversion for user-supplied routes.
 
 ### 2026-10-02 — Guarded fēnix FIT course import command
 
