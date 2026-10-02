@@ -7,6 +7,7 @@ Last checked: 2026-10-02. This note separates Garmin's published instructions fr
 - Garmin's [GPX transfer guide](https://www.garmin.com/fr-FR/blog/comment-installer-une-trace-gpx-sur-votre-edge-et-tacx/) says to put a GPX track in `Garmin/NEWFILES` and explicitly lists the Edge 1000. The [Edge 1000 manual](https://www8.garmin.com/manuals/webhelp/edge1000/EN-US/GUID-3E9F932E-22BF-4454-8520-1EFCA047EF87.html) also documents sending a Connect course over USB and opening it under **Courses** after disconnecting.
 - The connected Edge's internal volume has `Garmin/NewFiles` and six existing FIT courses in `Garmin/Courses`. The latter is an output/storage folder, not the tested import inbox.
 - After a fresh verified backup on 2026-10-02, a synthetic five-point GPX track named `GLinux Test` was copied to internal `Garmin/NewFiles`. Source and destination SHA-256 matched; the volume was safely unmounted. The user disconnected and turned on the Edge, then confirmed `GLinux Test` appears under **Courses**. The test GPX and backup are private, outside Git.
+- The guarded `import-edge-course` command was also tested on the physical Edge with a 556-point GPX derived from an existing backed-up FIT course. It made a fresh verified backup, copied and hash-checked the GPX, and safely unmounted. The user confirmed `GLinux Replay` appears under **Courses**. The exported route and backup remain private; this is a duplicate of an existing route for testing.
 
 ## fēnix 5X
 

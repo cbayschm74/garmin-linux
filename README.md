@@ -77,7 +77,7 @@ udisksctl mount -b /dev/sdX -o rw
 .venv/bin/python -m garmin_companion import-edge-course --volume /dev/sdX --file /path/to/route.gpx
 ```
 
-The command accepts GPX routes or tracks with at least two points. It confirms the Edge model and writable internal volume, makes a new verified backup under `~/GarminBackups`, refuses an existing destination, checks the copied hash, then unmounts the Edge. Disconnect and power it on before checking **Courses**. A verified copy alone does not prove that the Edge accepted a particular user GPX file. The command has been tested with synthetic volumes; the earlier manual `GLinux Test` transfer was verified on the physical Edge.
+The command accepts GPX routes or tracks with at least two points. It confirms the Edge model and writable internal volume, makes a new verified backup under `~/GarminBackups`, refuses an existing destination, checks the copied hash, then unmounts the Edge. Disconnect and power it on before checking **Courses**. A verified copy alone does not prove that the Edge accepted a particular user GPX file. The command passed synthetic tests and a live test with a GPX converted privately from one of the user's backed-up Edge FIT courses; the user confirmed it appeared on the Edge as `GLinux Replay`.
 
 ## Privacy and device safety
 

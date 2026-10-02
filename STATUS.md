@@ -4,7 +4,7 @@ Last updated: 2026-10-02
 
 ## Current state
 
-- Git repository, documentation, and a read-only USB detector now exist. The only device write so far was the verified synthetic `GLinux Test` GPX transfer to the Edge 1000.
+- Git repository, documentation, and a read-only USB detector now exist. The Edge 1000 has two verified GPX test imports; no other device data was changed by this project.
 - Target desktops: Kubuntu on the current machine; Omarchy 4.0.4-1 on the laptop.
 - Target devices: Garmin Edge 1000 and fēnix 5X.
 - Edge 1000 inspected on Kubuntu with both USB volumes mounted read-only. See `docs/device-compatibility.md`. Re-detect volume paths before every later use.
@@ -15,11 +15,11 @@ Last updated: 2026-10-02
 - `export-activity --id` selects one activity by SHA-256 prefix and prepares a verified FIT copy in `/home/cbayschm/GarminBackups/ForUpload` for manual Garmin Connect web import.
 - `courses` previews backed-up FIT/GPX files after manifest integrity checks; `inspect-course --file` previews a local FIT/GPX file. Six Edge 1000 FIT files are valid courses; the two fēnix 5X GPX files contain waypoints only.
 - A synthetic GPX course was copied to the Edge 1000 `Garmin/NewFiles` folder after a fresh backup, with matching SHA-256 and safe unmount. The user confirmed it appears under **Courses** after disconnecting and turning on the Edge. `GLinux Test` remains on the Edge until removed through its course menu. See `docs/course-compatibility.md`.
-- `import-edge-course --volume ... --file ...` now implements guarded GPX transfer for a confirmed, writable Edge 1000 internal volume. Synthetic tests passed; it has not yet imported a user-supplied GPX on the live device.
+- `import-edge-course --volume ... --file ...` implements guarded GPX transfer for a confirmed, writable Edge 1000 internal volume. Synthetic tests and a live import of a GPX derived from the user's backed-up Edge FIT course passed. The user confirmed `GLinux Replay` appears under **Courses**.
 
 ## Next
 
-Next: use `import-edge-course` with a real user-supplied GPX route or track, then check it under **Courses** on the Edge 1000. The Edge must be reconnected and mounted read-write, and a fresh backup will run within the command. If no user course is available, continue the fēnix 5X Connect course path or Omarchy validation. fēnix USB import behavior remains unverified.
+Next Kubuntu step: establish a fēnix 5X course transfer using Garmin's documented Connect course import and **Send to Device** path, or, if the user prefers no cloud step, investigate direct USB with a small verified test after a fresh backup. The fēnix USB course path remains unverified. Omarchy validation is also pending.
 
 ## Completed
 
@@ -43,6 +43,14 @@ Next: use `import-edge-course` with a real user-supplied GPX route or track, the
 - Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
 
 ## Session log
+
+### 2026-10-02 — Live guarded Edge course import
+
+- No GPX route was found in the user's Downloads, Documents, Desktop, or other home folders outside Garmin backups. The two fēnix GPX backups contain waypoints only. With the user's instruction to choose a valid GPX, converted the shortest verified Edge FIT course backup into a private 556-point GPX track named `GLinux Replay`; no route or coordinates were committed to Git.
+- Confirmed the connected Edge 1000 internal VFAT volume was mounted read-write, then ran `import-edge-course` with the private GPX. The command saved a fresh complete backup at `/home/cbayschm/GarminBackups/Edge_1000_GARMIN_20261002T122045.484269Z` (12 files, 329,869 bytes), copied the 24,669-byte GPX to `Garmin/NewFiles`, verified SHA-256 (`46169d64d9fb` prefix), and safely unmounted. Independently rechecked every backup hash.
+- The user confirmed `GLinux Replay` appears under **Courses** after disconnecting and powering on the Edge. This is a real route already present as a FIT course on the Edge, reimported under a distinct test name to exercise the guarded command. It may remain as a duplicate course until removed through the device menu.
+- Files changed: `STATUS.md`, `PLAN.md`, `README.md`, `docs/course-compatibility.md`; private GPX and backup are outside Git.
+- Next action: establish the fēnix 5X course transfer path.
 
 ### 2026-10-02 — Guarded Edge GPX import command
 
