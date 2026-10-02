@@ -95,7 +95,7 @@ To turn a local GPX route into a FIT course for the fēnix, run:
 .venv/bin/python -m garmin_companion convert-gpx-course --file /path/to/route.gpx
 ```
 
-The verified FIT file is saved privately under `~/GarminBackups/ForDevice`. Use its printed path with `import-fenix-course` after reconnecting and mounting the watch. Conversion accepts one route or one track with one segment, containing 2 to 10,000 valid coordinates. It preserves the route shape and a name of up to 15 characters; it calculates distance and estimated pacing. GPX timestamps, elevation, waypoints, and turn cues are not carried into the FIT file. Garmin's [FIT course specification](https://developer.garmin.com/fit/file-types/course/) defines the required messages. Generated files decode as FIT courses, but on-device acceptance of this converter's output still needs a live check.
+The verified FIT file is saved privately under `~/GarminBackups/ForDevice`. Use its printed path with `import-fenix-course` after reconnecting and mounting the watch. Conversion accepts one route or one track with one segment, containing 2 to 10,000 valid coordinates. It preserves the route shape and a name of up to 15 characters; it calculates distance and estimated pacing. GPX timestamps, elevation, waypoints, and turn cues are not carried into the FIT file. Garmin's [FIT course specification](https://developer.garmin.com/fit/file-types/course/) defines the required messages. The user confirmed one generated course, `GLinux Replay`, appears under **Courses** on the fēnix 5X after import.
 
 ## Privacy and device safety
 
