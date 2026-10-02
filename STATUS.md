@@ -4,7 +4,7 @@ Last updated: 2026-10-02
 
 ## Current state
 
-- Git repository, documentation, and a read-only USB detector now exist. The Edge 1000 has two verified GPX test imports; one GPX test is awaiting on-watch confirmation on the fēnix 5X. No other device data was changed by this project.
+- Git repository, documentation, and a read-only USB detector now exist. The Edge 1000 has two verified GPX test imports. The fēnix 5X GPX test did not become a course, but its FIT course test appeared under **Courses**. No other device data was changed by this project.
 - Target desktops: Kubuntu on the current machine; Omarchy 4.0.4-1 on the laptop.
 - Target devices: Garmin Edge 1000 and fēnix 5X.
 - Edge 1000 inspected on Kubuntu with both USB volumes mounted read-only. See `docs/device-compatibility.md`. Re-detect volume paths before every later use.
@@ -16,11 +16,11 @@ Last updated: 2026-10-02
 - `courses` previews backed-up FIT/GPX files after manifest integrity checks; `inspect-course --file` previews a local FIT/GPX file. Six Edge 1000 FIT files are valid courses; the two fēnix 5X GPX files contain waypoints only.
 - A synthetic GPX course was copied to the Edge 1000 `Garmin/NewFiles` folder after a fresh backup, with matching SHA-256 and safe unmount. The user confirmed it appears under **Courses** after disconnecting and turning on the Edge. `GLinux Test` remains on the Edge until removed through its course menu. See `docs/course-compatibility.md`.
 - `import-edge-course --volume ... --file ...` implements guarded GPX transfer for a confirmed, writable Edge 1000 internal volume. Synthetic tests and a live import of a GPX derived from the user's backed-up Edge FIT course passed. The user confirmed `GLinux Replay` appears under **Courses**.
-- The fēnix 5X declares GPX and FIT course input through `Garmin/NewFiles` in its own device XML. A synthetic GPX was copied there after a fresh backup, with matching hash and safe unmount. The watch-screen check for `GLinux 5X Test` is pending.
+- The fēnix 5X declares GPX and FIT course input through `Garmin/NewFiles` in its own device XML. A synthetic GPX was consumed without creating a visible course. A valid FIT course copied to the same inbox after a fresh backup appeared under **Courses** on the watch. Direct FIT course import is verified on this model; GPX-to-course conversion is not.
 
 ## Next
 
-Next: check whether `GLinux 5X Test` appears under **Navigate → Courses** after disconnecting the fēnix 5X. If yes, build the same guarded GPX import workflow for this model; if no, inspect the watch's inbox and course folders read-only for processing evidence and retain Garmin Connect **Send to Device** as the documented route. Omarchy validation remains pending.
+Next: build and test a guarded FIT course import command for the fēnix 5X using the verified `Garmin/NewFiles` path. It should make a fresh backup, validate the FIT course, check the copy hash, and safely unmount. GPX-to-FIT conversion for user-supplied routes remains a separate step. Omarchy validation remains pending.
 
 ## Completed
 
@@ -45,13 +45,21 @@ Next: check whether `GLinux 5X Test` appears under **Navigate → Courses** afte
 
 ## Session log
 
+### 2026-10-02 — fēnix GPX failure inspection and FIT trial
+
+- The user found only **Create New** under **Courses** after the GPX trial. Reconnected the fēnix 5X and mounted it read-only: the test GPX was gone from `Garmin/NewFiles`, while `Garmin/Courses` contained no files. The watch did not retain the GPX as a visible course.
+- Saved a fresh verified watch backup at `/home/cbayschm/GarminBackups/fenix_5x_GARMIN_20261002T123437.193787Z` (71 files, 2,294,944 bytes) and independently checked all hashes. Selected the smallest backed-up Edge FIT course, a 627-byte valid file that the Edge generated from our synthetic five-point route; it has the internal name `GLinux Test`.
+- Confirmed the watch's internal volume read-write, copied the FIT course to `Garmin/NewFiles/GLinuxWatchFitTest.fit`, checked matching SHA-256 (`939eb19f0341` prefix), and safely unmounted. The user confirmed `GLinux Test` appears under **Courses** on the disconnected watch.
+- Files changed: `STATUS.md`, `PLAN.md`, `README.md`, `docs/course-compatibility.md`. No personal course data was committed to Git.
+- Next action: build guarded fēnix 5X FIT course import.
+
 ### 2026-10-02 — fēnix 5X direct GPX course test
 
 - Garmin's course compatibility list explicitly includes the fēnix 5X. Read the connected watch's `GarminDevice.xml`: it declares GPX 1.1 input and FIT course input in `Garmin/NewFiles`, and FIT course output in `Garmin/Courses`. The direct USB path is device-declared, though not described in the owner's manual.
 - Mounted the watch read-only, confirmed identity and folder, and saved a fresh verified backup at `/home/cbayschm/GarminBackups/fenix_5x_GARMIN_20261002T122700.236874Z` (71 files, 2,294,944 bytes). Independently rechecked all saved hashes. Connection remained stable.
-- Prepared a private 521-byte, five-point GPX named `GLinux 5X Test`. Remounted the same confirmed watch volume read-write, copied it to `Garmin/NewFiles`, confirmed source and device SHA-256 match (`5a82912d9403` prefix), then unmounted safely. Watch-screen acceptance remains to be checked.
+- Prepared a private 521-byte, five-point GPX named `GLinux 5X Test`. Remounted the same confirmed watch volume read-write, copied it to `Garmin/NewFiles`, confirmed source and device SHA-256 match (`5a82912d9403` prefix), then unmounted safely. The user reported that **Courses** showed only **Create New**; the GPX did not become a visible course.
 - Files changed: `docs/course-compatibility.md`, `STATUS.md`. Private GPX and backup remain outside Git.
-- Next action: check **START → Navigate → Courses** on the watch for `GLinux 5X Test`.
+- Next action: reconnect the watch and inspect the inbox and course folders read-only.
 
 ### 2026-10-02 — Live guarded Edge course import
 
