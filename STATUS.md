@@ -13,10 +13,11 @@ Last updated: 2026-10-02
 - `inventory` and `backup` commands are implemented and verified on the Edge 1000 internal storage and SD card, and the fēnix 5X. Three private, complete backups are stored in `/home/cbayschm/GarminBackups`, outside Git.
 - Activity summaries are available through `.venv/bin/python -m garmin_companion activities`: 98 Edge 1000 activities and 67 fēnix 5X activities decoded successfully. Private JSON summary: `/home/cbayschm/GarminBackups/activity-summary.json`.
 - `export-activity --id` selects one activity by SHA-256 prefix and prepares a verified FIT copy in `/home/cbayschm/GarminBackups/ForUpload` for manual Garmin Connect web import.
+- `courses` previews backed-up FIT/GPX files after manifest integrity checks; `inspect-course --file` previews a local FIT/GPX file. Six Edge 1000 FIT files are valid courses; the two fēnix 5X GPX files contain waypoints only. No course has been written to either device.
 
 ## Next
 
-Next Kubuntu session: begin milestone 3 by inspecting backed-up course formats and device folder behavior for the Edge 1000 and fēnix 5X. Use official device documentation before implementing a write to either device. Manual Garmin Connect import of a prepared activity remains available if the user has one missing from their account. Omarchy environment and tool validation remain pending.
+Next Kubuntu session: establish and document a supported course transfer route for each model, including the input folder or Garmin Connect send method. Then prepare a device-ready copy of a user-supplied course and verify it on one target device after a fresh backup. The exact USB transfer inbox remains unverified; the observed Edge `Garmin/Courses` folder only proves where existing courses are stored. Omarchy environment and tool validation remain pending.
 
 ## Completed
 
@@ -40,6 +41,14 @@ Next Kubuntu session: begin milestone 3 by inspecting backed-up course formats a
 - Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
 
 ## Session log
+
+### 2026-10-02 — Read-only course previews
+
+- Added `courses` and `inspect-course --file`, including JSON output. FIT previews require the official FIT Course message types; GPX previews distinguish routes/tracks with points from waypoint-only collections. Files in complete backups are checked against manifest size and SHA-256 before parsing. The CLI prints no coordinates.
+- Verified all six backed-up Edge FIT courses decoded with no problems, and both fēnix GPX files were classified as waypoints rather than courses. Handled a FIT SDK name-decoding quirk seen in two real courses. Three synthetic course tests passed, including integrity rejection. No Garmin volume was mounted or changed.
+- Garmin's Edge manual documents sending courses from Garmin Connect, while the fēnix manual describes course creation on the watch. Neither establishes a tested USB import folder for this implementation. Do not infer import support from the backed-up storage paths.
+- Files changed: `garmin_companion/courses.py`, `garmin_companion/__main__.py`, `tests/test_courses.py`, `README.md`, `PLAN.md`, `STATUS.md`.
+- Next action: research and verify a supported import route before writing any course to a device.
 
 ### 2026-10-02 — Activity selection and export
 

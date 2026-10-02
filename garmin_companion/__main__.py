@@ -27,6 +27,12 @@ def main() -> int:
     activities_command.add_argument("--backups", type=Path, default=Path.home() / "GarminBackups")
     activities_command.add_argument("--json", action="store_true", help="print full summaries and backup paths")
     activities_command.add_argument("--limit", type=int, default=20, help="rows shown in text output (default: 20)")
+    courses_command = commands.add_parser("courses", help="preview course and waypoint files in complete backups")
+    courses_command.add_argument("--backups", type=Path, default=Path.home() / "GarminBackups")
+    courses_command.add_argument("--json", action="store_true", help="print full previews and backup paths")
+    inspect_command = commands.add_parser("inspect-course", help="preview a local GPX or FIT course")
+    inspect_command.add_argument("--file", required=True, type=Path)
+    inspect_command.add_argument("--json", action="store_true", help="print full preview")
     export_command = commands.add_parser("export-activity", help="prepare one FIT file for manual Garmin Connect upload")
     export_command.add_argument("--id", required=True, help="at least eight characters of the activity SHA-256 ID")
     export_command.add_argument("--backups", type=Path, default=Path.home() / "GarminBackups")
@@ -83,6 +89,30 @@ def main() -> int:
             target = prepare_activity(args.backups, args.id, args.dest)
             print(f'Prepared verified FIT file: {target}')
             print('In Garmin Connect web, choose the upload icon → Import Data → Browse, then select this file.')
+        elif args.command == 'courses':
+            from .courses import course_library
+            library = course_library(args.backups)
+            if args.json:
+                print(json.dumps(library, indent=2))
+            else:
+                for row in library['courses']:
+                    count = row.get('record_points', row.get('route_points', 0) + row.get('track_points', 0))
+                    print(f"{row['sha256'][:12]} | {row['format']} {row['kind']} | {row['name'] or 'unnamed'} | {count} route points | {row['path']}")
+                print(f"Files: {len(library['courses'])}; duplicate copies: {library['duplicate_copies']}; problems: {len(library['problems'])}")
+                for problem in library['problems']:
+                    print(f"Warning: {problem}", file=sys.stderr)
+        elif args.command == 'inspect-course':
+            from .courses import inspect_course
+            preview = inspect_course(args.file)
+            if args.json:
+                print(json.dumps(preview, indent=2))
+            else:
+                print(f"{preview['format']} {preview['kind']}: {preview['name'] or 'unnamed'}")
+                print(f"SHA-256: {preview['sha256']}; size: {preview['size_bytes']} bytes")
+                if preview['format'] == 'FIT':
+                    print(f"Laps: {preview['laps']}; records: {preview['record_points']}; distance: {preview['distance_meters']} m")
+                else:
+                    print(f"Routes: {preview['routes']} ({preview['route_points']} points); tracks: {preview['tracks']} ({preview['track_points']} points); waypoints: {preview['waypoints']}")
         else:
             destination, listing = backup(select_volume(args.volume), args.dest)
             print(f"Verified backup: {destination}")

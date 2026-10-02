@@ -55,6 +55,18 @@ Then sign in to Garmin Connect on the web and choose the upload icon → **Impor
 
 Garmin SDK reference: https://github.com/garmin/fit-python-sdk . Its license applies separately from this project's MIT license; the dependency is installed rather than copied into our source tree.
 
+## Course previews
+
+```sh
+.venv/bin/python -m garmin_companion courses
+.venv/bin/python -m garmin_companion courses --json
+.venv/bin/python -m garmin_companion inspect-course --file /path/to/course.gpx
+```
+
+`courses` checks FIT and GPX files in complete backups against each backup manifest before reading them. `inspect-course` previews a local FIT or GPX file up to 50 MB. FIT files must identify themselves as courses and contain Course, Lap, and Record messages. GPX routes and tracks with points are labeled `course_candidate`; waypoint-only GPX files are labeled `waypoints`. These commands report basic metadata and point counts without printing coordinates. A valid preview does not establish that either device will accept the file. No course is copied to a device yet.
+
+Garmin's [FIT Course file definition](https://developer.garmin.com/fit/file-types/course/) describes the required FIT messages. The [Edge 1000 course instructions](https://www8.garmin.com/manuals/webhelp/edge1000/EN-US/GUID-3E9F932E-22BF-4454-8520-1EFCA047EF87.html) describe sending courses from Garmin Connect; the [fēnix 5X manual](https://www8.garmin.com/manuals/webhelp/fenix5x/EN-US/GUID-674C66B5-0784-4441-B456-E0313B5902D9.html) describes creating courses on the watch. A supported USB transfer folder still needs to be established and tested for each model.
+
 ## Privacy and device safety
 
 - Do not commit real activities, routes, device XML, serial numbers, credentials, maps, or firmware.

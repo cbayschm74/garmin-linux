@@ -50,6 +50,7 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 
 ### 3. Courses
 
+- [x] Preview backed-up FIT courses and GPX route/track files with integrity checks; distinguish waypoint-only GPX files.
 - [ ] Inspect what each device accepts for courses and where they belong; verify with official device documentation and a harmless test file.
 - [ ] Import a user-supplied GPX/FIT course, preview its basic metadata, and make a device-ready copy after backup and confirmation.
 - [ ] Check a copied course on the target device. Avoid claiming the two models support identical course features.
