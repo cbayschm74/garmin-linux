@@ -1,6 +1,6 @@
 # Garmin Linux companion: project plan
 
-Last updated: 2026-10-01
+Last updated: 2026-10-02
 
 ## Goal
 
@@ -32,10 +32,12 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 ### 1. Safe device detection and backup
 
 - [x] Build a small command-line core that lists candidate Garmin USB volumes and explains why each was detected; verified on Kubuntu with Edge 1000.
-- [ ] Validate the detector on Omarchy and with the fēnix 5X after a reliable USB connection is available.
+- [x] Validate the detector with the fēnix 5X on Kubuntu.
+- [ ] Validate the detector on Omarchy.
 - [x] Implement read-only inventory and timestamped backup of activity, course, and device metadata files, preserving originals and checking copy integrity. Verified on both Edge 1000 volumes on Kubuntu.
 - [x] Require an explicit current Garmin volume, refuse destination paths on Garmin mounts, and handle disconnects and insufficient disk space clearly. Synthetic failure checks and live Edge backup passed.
-- [ ] Validate backup on the fēnix 5X after a reliable USB connection is available; validate the tool on Omarchy.
+- [x] Validate backup on the fēnix 5X on Kubuntu; successful copy, independent hash check, and orderly unmount completed on 2026-10-02.
+- [ ] Validate the tool on Omarchy and document a verified device restore procedure.
 - **Done when:** both devices can be detected and backed up on Linux, with a restore-by-copy procedure documented. No device write is required for this milestone.
 
 ### 2. Activity library

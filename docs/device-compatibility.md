@@ -23,6 +23,12 @@ Only observations made directly on the connected hardware are marked **Observed*
 
 - Inspect USB behavior and mount layout on the laptop when available. Do not assume its device path or automount behavior matches Kubuntu.
 
+## fēnix 5X backup validation on Kubuntu — observed 2026-10-02
+
+- Scanner confirmed the connected watch from its device XML after a read-only mount. The inventory included 67 activity files and 71 selected files overall, totaling 2,294,944 bytes.
+- Backup completed and every saved file passed an independent hash and size check. The watch was unmounted successfully afterward. The aging connector remains a consideration for future operations, but this backup connection stayed usable through completion.
+- Personal files and device XML were stored only in the private backup directory outside Git. No source file was changed.
+
 ## Desktop environments
 
 - **Kubuntu machine, observed:** Ubuntu 26.04.1 LTS with KDE Plasma workspace package 6.6.6, Python 3.14.4, Git 2.53.0, Qt 6.10.2 and PyQt6 6.10.2 available in the active Python environment. `PySide6` was not found. These were checked through command-line package and Python metadata; the Plasma GUI itself was not started in the tool session.

@@ -1,6 +1,6 @@
 # Garmin Linux companion: session status
 
-Last updated: 2026-10-01
+Last updated: 2026-10-02
 
 ## Current state
 
@@ -10,11 +10,11 @@ Last updated: 2026-10-01
 - Edge 1000 inspected on Kubuntu with both USB volumes mounted read-only. See `docs/device-compatibility.md`. Re-detect volume paths before every later use.
 - fēnix 5X inspected on Kubuntu in Mass Storage mode, read-only. Its activity folder is singular (`Garmin/Activity`). The first USB connection was unstable; the user reports an aging cable connector.
 - `python3 -m garmin_companion scan` reports Garmin USB volumes and explains each match; `--json` provides the same data for future interfaces. Verified against the Edge 1000 on Kubuntu, both mounted and unmounted.
-- `inventory` and `backup` commands are implemented and verified on the Edge 1000 internal storage and SD card. Two private, complete backups are stored in `/home/cbayschm/GarminBackups`, outside Git.
+- `inventory` and `backup` commands are implemented and verified on the Edge 1000 internal storage and SD card, and the fēnix 5X. Three private, complete backups are stored in `/home/cbayschm/GarminBackups`, outside Git.
 
 ## Next
 
-Next Kubuntu session: start milestone 2 by reading activity metadata from the verified Edge backups, using a documented FIT parser and keeping personal files outside Git. The fēnix 5X backup remains pending until its USB connection is reliable. Omarchy environment and tool validation remain pending until the laptop is available.
+Next Kubuntu session: start milestone 2 by reading activity metadata from the verified Edge and fēnix backups, using a documented FIT parser and keeping personal files outside Git. Device connection is not needed for that step. Omarchy environment and tool validation remain pending until the laptop is available.
 
 ## Completed
 
@@ -26,17 +26,27 @@ Next Kubuntu session: start milestone 2 by reading activity metadata from the ve
 - [x] Inspected fēnix 5X storage on Kubuntu, mounted read-only.
 - [x] Built and verified the read-only Garmin USB volume detector on Kubuntu with the Edge 1000.
 - [x] Built read-only inventory and verified backup, then backed up both Edge 1000 volumes (105 selected files, 9,967,349 bytes total).
+- [x] Validated detection, inventory, and backup on the fēnix 5X (71 selected files, 2,294,944 bytes); independently checked saved hashes and unmounted successfully.
 
 ## Blockers / decisions needed
 
 - Access to the Omarchy laptop is needed to finish milestone 0 cross-desktop verification.
-- Cross-distro behavior of the new detector is unverified until it runs on Omarchy.
+- Cross-distro behavior of the detector and backup tool is unverified until they run on Omarchy.
 - The fēnix 5X connection was unstable before entering Mass Storage mode, and the volume disappeared before orderly unmount after the read-only inspection. Use a reliable data cable/connector before implementing large backups or any device writes; backup code must detect and reject incomplete copies.
-- fēnix 5X backup and all Omarchy tests remain pending. The Edge backups are complete but maps, firmware, and other device folders are outside the current backup selection.
+- All Omarchy tests remain pending. Both models now have complete selected-data backups on Kubuntu; maps, firmware, and other device folders are outside the current backup selection. A device restore procedure remains to be validated before offering restoration in the app.
 - Repository working name is `garmin-linux`; MIT license chosen for project code and documentation.
 - Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
 
 ## Session log
+
+### 2026-10-02 — fēnix 5X verified backup
+
+- Re-detected the connected watch as `fenix5x Flash`, mounted it read-only, and confirmed `fenix 5x` with raw software-version field `2500` through the scanner.
+- Inventory: 71 files, 2,294,944 bytes, including 67 activity files, two GPX files, one NewFiles file, and device XML.
+- Saved `/home/cbayschm/GarminBackups/fenix_5x_GARMIN_20261002T045829.118876Z`. Independently rechecked every saved SHA-256 hash and size, the `COMPLETE` marker, and private directory mode `700`.
+- The connection remained usable through backup and the watch was unmounted successfully. No device file was changed.
+- Files changed: `STATUS.md`, `PLAN.md`, `docs/device-compatibility.md`. No application code changes were needed.
+- Next action: activity metadata reader using the verified backups from both models.
 
 ### 2026-10-01 — Edge inventory and verified backup
 
