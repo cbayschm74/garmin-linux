@@ -11,8 +11,9 @@ Last checked: 2026-10-02. This note separates Garmin's published instructions fr
 
 ## fēnix 5X
 
-- Garmin [documents importing GPX, FIT, or TCX courses into Connect](https://support.garmin.com/en-GB/?faq=wKuZXCaZRP4mWPX5aRz5h5), then using **Send to Device**. The [fēnix 5X manual](https://www8.garmin.com/manuals/webhelp/fenix5x/EN-US/GUID-674C66B5-0784-4441-B456-E0313B5902D9.html) confirms a **Navigate → Courses** menu, but does not specify a USB inbox for GPX.
-- The backed-up `Garmin/GPX` files are waypoint collections, not course examples. Direct GPX copying to `Garmin/NewFiles` has inconsistent reports for this model; it has not been tested here. Prefer the published Connect import route until a specific file and a watch-screen check can validate USB import.
+- Garmin [documents importing GPX, FIT, or TCX courses into Connect](https://support.garmin.com/en-GB/?faq=wKuZXCaZRP4mWPX5aRz5h5), then using **Send to Device**. Its [course compatibility list](https://support.garmin.com/en-GB/?faq=ZY8vOwxq106cRyPSpiVbQ7) explicitly includes the fēnix 5X. The [fēnix 5X manual](https://www8.garmin.com/manuals/webhelp/fenix5x/EN-US/GUID-674C66B5-0784-4441-B456-E0313B5902D9.html) confirms a **Navigate → Courses** menu.
+- The connected watch's `GarminDevice.xml` declares `GPSData` with GPX 1.1 input at `Garmin/NewFiles`, and FIT course (`FIT_TYPE_6`) input there with course output at `Garmin/Courses`. This is device-declared format and folder information; the Garmin manual does not describe this direct USB workflow.
+- The backed-up `Garmin/GPX` files are waypoint collections, not course examples. After a fresh verified backup on 2026-10-02, a synthetic five-point GPX named `GLinux 5X Test` was copied to the declared inbox. Source and destination SHA-256 matched and the watch was safely unmounted. Its appearance under **Courses** is pending a watch-screen check. The test GPX and backup are private, outside Git.
 
 ## Transfer rule for the app
 

@@ -4,7 +4,7 @@ Last updated: 2026-10-02
 
 ## Current state
 
-- Git repository, documentation, and a read-only USB detector now exist. The Edge 1000 has two verified GPX test imports; no other device data was changed by this project.
+- Git repository, documentation, and a read-only USB detector now exist. The Edge 1000 has two verified GPX test imports; one GPX test is awaiting on-watch confirmation on the fēnix 5X. No other device data was changed by this project.
 - Target desktops: Kubuntu on the current machine; Omarchy 4.0.4-1 on the laptop.
 - Target devices: Garmin Edge 1000 and fēnix 5X.
 - Edge 1000 inspected on Kubuntu with both USB volumes mounted read-only. See `docs/device-compatibility.md`. Re-detect volume paths before every later use.
@@ -16,10 +16,11 @@ Last updated: 2026-10-02
 - `courses` previews backed-up FIT/GPX files after manifest integrity checks; `inspect-course --file` previews a local FIT/GPX file. Six Edge 1000 FIT files are valid courses; the two fēnix 5X GPX files contain waypoints only.
 - A synthetic GPX course was copied to the Edge 1000 `Garmin/NewFiles` folder after a fresh backup, with matching SHA-256 and safe unmount. The user confirmed it appears under **Courses** after disconnecting and turning on the Edge. `GLinux Test` remains on the Edge until removed through its course menu. See `docs/course-compatibility.md`.
 - `import-edge-course --volume ... --file ...` implements guarded GPX transfer for a confirmed, writable Edge 1000 internal volume. Synthetic tests and a live import of a GPX derived from the user's backed-up Edge FIT course passed. The user confirmed `GLinux Replay` appears under **Courses**.
+- The fēnix 5X declares GPX and FIT course input through `Garmin/NewFiles` in its own device XML. A synthetic GPX was copied there after a fresh backup, with matching hash and safe unmount. The watch-screen check for `GLinux 5X Test` is pending.
 
 ## Next
 
-Next Kubuntu step: establish a fēnix 5X course transfer using Garmin's documented Connect course import and **Send to Device** path, or, if the user prefers no cloud step, investigate direct USB with a small verified test after a fresh backup. The fēnix USB course path remains unverified. Omarchy validation is also pending.
+Next: check whether `GLinux 5X Test` appears under **Navigate → Courses** after disconnecting the fēnix 5X. If yes, build the same guarded GPX import workflow for this model; if no, inspect the watch's inbox and course folders read-only for processing evidence and retain Garmin Connect **Send to Device** as the documented route. Omarchy validation remains pending.
 
 ## Completed
 
@@ -43,6 +44,14 @@ Next Kubuntu step: establish a fēnix 5X course transfer using Garmin's document
 - Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
 
 ## Session log
+
+### 2026-10-02 — fēnix 5X direct GPX course test
+
+- Garmin's course compatibility list explicitly includes the fēnix 5X. Read the connected watch's `GarminDevice.xml`: it declares GPX 1.1 input and FIT course input in `Garmin/NewFiles`, and FIT course output in `Garmin/Courses`. The direct USB path is device-declared, though not described in the owner's manual.
+- Mounted the watch read-only, confirmed identity and folder, and saved a fresh verified backup at `/home/cbayschm/GarminBackups/fenix_5x_GARMIN_20261002T122700.236874Z` (71 files, 2,294,944 bytes). Independently rechecked all saved hashes. Connection remained stable.
+- Prepared a private 521-byte, five-point GPX named `GLinux 5X Test`. Remounted the same confirmed watch volume read-write, copied it to `Garmin/NewFiles`, confirmed source and device SHA-256 match (`5a82912d9403` prefix), then unmounted safely. Watch-screen acceptance remains to be checked.
+- Files changed: `docs/course-compatibility.md`, `STATUS.md`. Private GPX and backup remain outside Git.
+- Next action: check **START → Navigate → Courses** on the watch for `GLinux 5X Test`.
 
 ### 2026-10-02 — Live guarded Edge course import
 
