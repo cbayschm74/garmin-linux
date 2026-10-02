@@ -37,6 +37,10 @@ def main() -> int:
     import_command.add_argument("--volume", required=True, help="current Edge internal volume path from scan")
     import_command.add_argument("--file", required=True, type=Path, help="local GPX route or track")
     import_command.add_argument("--backups", type=Path, default=Path.home() / "GarminBackups")
+    fenix_import_command = commands.add_parser("import-fenix-course", help="back up and copy a FIT course to a mounted fenix 5x")
+    fenix_import_command.add_argument("--volume", required=True, help="current fenix 5x volume path from scan")
+    fenix_import_command.add_argument("--file", required=True, type=Path, help="local FIT course")
+    fenix_import_command.add_argument("--backups", type=Path, default=Path.home() / "GarminBackups")
     export_command = commands.add_parser("export-activity", help="prepare one FIT file for manual Garmin Connect upload")
     export_command.add_argument("--id", required=True, help="at least eight characters of the activity SHA-256 ID")
     export_command.add_argument("--backups", type=Path, default=Path.home() / "GarminBackups")
@@ -123,6 +127,12 @@ def main() -> int:
             print(f'Fresh verified backup: {result.backup_path}')
             print(f'Copied GPX with SHA-256 {result.sha256} to {result.copied_path}')
             print('Edge volume safely unmounted. Disconnect it, turn it on, and check Courses for the imported name.')
+        elif args.command == 'import-fenix-course':
+            from .import_course import import_fenix_fit
+            result = import_fenix_fit(args.volume, args.file, args.backups)
+            print(f'Fresh verified backup: {result.backup_path}')
+            print(f'Copied FIT with SHA-256 {result.sha256} to {result.copied_path}')
+            print('Watch safely unmounted. Disconnect it, then check START → Navigate → Courses for the imported name.')
         else:
             destination, listing = backup(select_volume(args.volume), args.dest)
             print(f"Verified backup: {destination}")

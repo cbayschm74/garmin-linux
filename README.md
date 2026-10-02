@@ -67,7 +67,7 @@ Garmin SDK reference: https://github.com/garmin/fit-python-sdk . Its license app
 
 Garmin's [FIT Course file definition](https://developer.garmin.com/fit/file-types/course/) describes the required FIT messages. The [Edge 1000 course instructions](https://www8.garmin.com/manuals/webhelp/edge1000/EN-US/GUID-3E9F932E-22BF-4454-8520-1EFCA047EF87.html) describe sending courses from Garmin Connect; the [fēnix 5X manual](https://www8.garmin.com/manuals/webhelp/fenix5x/EN-US/GUID-674C66B5-0784-4441-B456-E0313B5902D9.html) describes creating courses on the watch.
 
-An [Edge 1000 GPX transfer guide](https://www.garmin.com/fr-FR/blog/comment-installer-une-trace-gpx-sur-votre-edge-et-tacx/) identifies `Garmin/NewFiles` as its USB import folder. A synthetic GPX copied there after a fresh backup appeared in the Edge's **Courses** list. On the fēnix 5X, a valid FIT course copied to its device-declared `Garmin/NewFiles` inbox appeared under **Courses**, while a GPX test did not. A guarded FIT import command is the next implementation step. Garmin's [Connect course import](https://support.garmin.com/en-GB/?faq=wKuZXCaZRP4mWPX5aRz5h5) and **Send to Device** remain an official alternative. See [docs/course-compatibility.md](docs/course-compatibility.md) for evidence and limits.
+An [Edge 1000 GPX transfer guide](https://www.garmin.com/fr-FR/blog/comment-installer-une-trace-gpx-sur-votre-edge-et-tacx/) identifies `Garmin/NewFiles` as its USB import folder. A synthetic GPX copied there after a fresh backup appeared in the Edge's **Courses** list. On the fēnix 5X, a valid FIT course copied to its device-declared `Garmin/NewFiles` inbox appeared under **Courses**, while a GPX test did not. Garmin's [Connect course import](https://support.garmin.com/en-GB/?faq=wKuZXCaZRP4mWPX5aRz5h5) and **Send to Device** remain an official alternative. See [docs/course-compatibility.md](docs/course-compatibility.md) for evidence and limits.
 
 To import your own GPX course into an Edge 1000, reconnect it, run `scan` to find its current **internal** volume path, and mount that volume read-write. For example, replace the device path and GPX path below with the values from your computer:
 
@@ -78,6 +78,16 @@ udisksctl mount -b /dev/sdX -o rw
 ```
 
 The command accepts GPX routes or tracks with at least two points. It confirms the Edge model and writable internal volume, makes a new verified backup under `~/GarminBackups`, refuses an existing destination, checks the copied hash, then unmounts the Edge. Disconnect and power it on before checking **Courses**. A verified copy alone does not prove that the Edge accepted a particular user GPX file. The command passed synthetic tests and a live test with a GPX converted privately from one of the user's backed-up Edge FIT courses; the user confirmed it appeared on the Edge as `GLinux Replay`.
+
+For a fēnix 5X, use a FIT **course** file, not an activity FIT or GPX file. Reconnect the watch in Mass Storage mode, run `scan` for its current volume path, then mount it read-write. Replace the paths below:
+
+```sh
+python3 -m garmin_companion scan
+udisksctl mount -b /dev/sdX -o rw
+.venv/bin/python -m garmin_companion import-fenix-course --volume /dev/sdX --file /path/to/course.fit
+```
+
+The fēnix command verifies the FIT course with Garmin's decoder and uses the same fresh-backup, exclusive-copy, SHA-256, and safe-unmount checks as the Edge command. Disconnect the watch and check **START → Navigate → Courses**. A manual FIT transfer was verified on the physical watch; this new guarded command has passed synthetic tests and still needs a live course import. GPX-to-FIT conversion is not implemented yet.
 
 ## Privacy and device safety
 

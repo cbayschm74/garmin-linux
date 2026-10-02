@@ -17,10 +17,11 @@ Last updated: 2026-10-02
 - A synthetic GPX course was copied to the Edge 1000 `Garmin/NewFiles` folder after a fresh backup, with matching SHA-256 and safe unmount. The user confirmed it appears under **Courses** after disconnecting and turning on the Edge. `GLinux Test` remains on the Edge until removed through its course menu. See `docs/course-compatibility.md`.
 - `import-edge-course --volume ... --file ...` implements guarded GPX transfer for a confirmed, writable Edge 1000 internal volume. Synthetic tests and a live import of a GPX derived from the user's backed-up Edge FIT course passed. The user confirmed `GLinux Replay` appears under **Courses**.
 - The fēnix 5X declares GPX and FIT course input through `Garmin/NewFiles` in its own device XML. A synthetic GPX was consumed without creating a visible course. A valid FIT course copied to the same inbox after a fresh backup appeared under **Courses** on the watch. Direct FIT course import is verified on this model; GPX-to-course conversion is not.
+- `import-fenix-course --volume ... --file ...` now checks and imports only FIT courses to the confirmed fēnix 5X. Synthetic tests pass; the guarded command itself has not yet made a live import.
 
 ## Next
 
-Next: build and test a guarded FIT course import command for the fēnix 5X using the verified `Garmin/NewFiles` path. It should make a fresh backup, validate the FIT course, check the copy hash, and safely unmount. GPX-to-FIT conversion for user-supplied routes remains a separate step. Omarchy validation remains pending.
+Next: validate `import-fenix-course` on the connected fēnix 5X with a distinct valid FIT course and confirm its appearance under **Courses**, avoiding a duplicate of `GLinux Test`. Then assess GPX-to-FIT conversion for user-supplied routes. Omarchy validation remains pending.
 
 ## Completed
 
@@ -44,6 +45,13 @@ Next: build and test a guarded FIT course import command for the fēnix 5X using
 - Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
 
 ## Session log
+
+### 2026-10-02 — Guarded fēnix FIT course import command
+
+- Refactored the Edge GPX importer to share its backup, exclusive copy, mount-instance, hash, and unmount checks with a new `import-fenix-course` command. The fēnix path accepts only a confirmed `fenix 5x` internal VFAT volume and a valid FIT course; GPX and activity FIT files are rejected by format/type validation.
+- Thirteen synthetic tests passed, including fēnix FIT copy-after-backup and wrong-format/model rejection. A live invocation while the watch was unmounted correctly refused the operation. No device file was changed in this session.
+- Files changed: `garmin_companion/import_course.py`, `garmin_companion/__main__.py`, `tests/test_import_course.py`, `README.md`, `PLAN.md`, `STATUS.md`.
+- Next action: live-test the guarded fēnix FIT import with a distinct course and check the watch screen.
 
 ### 2026-10-02 — fēnix GPX failure inspection and FIT trial
 

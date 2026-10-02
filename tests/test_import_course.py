@@ -1,5 +1,6 @@
-"""Synthetic Edge GPX import guard checks; no device is touched."""
+"""Synthetic course import guard checks; no device is touched."""
 
+import hashlib
 import tempfile
 import subprocess
 import unittest
@@ -67,7 +68,7 @@ class EdgeImportTests(unittest.TestCase):
         import_course.select_volume.return_value = GarminVolume(
             '/dev/synthetic', 'fenix5x Flash', 'vfat', 'GARMIN', 1024,
             str(self.device), 'confirmed', 'fenix 5x', '100', ['test'])
-        with self.assertRaisesRegex(ValueError, 'only a confirmed Edge 1000'):
+        with self.assertRaisesRegex(ValueError, 'requires a confirmed Edge 1000'):
             import_course.import_edge_gpx(self.volume.path, self.gpx, self.root / 'backup')
 
     def test_reports_unmount_failure_after_verified_copy(self):
@@ -75,6 +76,32 @@ class EdgeImportTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Course copy verified, but safe unmount failed'):
             import_course.import_edge_gpx(self.volume.path, self.gpx, self.root / 'backup')
         self.assertEqual(len(list((self.device / 'Garmin' / 'NewFiles').glob('GL-*.gpx'))), 1)
+
+    def test_fenix_fit_imports_after_backup(self):
+        fit = self.root / 'course.fit'
+        fit.write_bytes(b'synthetic FIT course fixture')
+        self.volume = GarminVolume('/dev/synthetic', 'fenix5x Flash', 'vfat', 'GARMIN',
+                                   1024, str(self.device), 'confirmed', 'fenix 5x', '100', ['test'])
+        import_course.select_volume.return_value = self.volume
+        import_course.scan.return_value = [self.volume]
+        preview = {'kind': 'course', 'name': 'Synthetic', 'sha256': hashlib.sha256(fit.read_bytes()).hexdigest()}
+        with patch.object(import_course, 'inspect_course', return_value=preview):
+            result = import_course.import_fenix_fit(self.volume.path, fit, self.root / 'backup')
+        self.assertEqual(result.course_name, 'Synthetic')
+        self.assertEqual(result.copied_path.read_bytes(), fit.read_bytes())
+        self.assertEqual(result.copied_path.suffix, '.fit')
+        import_course.subprocess.run.assert_called_once()
+
+    def test_fenix_rejects_gpx_and_wrong_model(self):
+        import_course.select_volume.return_value = GarminVolume(
+            '/dev/synthetic', 'fenix5x Flash', 'vfat', 'GARMIN', 1024,
+            str(self.device), 'confirmed', 'fenix 5x', '100', ['test'])
+        with self.assertRaisesRegex(ValueError, 'accepts FIT only'):
+            import_course.import_fenix_fit(self.volume.path, self.gpx, self.root / 'backup')
+        import_course.select_volume.return_value = self.volume
+        with self.assertRaisesRegex(ValueError, 'requires a confirmed fenix 5x'):
+            import_course.import_fenix_fit(self.volume.path, self.root / 'course.fit', self.root / 'backup')
+        self.assertFalse(self.backup_path.exists())
 
 
 if __name__ == '__main__':
