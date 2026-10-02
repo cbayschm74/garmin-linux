@@ -12,10 +12,11 @@ Last updated: 2026-10-02
 - `python3 -m garmin_companion scan` reports Garmin USB volumes and explains each match; `--json` provides the same data for future interfaces. Verified against the Edge 1000 on Kubuntu, both mounted and unmounted.
 - `inventory` and `backup` commands are implemented and verified on the Edge 1000 internal storage and SD card, and the fēnix 5X. Three private, complete backups are stored in `/home/cbayschm/GarminBackups`, outside Git.
 - Activity summaries are available through `.venv/bin/python -m garmin_companion activities`: 98 Edge 1000 activities and 67 fēnix 5X activities decoded successfully. Private JSON summary: `/home/cbayschm/GarminBackups/activity-summary.json`.
+- `export-activity --id` selects one activity by SHA-256 prefix and prepares a verified FIT copy in `/home/cbayschm/GarminBackups/ForUpload` for manual Garmin Connect web import.
 
 ## Next
 
-Next Kubuntu session: finish milestone 2 by adding activity selection/export for Garmin Connect's supported manual browser upload. Use the activity library and verified backups; no USB connection is required. Do not upload to a cloud service without the user requesting that upload. Omarchy environment and tool validation remain pending.
+Next Kubuntu session: begin milestone 3 by inspecting backed-up course formats and device folder behavior for the Edge 1000 and fēnix 5X. Use official device documentation before implementing a write to either device. Manual Garmin Connect import of a prepared activity remains available if the user has one missing from their account. Omarchy environment and tool validation remain pending.
 
 ## Completed
 
@@ -39,6 +40,13 @@ Next Kubuntu session: finish milestone 2 by adding activity selection/export for
 - Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
 
 ## Session log
+
+### 2026-10-02 — Activity selection and export
+
+- Added short activity IDs to text listings and `export-activity --id` to prepare one FIT file in a private upload folder. Selection requires at least eight hex characters and exactly one match. The source is checked again by SHA-256 before export; the copy is checked, written with mode `600`, and published without overwriting an existing different file.
+- Verified one real activity export against its saved hash, safe repeat behavior, and invalid-ID rejection. The prepared file is under `/home/cbayschm/GarminBackups/ForUpload`, outside Git. No file was sent to Garmin Connect.
+- Files changed: `garmin_companion/export.py`, `garmin_companion/__main__.py`, `README.md`, `PLAN.md`, `STATUS.md`.
+- Next action: inspect course formats and transfer methods for both target devices. Browser upload validation can be done later with an activity that needs importing.
 
 ### 2026-10-02 — Activity summaries
 

@@ -44,6 +44,15 @@ python3 -m venv .venv
 
 The reader uses complete backups under `~/GarminBackups` (override with `--backups`). It checks each activity against the backup manifest before decoding, reports UTC start time, sport, timer duration, elapsed duration, distance, source model, and backup paths. Multisport sessions are combined in one file summary. Identical file copies are listed once with all their backup paths; originals remain intact. Files that fail integrity or decoding checks are reported as problems. Source models come from FIT metadata where available. A private summary for the current backups is saved at `~/GarminBackups/activity-summary.json`.
 
+To prepare one activity for Garmin Connect, copy its 12-character ID from `activities` and run `export-activity --id ID`. The command checks the original backup again and saves a private FIT copy in `~/GarminBackups/ForUpload`. For example, replace the sample ID here with one from your list:
+
+```sh
+.venv/bin/python -m garmin_companion activities --limit 20
+.venv/bin/python -m garmin_companion export-activity --id 0123456789ab
+```
+
+Then sign in to Garmin Connect on the web and choose the upload icon → **Import Data** → **Browse** to select the prepared FIT file. Garmin documents [manual activity upload](https://support.garmin.com/en-CA/?faq=Ht3ZP52Kju075uKvqTqu99), including the 50 MB FIT limit. The command prepares a local file; it does not access your Garmin account.
+
 Garmin SDK reference: https://github.com/garmin/fit-python-sdk . Its license applies separately from this project's MIT license; the dependency is installed rather than copied into our source tree.
 
 ## Privacy and device safety

@@ -26,6 +26,11 @@ def main() -> int:
     activities_command = commands.add_parser("activities", help="summarize activities from complete backups")
     activities_command.add_argument("--backups", type=Path, default=Path.home() / "GarminBackups")
     activities_command.add_argument("--json", action="store_true", help="print full summaries and backup paths")
+    activities_command.add_argument("--limit", type=int, default=20, help="rows shown in text output (default: 20)")
+    export_command = commands.add_parser("export-activity", help="prepare one FIT file for manual Garmin Connect upload")
+    export_command.add_argument("--id", required=True, help="at least eight characters of the activity SHA-256 ID")
+    export_command.add_argument("--backups", type=Path, default=Path.home() / "GarminBackups")
+    export_command.add_argument("--dest", type=Path, default=Path.home() / "GarminBackups" / "ForUpload")
     args = parser.parse_args()
 
     try:
@@ -58,17 +63,26 @@ def main() -> int:
                     print(f"  {folder}: {count}")
         elif args.command == "activities":
             from .activities import activity_library
+            if args.limit < 1:
+                raise ValueError('--limit must be positive')
             library = activity_library(args.backups)
             if args.json:
                 print(json.dumps(library, indent=2))
             else:
-                for row in library['activities']:
+                for row in library['activities'][:args.limit]:
                     duration = f"{row['duration_seconds'] / 60:.1f} min" if row['duration_seconds'] is not None else 'unknown duration'
                     distance = f"{row['distance_meters'] / 1000:.2f} km" if row['distance_meters'] is not None else 'unknown distance'
-                    print(f"{row['start_time_utc'] or 'unknown date'} | {', '.join(row['sports'])} | {duration} | {distance} | {row['source_device']}")
+                    print(f"{row['sha256'][:12]} | {row['start_time_utc'] or 'unknown date'} | {', '.join(row['sports'])} | {duration} | {distance} | {row['source_device']}")
                 print(f"Activities: {len(library['activities'])}; duplicate copies: {library['duplicate_copies']}; problems: {len(library['problems'])}")
+                if len(library['activities']) > args.limit:
+                    print(f"Showing {args.limit}; use --limit {len(library['activities'])} to see all")
                 for problem in library['problems']:
                     print(f"Warning: {problem}", file=sys.stderr)
+        elif args.command == 'export-activity':
+            from .export import prepare_activity
+            target = prepare_activity(args.backups, args.id, args.dest)
+            print(f'Prepared verified FIT file: {target}')
+            print('In Garmin Connect web, choose the upload icon → Import Data → Browse, then select this file.')
         else:
             destination, listing = backup(select_volume(args.volume), args.dest)
             print(f"Verified backup: {destination}")
