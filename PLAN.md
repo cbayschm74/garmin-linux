@@ -42,8 +42,8 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 
 ### 2. Activity library
 
-- [ ] Use Garmin's FIT SDK or another documented FIT parser to read essential metadata from backed-up activities.
-- [ ] Show activity date, type, duration, distance, source device, and backup path; deduplicate without deleting originals.
+- [x] Use Garmin's official FIT Python SDK to read essential metadata from backed-up activities.
+- [x] Show activity date, type, duration, distance, source device, and backup paths; deduplicate identical files without deleting originals. Validated on 165 activity files from both models.
 - [ ] Export or identify FIT/GPX/TCX files for Garmin Connect's supported manual web upload.
 - **Done when:** a user can find and back up a ride or run and upload it through the browser using the documented route.
 

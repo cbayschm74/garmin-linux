@@ -31,6 +31,21 @@ udisksctl unmount -b "$VOLUME"
 
 Run this separately for each Garmin volume, including an SD card. The backup includes `Garmin/Activity` or `Garmin/Activities`, `Courses`, `GPX`, `NewFiles`, and `GarminDevice.xml` when present. It does not copy maps or firmware. Every file is checked by SHA-256 after copying. A successful backup has `manifest.json` and `COMPLETE`; if copying fails or the device disconnects, the private `.incomplete-*` directory is retained without `COMPLETE`. Backups contain personal activity data and device metadata, so keep them outside Git and restrict access to them.
 
+## Activity summaries
+
+Install Garmin's official FIT decoder in a local environment:
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m garmin_companion activities
+.venv/bin/python -m garmin_companion activities --json
+```
+
+The reader uses complete backups under `~/GarminBackups` (override with `--backups`). It checks each activity against the backup manifest before decoding, reports UTC start time, sport, timer duration, elapsed duration, distance, source model, and backup paths. Multisport sessions are combined in one file summary. Identical file copies are listed once with all their backup paths; originals remain intact. Files that fail integrity or decoding checks are reported as problems. Source models come from FIT metadata where available. A private summary for the current backups is saved at `~/GarminBackups/activity-summary.json`.
+
+Garmin SDK reference: https://github.com/garmin/fit-python-sdk . Its license applies separately from this project's MIT license; the dependency is installed rather than copied into our source tree.
+
 ## Privacy and device safety
 
 - Do not commit real activities, routes, device XML, serial numbers, credentials, maps, or firmware.

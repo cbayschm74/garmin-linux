@@ -23,6 +23,9 @@ def main() -> int:
     backup_command = commands.add_parser("backup", help="copy and verify selected files")
     backup_command.add_argument("--volume", required=True, help="current device path from scan")
     backup_command.add_argument("--dest", required=True, type=Path, help="backup root outside Garmin volumes")
+    activities_command = commands.add_parser("activities", help="summarize activities from complete backups")
+    activities_command.add_argument("--backups", type=Path, default=Path.home() / "GarminBackups")
+    activities_command.add_argument("--json", action="store_true", help="print full summaries and backup paths")
     args = parser.parse_args()
 
     try:
@@ -53,6 +56,19 @@ def main() -> int:
                 print(f"{summary['volume']}: {summary['file_count']} files, {summary['total_bytes']} bytes")
                 for folder, count in summary["counts_by_folder"].items():
                     print(f"  {folder}: {count}")
+        elif args.command == "activities":
+            from .activities import activity_library
+            library = activity_library(args.backups)
+            if args.json:
+                print(json.dumps(library, indent=2))
+            else:
+                for row in library['activities']:
+                    duration = f"{row['duration_seconds'] / 60:.1f} min" if row['duration_seconds'] is not None else 'unknown duration'
+                    distance = f"{row['distance_meters'] / 1000:.2f} km" if row['distance_meters'] is not None else 'unknown distance'
+                    print(f"{row['start_time_utc'] or 'unknown date'} | {', '.join(row['sports'])} | {duration} | {distance} | {row['source_device']}")
+                print(f"Activities: {len(library['activities'])}; duplicate copies: {library['duplicate_copies']}; problems: {len(library['problems'])}")
+                for problem in library['problems']:
+                    print(f"Warning: {problem}", file=sys.stderr)
         else:
             destination, listing = backup(select_volume(args.volume), args.dest)
             print(f"Verified backup: {destination}")

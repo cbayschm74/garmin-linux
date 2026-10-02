@@ -11,10 +11,11 @@ Last updated: 2026-10-02
 - fēnix 5X inspected on Kubuntu in Mass Storage mode, read-only. Its activity folder is singular (`Garmin/Activity`). The first USB connection was unstable; the user reports an aging cable connector.
 - `python3 -m garmin_companion scan` reports Garmin USB volumes and explains each match; `--json` provides the same data for future interfaces. Verified against the Edge 1000 on Kubuntu, both mounted and unmounted.
 - `inventory` and `backup` commands are implemented and verified on the Edge 1000 internal storage and SD card, and the fēnix 5X. Three private, complete backups are stored in `/home/cbayschm/GarminBackups`, outside Git.
+- Activity summaries are available through `.venv/bin/python -m garmin_companion activities`: 98 Edge 1000 activities and 67 fēnix 5X activities decoded successfully. Private JSON summary: `/home/cbayschm/GarminBackups/activity-summary.json`.
 
 ## Next
 
-Next Kubuntu session: start milestone 2 by reading activity metadata from the verified Edge and fēnix backups, using a documented FIT parser and keeping personal files outside Git. Device connection is not needed for that step. Omarchy environment and tool validation remain pending until the laptop is available.
+Next Kubuntu session: finish milestone 2 by adding activity selection/export for Garmin Connect's supported manual browser upload. Use the activity library and verified backups; no USB connection is required. Do not upload to a cloud service without the user requesting that upload. Omarchy environment and tool validation remain pending.
 
 ## Completed
 
@@ -38,6 +39,14 @@ Next Kubuntu session: start milestone 2 by reading activity metadata from the ve
 - Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
 
 ## Session log
+
+### 2026-10-02 — Activity summaries
+
+- Installed Garmin's official FIT Python SDK 21.217.0 in the ignored project `.venv`, pinned in `requirements.txt`. Run activity commands with `.venv/bin/python`.
+- Added `activities` and `activities --json`, reading only complete local backups. Each input is checked against its manifest hash and size. Summaries include UTC date, sport, timer/elapsed duration, distance, source model, and backup paths. Identical copies are grouped by SHA-256 without changing originals.
+- Decoded all 165 backed-up activity files with no errors or missing date/duration/distance fields. Verified duplicate copies are grouped and a deliberately damaged copy is rejected. Personal files and the generated `activity-summary.json` remain in `/home/cbayschm/GarminBackups` outside Git.
+- Files changed: `garmin_companion/activities.py`, `garmin_companion/__main__.py`, `requirements.txt`, `README.md`, `PLAN.md`, `STATUS.md`.
+- Next action: activity selection and local export for manual Garmin Connect upload.
 
 ### 2026-10-02 — fēnix 5X verified backup
 
