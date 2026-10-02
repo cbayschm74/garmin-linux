@@ -20,10 +20,11 @@ Last updated: 2026-10-02
 - `import-fenix-course --volume ... --file ...` checks and imports only FIT courses to the confirmed fēnix 5X. Synthetic tests pass and its first live copy passed backup, hash, and unmount checks.
 - The guarded fēnix command copied a distinct valid FIT course after a fresh verified backup and safe unmount. The user confirmed `Ruta Posible 1` appears under **Courses**.
 - `convert-gpx-course --file ...` creates a verified FIT course privately from one GPX route or single-segment track. Synthetic tests and a 556-point private GPX conversion passed Garmin's FIT decoder; the user confirmed that generated `GLinux Replay` appears under **Courses** on the fēnix 5X.
+- `docs/connect-sync-feasibility.md` maps activity and course flows. Local USB activity reading and course transfer are tested; Connect web/phone import, export, and send flows are documented but not yet tested in this account. Garmin's official Connect Developer Program is business-only and requires approval, so automatic account access is blocked for this personal app through that program.
 
 ## Next
 
-Next: document the activity and course sync paths and evaluate official Garmin Connect API access (milestone 4) while working on Kubuntu. A real user-supplied GPX/FIT course and Omarchy validation remain pending.
+Next: inventory installed firmware versions for the Edge 1000 and fēnix 5X and identify their official update routes (milestone 5), without writing firmware. A browser import of an activity missing from Connect, a real user-supplied course, and Omarchy validation remain pending.
 
 ## Completed
 
@@ -47,6 +48,12 @@ Next: document the activity and course sync paths and evaluate official Garmin C
 - Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
 
 ## Session log
+
+### 2026-10-02 — Activity and course sync feasibility
+
+- Checked Garmin's current Connect Developer Program FAQ, overview, Activity API, and Courses API. The program is business-only and requires approval. Its Activity API gives an approved partner activity data after device → Connect sync and user consent; its Courses API publishes partner courses to Connect for later device sync. No official personal-app credential or automatic activity upload API was established.
+- Documented the device, app, and Connect data flows in `docs/connect-sync-feasibility.md`, distinguishing tested local USB operations from Garmin-documented manual web/phone flows that have not been tested in this account. Recorded automatic Connect access as blocked through the official program; drafted a separate optional unofficial-connector decision for later, with credential and maintenance costs. No account access or device write occurred.
+- Verification: matched the table and API direction claims to the linked Garmin primary sources; checked the existing CLI capabilities and physical-device results in this repository. Files changed: `docs/connect-sync-feasibility.md`, `PLAN.md`, `README.md`, `STATUS.md`. Next action: firmware feasibility inventory on Kubuntu.
 
 ### 2026-10-02 — Generated FIT course transfer to fēnix 5X
 

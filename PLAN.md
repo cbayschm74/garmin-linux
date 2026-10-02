@@ -64,10 +64,11 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 
 ### 4. Activity and course sync feasibility gate
 
-- [ ] Document exact data flow needed: device → Garmin Connect, Garmin Connect → app, app → Garmin Connect, and app → device.
-- [ ] Evaluate Garmin's official developer program against this personal app. The published Activity API is Connect → approved partner; the Courses API is for approved partners sending courses to Connect.
-- [ ] If the user wants automatic Connect access, make a separate opt-in proposal for an unofficial connector with credential handling, maintenance cost, and failure modes. Do not make it a prerequisite for local features.
-- **Done when:** each requested sync direction has a tested supported path, an explicitly accepted unofficial path, or a recorded blocker.
+- [x] Document device ↔ app and Garmin Connect ↔ app activity/course data flows, separating tested USB paths from documented browser/phone paths.
+- [x] Evaluate the official developer program for this personal app. It is business-only and requires approval; Activity API is Connect → approved partner, and Courses API is approved partner → Connect.
+- [x] Record an optional, opt-in unofficial connector proposal and its credential, maintenance, and breakage costs. Do not implement without a later user decision.
+- [ ] Verify one manual activity browser import with an activity missing from Connect; optionally verify a Connect activity export and phone course send if those flows are needed.
+- **Gate result:** local USB activity reading and course transfer are tested; manual Connect paths are documented but untested in this account; official automatic Connect access is blocked without business-program approval. See `docs/connect-sync-feasibility.md`.
 
 ### 5. Firmware feasibility gate
 

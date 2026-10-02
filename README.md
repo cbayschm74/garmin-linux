@@ -2,11 +2,11 @@
 
 An early-stage, unofficial Linux companion for Garmin devices. The first targets are the Edge 1000 and fēnix 5X on Kubuntu and Omarchy 4.0.4-1.
 
-The project will start with safe USB detection, backups, activity files, and courses. Garmin Connect integration, firmware delivery, and licensed map downloads each require separate feasibility checks; see [PLAN.md](PLAN.md). This project is not affiliated with Garmin.
+The project will start with safe USB detection, backups, activity files, and courses. Garmin Connect integration, firmware delivery, and licensed map downloads each require separate feasibility checks; see [PLAN.md](PLAN.md). The current [Connect sync assessment](docs/connect-sync-feasibility.md) records tested local paths, supported manual account paths, and the official API access limit. This project is not affiliated with Garmin.
 
 ## Current state
 
-Read-only device discovery and compatibility inspection are underway. There is no desktop application to install yet. See [STATUS.md](STATUS.md) for the next step and [docs/device-compatibility.md](docs/device-compatibility.md) for observed hardware details.
+The command-line core can detect and back up both devices, summarize activities, and transfer courses through model-specific USB paths. There is no desktop application to install yet. See [STATUS.md](STATUS.md) for the next step and [docs/device-compatibility.md](docs/device-compatibility.md) for observed hardware details.
 
 From this repository directory, list connected Garmin USB volumes without mounting or changing them:
 
@@ -63,7 +63,7 @@ Garmin SDK reference: https://github.com/garmin/fit-python-sdk . Its license app
 .venv/bin/python -m garmin_companion inspect-course --file /path/to/course.gpx
 ```
 
-`courses` checks FIT and GPX files in complete backups against each backup manifest before reading them. `inspect-course` previews a local FIT or GPX file up to 50 MB. FIT files must identify themselves as courses and contain Course, Lap, and Record messages. GPX routes and tracks with points are labeled `course_candidate`; waypoint-only GPX files are labeled `waypoints`. These commands report basic metadata and point counts without printing coordinates. A valid preview does not establish that either device will accept the file. No course is copied to a device yet.
+`courses` checks FIT and GPX files in complete backups against each backup manifest before reading them. `inspect-course` previews a local FIT or GPX file up to 50 MB. FIT files must identify themselves as courses and contain Course, Lap, and Record messages. GPX routes and tracks with points are labeled `course_candidate`; waypoint-only GPX files are labeled `waypoints`. These commands report basic metadata and point counts without printing coordinates. A valid preview alone does not establish that either device will accept the file.
 
 Garmin's [FIT Course file definition](https://developer.garmin.com/fit/file-types/course/) describes the required FIT messages. The [Edge 1000 course instructions](https://www8.garmin.com/manuals/webhelp/edge1000/EN-US/GUID-3E9F932E-22BF-4454-8520-1EFCA047EF87.html) describe sending courses from Garmin Connect; the [fēnix 5X manual](https://www8.garmin.com/manuals/webhelp/fenix5x/EN-US/GUID-674C66B5-0784-4441-B456-E0313B5902D9.html) describes creating courses on the watch.
 
