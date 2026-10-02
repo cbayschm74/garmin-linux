@@ -13,11 +13,12 @@ Last updated: 2026-10-02
 - `inventory` and `backup` commands are implemented and verified on the Edge 1000 internal storage and SD card, and the fēnix 5X. Three private, complete backups are stored in `/home/cbayschm/GarminBackups`, outside Git.
 - Activity summaries are available through `.venv/bin/python -m garmin_companion activities`: 98 Edge 1000 activities and 67 fēnix 5X activities decoded successfully. Private JSON summary: `/home/cbayschm/GarminBackups/activity-summary.json`.
 - `export-activity --id` selects one activity by SHA-256 prefix and prepares a verified FIT copy in `/home/cbayschm/GarminBackups/ForUpload` for manual Garmin Connect web import.
-- `courses` previews backed-up FIT/GPX files after manifest integrity checks; `inspect-course --file` previews a local FIT/GPX file. Six Edge 1000 FIT files are valid courses; the two fēnix 5X GPX files contain waypoints only. No course has been written to either device.
+- `courses` previews backed-up FIT/GPX files after manifest integrity checks; `inspect-course --file` previews a local FIT/GPX file. Six Edge 1000 FIT files are valid courses; the two fēnix 5X GPX files contain waypoints only.
+- A synthetic GPX course was copied to the Edge 1000 `Garmin/NewFiles` folder after a fresh backup, with matching SHA-256 and safe unmount. The user confirmed it appears under **Courses** after disconnecting and turning on the Edge. `GLinux Test` remains on the Edge until removed through its course menu. See `docs/course-compatibility.md`.
 
 ## Next
 
-Next Kubuntu session: establish and document a supported course transfer route for each model, including the input folder or Garmin Connect send method. Then prepare a device-ready copy of a user-supplied course and verify it on one target device after a fresh backup. The exact USB transfer inbox remains unverified; the observed Edge `Garmin/Courses` folder only proves where existing courses are stored. Omarchy environment and tool validation remain pending.
+Next: build and test a guarded import command for user-supplied GPX courses on the Edge 1000. It must check the current device identity, fresh backup, GPX preview, absent target, copy hash, and safe unmount workflow. For the fēnix 5X, use Garmin Connect course import and **Send to Device** as the documented path; USB import behavior remains unverified. Omarchy validation remains pending.
 
 ## Completed
 
@@ -41,6 +42,15 @@ Next Kubuntu session: establish and document a supported course transfer route f
 - Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
 
 ## Session log
+
+### 2026-10-02 — Edge course transfer test
+
+- Garmin's GPX transfer guide explicitly includes Edge 1000 and names `Garmin/NEWFILES`. Garmin support documents importing third-party GPX/FIT/TCX courses into Connect, then sending them to a device. The exact fēnix 5X USB inbox and accepted direct-copy formats remain unverified.
+- Confirmed the current Edge internal volume and its `Garmin/NewFiles` folder. Made a fresh complete verified backup at `/home/cbayschm/GarminBackups/Edge_1000_GARMIN_20261002T052514.392012Z` (11 files, 329,242 bytes).
+- Prepared a private 458-byte, five-point synthetic GPX named `GLinux Test` outside Git. The course preview accepted it. Copied it to the Edge `Garmin/NewFiles` folder, checked source and destination SHA-256 match (`697b7d4e1251` prefix), and unmounted the volume. The user confirmed `GLinux Test` appears in the Edge's **Courses** list after disconnecting and turning it on.
+- The sandbox continued to show a read-only mount after the host had remounted it read-write. Host `findmnt` confirmed `rw` before the transfer. No other device files were changed.
+- Files changed: `docs/course-compatibility.md`, `README.md`, `PLAN.md`, `STATUS.md`. Private test GPX and backup are outside Git.
+- Next action: build guarded Edge GPX import for user-supplied courses.
 
 ### 2026-10-02 — Read-only course previews
 
