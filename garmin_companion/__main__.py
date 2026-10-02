@@ -33,6 +33,10 @@ def main() -> int:
     inspect_command = commands.add_parser("inspect-course", help="preview a local GPX or FIT course")
     inspect_command.add_argument("--file", required=True, type=Path)
     inspect_command.add_argument("--json", action="store_true", help="print full preview")
+    import_command = commands.add_parser("import-edge-course", help="back up and copy a GPX course to a mounted Edge 1000")
+    import_command.add_argument("--volume", required=True, help="current Edge internal volume path from scan")
+    import_command.add_argument("--file", required=True, type=Path, help="local GPX route or track")
+    import_command.add_argument("--backups", type=Path, default=Path.home() / "GarminBackups")
     export_command = commands.add_parser("export-activity", help="prepare one FIT file for manual Garmin Connect upload")
     export_command.add_argument("--id", required=True, help="at least eight characters of the activity SHA-256 ID")
     export_command.add_argument("--backups", type=Path, default=Path.home() / "GarminBackups")
@@ -113,6 +117,12 @@ def main() -> int:
                     print(f"Laps: {preview['laps']}; records: {preview['record_points']}; distance: {preview['distance_meters']} m")
                 else:
                     print(f"Routes: {preview['routes']} ({preview['route_points']} points); tracks: {preview['tracks']} ({preview['track_points']} points); waypoints: {preview['waypoints']}")
+        elif args.command == 'import-edge-course':
+            from .import_course import import_edge_gpx
+            result = import_edge_gpx(args.volume, args.file, args.backups)
+            print(f'Fresh verified backup: {result.backup_path}')
+            print(f'Copied GPX with SHA-256 {result.sha256} to {result.copied_path}')
+            print('Edge volume safely unmounted. Disconnect it, turn it on, and check Courses for the imported name.')
         else:
             destination, listing = backup(select_volume(args.volume), args.dest)
             print(f"Verified backup: {destination}")

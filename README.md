@@ -69,10 +69,20 @@ Garmin's [FIT Course file definition](https://developer.garmin.com/fit/file-type
 
 An [Edge 1000 GPX transfer guide](https://www.garmin.com/fr-FR/blog/comment-installer-une-trace-gpx-sur-votre-edge-et-tacx/) identifies `Garmin/NewFiles` as its USB import folder. A synthetic GPX copied there after a fresh backup appeared in the Edge's **Courses** list. For the fēnix 5X, use Garmin's [Connect course import](https://support.garmin.com/en-GB/?faq=wKuZXCaZRP4mWPX5aRz5h5) and **Send to Device** instructions until its USB behavior is verified. See [docs/course-compatibility.md](docs/course-compatibility.md) for evidence and limits.
 
+To import your own GPX course into an Edge 1000, reconnect it, run `scan` to find its current **internal** volume path, and mount that volume read-write. For example, replace the device path and GPX path below with the values from your computer:
+
+```sh
+python3 -m garmin_companion scan
+udisksctl mount -b /dev/sdX -o rw
+.venv/bin/python -m garmin_companion import-edge-course --volume /dev/sdX --file /path/to/route.gpx
+```
+
+The command accepts GPX routes or tracks with at least two points. It confirms the Edge model and writable internal volume, makes a new verified backup under `~/GarminBackups`, refuses an existing destination, checks the copied hash, then unmounts the Edge. Disconnect and power it on before checking **Courses**. A verified copy alone does not prove that the Edge accepted a particular user GPX file. The command has been tested with synthetic volumes; the earlier manual `GLinux Test` transfer was verified on the physical Edge.
+
 ## Privacy and device safety
 
 - Do not commit real activities, routes, device XML, serial numbers, credentials, maps, or firmware.
-- The first implementation will read and back up files before adding any device write feature.
+- Edge GPX import makes a fresh verified backup before writing one new file to `Garmin/NewFiles`.
 - Device paths can change between connections. Detect the device each time; do not assume a fixed `/dev/sd*` name.
 
 ## License

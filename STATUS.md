@@ -4,7 +4,7 @@ Last updated: 2026-10-02
 
 ## Current state
 
-- Git repository, documentation, and a read-only USB detector now exist. No device file has been changed.
+- Git repository, documentation, and a read-only USB detector now exist. The only device write so far was the verified synthetic `GLinux Test` GPX transfer to the Edge 1000.
 - Target desktops: Kubuntu on the current machine; Omarchy 4.0.4-1 on the laptop.
 - Target devices: Garmin Edge 1000 and fēnix 5X.
 - Edge 1000 inspected on Kubuntu with both USB volumes mounted read-only. See `docs/device-compatibility.md`. Re-detect volume paths before every later use.
@@ -15,10 +15,11 @@ Last updated: 2026-10-02
 - `export-activity --id` selects one activity by SHA-256 prefix and prepares a verified FIT copy in `/home/cbayschm/GarminBackups/ForUpload` for manual Garmin Connect web import.
 - `courses` previews backed-up FIT/GPX files after manifest integrity checks; `inspect-course --file` previews a local FIT/GPX file. Six Edge 1000 FIT files are valid courses; the two fēnix 5X GPX files contain waypoints only.
 - A synthetic GPX course was copied to the Edge 1000 `Garmin/NewFiles` folder after a fresh backup, with matching SHA-256 and safe unmount. The user confirmed it appears under **Courses** after disconnecting and turning on the Edge. `GLinux Test` remains on the Edge until removed through its course menu. See `docs/course-compatibility.md`.
+- `import-edge-course --volume ... --file ...` now implements guarded GPX transfer for a confirmed, writable Edge 1000 internal volume. Synthetic tests passed; it has not yet imported a user-supplied GPX on the live device.
 
 ## Next
 
-Next: build and test a guarded import command for user-supplied GPX courses on the Edge 1000. It must check the current device identity, fresh backup, GPX preview, absent target, copy hash, and safe unmount workflow. For the fēnix 5X, use Garmin Connect course import and **Send to Device** as the documented path; USB import behavior remains unverified. Omarchy validation remains pending.
+Next: use `import-edge-course` with a real user-supplied GPX route or track, then check it under **Courses** on the Edge 1000. The Edge must be reconnected and mounted read-write, and a fresh backup will run within the command. If no user course is available, continue the fēnix 5X Connect course path or Omarchy validation. fēnix USB import behavior remains unverified.
 
 ## Completed
 
@@ -42,6 +43,14 @@ Next: build and test a guarded import command for user-supplied GPX courses on t
 - Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
 
 ## Session log
+
+### 2026-10-02 — Guarded Edge GPX import command
+
+- Added `import-edge-course --volume PATH --file ROUTE.gpx`. It accepts only a confirmed Edge 1000 internal VFAT volume mounted read-write and a GPX route/track with at least two points. It rejects a course source on any mounted Garmin volume and names the inbox file from the source SHA-256 to avoid arbitrary filenames.
+- Before writing, the command makes a fresh complete verified backup. It refuses an existing target, uses exclusive creation, checks the source and destination hashes, checks the mount instance through the transfer, and calls `udisksctl unmount` after success. If unmount fails after a verified copy, the error says to unmount manually before disconnecting.
+- Eleven synthetic tests passed, including existing-target preservation, wrong-device and waypoint-only rejection, and an unmount failure. A live invocation with the unmounted Edge correctly refused the import. No device file was changed in this session.
+- Files changed: `garmin_companion/import_course.py`, `garmin_companion/__main__.py`, `tests/test_import_course.py`, `README.md`, `PLAN.md`, `STATUS.md`.
+- Next action: test a user-supplied GPX on the physical Edge and confirm it appears in **Courses**.
 
 ### 2026-10-02 — Edge course transfer test
 
