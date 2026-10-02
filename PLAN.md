@@ -56,6 +56,7 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 - [x] Verify the guarded command on the physical Edge 1000 with a real route converted from a backed-up FIT course; user confirmed it appears under **Courses**.
 - [x] Build a guarded fēnix 5X FIT course import command; synthetic tests pass. Its direct FIT inbox was already verified manually on-device.
 - [x] Verify the guarded FIT command on the physical fēnix 5X with a distinct course; user confirmed it appears under **Courses**.
+- [x] Convert a single GPX route or track into a FIT course with Garmin's encoder, then decode and check the result. On-device acceptance of generated FIT remains pending.
 - [x] Inspect what each device accepts for courses and where they belong. Edge 1000 GPX and fēnix 5X FIT imports were verified on-device with harmless test routes; the fēnix GPX test did not create a course.
 - [ ] Import a user-supplied GPX/FIT course, preview its basic metadata, and make a device-ready copy after backup and confirmation.
 - [ ] Check a copied course on the target device. Avoid claiming the two models support identical course features.

@@ -41,6 +41,9 @@ def main() -> int:
     fenix_import_command.add_argument("--volume", required=True, help="current fenix 5x volume path from scan")
     fenix_import_command.add_argument("--file", required=True, type=Path, help="local FIT course")
     fenix_import_command.add_argument("--backups", type=Path, default=Path.home() / "GarminBackups")
+    convert_command = commands.add_parser("convert-gpx-course", help="convert one local GPX route or track to a verified FIT course")
+    convert_command.add_argument("--file", required=True, type=Path, help="local GPX route or track")
+    convert_command.add_argument("--dest", type=Path, default=Path.home() / "GarminBackups" / "ForDevice")
     export_command = commands.add_parser("export-activity", help="prepare one FIT file for manual Garmin Connect upload")
     export_command.add_argument("--id", required=True, help="at least eight characters of the activity SHA-256 ID")
     export_command.add_argument("--backups", type=Path, default=Path.home() / "GarminBackups")
@@ -133,6 +136,12 @@ def main() -> int:
             print(f'Fresh verified backup: {result.backup_path}')
             print(f'Copied FIT with SHA-256 {result.sha256} to {result.copied_path}')
             print('Watch safely unmounted. Disconnect it, then check START → Navigate → Courses for the imported name.')
+        elif args.command == 'convert-gpx-course':
+            from .convert_course import convert_gpx_to_fit
+            result = convert_gpx_to_fit(args.file, args.dest)
+            print(f'Verified FIT course: {result.path}')
+            print(f'Name: {result.name}; points: {result.point_count}; distance: {result.distance_meters / 1000:.2f} km')
+            print(f'Source SHA-256: {result.source_sha256}; FIT SHA-256: {result.fit_sha256}')
         else:
             destination, listing = backup(select_volume(args.volume), args.dest)
             print(f"Verified backup: {destination}")
