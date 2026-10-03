@@ -24,10 +24,11 @@ Last updated: 2026-10-03
 - `docs/firmware-feasibility.md` records live read-only main software fields: Edge 1000 `1550` (rendered 15.50) and fēnix 5X `2500` (rendered 25.00). The user synced the fēnix with Garmin Connect on a phone; it still showed 25.00 and no update prompt. After connecting to Wi‑Fi and restarting, the Edge explicitly reported "no updates available" at 15.50.
 - Garmin's exact-model download pages were reviewed. Edge 1000's public update page lists 15.50 via Express. The fēnix 5X US collection offers an older 24.71 beta while a separate APAC page lists 25.10. The user confirms this watch uses ROW firmware, so APAC 25.10 is not an update candidate. No matching production package with official checksum and tested recovery path was established for a Linux installer.
 - Read-only map inventory found 28 IMG files across Edge 1000 internal/SD and fēnix 5X internal storage. Embedded IMG names and versions are recorded in `docs/map-inventory.md`. `docs/map-feasibility.md` records Garmin and OpenMTBMap delivery paths. The user has an OpenMTBMap account and reports one purchased Edge Chile topo map; actual account-specific update offers remain unverified.
+- A local September 2026 OpenMTBMap China trial assembled both fēnix and Edge layout IMGs from the downloaded EXE's map tiles and the separate 20 m contour archive. Each verified image contains 11 map tiles and 22 contour tiles from the fēnix's existing region selection. Both remain in `~/Downloads/GarminMapBuild-China/`; no Garmin map was changed. See `docs/openmtbmap-china-build.md`.
 
 ## Next
 
-Next: design and implement a read-only local OpenMTBMap archive/IMG inspection command on Kubuntu. Validate it on the existing `~/Downloads/mtbchina.exe` and `china_contours.7z`, distinguishing tile packages that need assembly from ready-to-copy IMG downloads. No account credentials or device writes. A Garmin Express account-specific map-offer check on Windows/Mac, a browser activity import, a real user-supplied course, and Omarchy validation remain pending.
+Next: implement a read-only local OpenMTBMap archive/IMG inspection command on Kubuntu. Validate it on the existing `~/Downloads/mtbchina.exe`, `china_contours.7z`, and the two newly built regional IMGs. Report archive-versus-ready-IMG, map/contour tile counts, code page, family ID, size, and SHA-256 without account credentials or device writes. Then design a map-specific backup/recovery flow and controlled on-device trial, recognizing that the trial Edge IMG covers less territory than its current three-part China set. A Garmin Express account-specific map-offer check on Windows/Mac, a browser activity import, a real user-supplied course, and Omarchy validation remain pending.
 
 ## Completed
 
@@ -51,6 +52,14 @@ Next: design and implement a read-only local OpenMTBMap archive/IMG inspection c
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-03 — Built regional China maps with contours on Linux
+
+- Compared the installed China IMG contents on the Edge 1000 and fēnix 5X by mounting their volumes read-only. The existing fēnix IMG contains 11 map and 22 contour tiles; the Edge's three China files collectively contain 111 map and 814 contour tiles. Unmounted both devices after inspection.
+- Read the downloaded `mtbchina.exe` with 7-Zip rather than running the Windows installer. Extracted exactly the 11 map tiles matching the fēnix's older regional selection, plus its `fenxcn.TYP` and `widecn.TYP` layouts. Extracted the corresponding 22 contour tiles from `china_contours.7z`. The sampled map LBL and both TYP files report code page 1252. The currently published public MD5 describes an older EXE, so a matching publisher checksum for this September package remains to be found.
+- Downloaded mkgmap r4924 and built a fēnix layout IMG (388,734,976 bytes) and Edge layout IMG (388,644,864 bytes) with family ID 6555, code page 1252, and a search index. Both builds reported zero exceptions. Independent IMG inspection found exactly the expected 11 map and 22 contour tile IDs, one TYP, and one MDR in each output. SHA-256 values and locations are in `docs/openmtbmap-china-build.md`.
+- These are local, structurally valid trial images. Rendering, routing, and on-device acceptance have not been tested. The Edge trial has only the fēnix region selection, so it must not replace the Edge's much broader existing China set. No Garmin map was changed.
+- Files changed: `docs/openmtbmap-china-build.md`, `docs/map-feasibility.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-03 — Inspected downloaded OpenMTBMap China packages without execution
 

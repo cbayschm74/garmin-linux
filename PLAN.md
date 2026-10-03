@@ -83,6 +83,7 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 - [x] Classify known map sources and update terms; explicitly mark account-specific Garmin entitlements and offers unknown. The user reports an OpenMTBMap account and one purchased Chile topo map. See `docs/map-feasibility.md`.
 - [x] Check documented Garmin delivery methods for the Edge 1000 and ROW fēnix 5X. Express is the documented map entitlement/update route; no personal Linux Garmin map download interface was established.
 - [x] Document a practical Express-on-Windows-or-Mac check and separately assess user-downloaded OpenMTBMap/VeloMap updates on Linux.
+- [x] Assemble and structurally verify a regional China IMG with map and contour tiles from the user's local archives for the fēnix and Edge layouts; on-device behavior is still untested. See `docs/openmtbmap-china-build.md`.
 - **Gate result:** Garmin-branded maps use Express for account/device-specific offers, with the purchased Chile topo map requiring a new purchase for newer content if available. OpenMTBMap member IMG archives offer a Linux path for user-supplied updates. No automated Garmin map download is claimed. Actual account offers remain untested.
 
 ### 7. Desktop app
