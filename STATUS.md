@@ -22,10 +22,11 @@ Last updated: 2026-10-03
 - `convert-gpx-course --file ...` creates a verified FIT course privately from one GPX route or single-segment track. Synthetic tests and a 556-point private GPX conversion passed Garmin's FIT decoder; the user confirmed that generated `GLinux Replay` appears under **Courses** on the fēnix 5X.
 - `docs/connect-sync-feasibility.md` maps activity and course flows. Local USB activity reading and course transfer are tested; Connect web/phone import, export, and send flows are documented but not yet tested in this account. Garmin's official Connect Developer Program is business-only and requires approval, so automatic account access is blocked for this personal app through that program.
 - `docs/firmware-feasibility.md` records live read-only main software fields: Edge 1000 `1550` (rendered 15.50) and fēnix 5X `2500` (rendered 25.00). Official Garmin update routes are documented; no update availability check or firmware write was performed.
+- Garmin's exact-model download pages were reviewed. Edge 1000's public update page lists 15.50 via Express. The fēnix 5X US collection offers an older 24.71 beta while a separate APAC page lists 25.10; applicability of the APAC release to this watch is unverified. No matching production package with official checksum and tested recovery path was established for a Linux installer.
 
 ## Next
 
-Next: investigate Garmin's exact-model firmware download pages for production packages, official checksums, and recovery instructions (milestone 5), without downloading to or writing either device. A phone/Wi‑Fi update availability check, a browser import of an activity missing from Connect, a real user-supplied course, and Omarchy validation remain pending.
+Next: check update availability through the fēnix's paired Garmin Connect phone app and the Edge's configured Wi‑Fi (or Garmin Connect phone app), with the user's help, and record the result without assuming an update exists. A browser import of an activity missing from Connect, a real user-supplied course, map inventory, and Omarchy validation remain pending.
 
 ## Completed
 
@@ -49,6 +50,12 @@ Next: investigate Garmin's exact-model firmware download pages for production pa
 - Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
 
 ## Session log
+
+### 2026-10-03 — Exact-model firmware package and recovery research
+
+- Read Garmin's Edge 1000 product update page, fēnix 5X US download collection and agreement, fēnix 5X APAC product update page, Connect IQ device reference, and general Express update troubleshooting. Compared public variant information with the saved device XML main part numbers (`006-B1836-00` Edge; `006-B2604-00` fēnix), without exposing serial numbers.
+- Edge page lists 15.50 through Express, matching the observed version. US fēnix collection lists a 24.71 beta, older than the observed 25.00; the APAC product page lists 25.10 but its applicability to this specific watch is unverified. No exact-match production payload, official checksum, and tested recovery path were established for local Linux firmware installation.
+- Updated `docs/firmware-feasibility.md`, `PLAN.md`, and `STATUS.md`. Verification: reviewed model/variant and version statements against Garmin primary pages and ran `git diff --check`; no firmware package was downloaded, and no device volume was mounted or written. Next action: user-assisted phone/Wi‑Fi update availability check.
 
 ### 2026-10-03 — Read-only firmware version inventory and official routes
 
