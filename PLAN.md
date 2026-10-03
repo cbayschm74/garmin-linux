@@ -1,6 +1,6 @@
 # Garmin Linux companion: project plan
 
-Last updated: 2026-10-02
+Last updated: 2026-10-03
 
 ## Goal
 
@@ -79,7 +79,8 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 
 ### 6. Maps feasibility gate
 
-- [ ] Inventory the maps installed on both devices and identify which updates are free, purchased, or device licensed.
+- [x] Inventory installed IMG files and embedded map names/versions on both devices, read-only. See `docs/map-inventory.md`.
+- [ ] Identify which map updates are free, purchased, or device licensed using documented sources or account evidence; do not infer entitlement from files.
 - [ ] Check official Garmin delivery methods for these exact models and whether a Linux-accessible, documented entitlement/download path exists.
 - [ ] If not, document a practical Express-on-Windows option and separately assess legal, user-supplied map alternatives without presenting them as Garmin map updates.
 - **Done when:** each map type has an honest supported update route or a recorded blocker. No automated Garmin map download is claimed without a documented or authorized interface.

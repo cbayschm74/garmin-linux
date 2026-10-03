@@ -23,10 +23,11 @@ Last updated: 2026-10-03
 - `docs/connect-sync-feasibility.md` maps activity and course flows. Local USB activity reading and course transfer are tested; Connect web/phone import, export, and send flows are documented but not yet tested in this account. Garmin's official Connect Developer Program is business-only and requires approval, so automatic account access is blocked for this personal app through that program.
 - `docs/firmware-feasibility.md` records live read-only main software fields: Edge 1000 `1550` (rendered 15.50) and fēnix 5X `2500` (rendered 25.00). The user synced the fēnix with Garmin Connect on a phone; it still showed 25.00 and no update prompt. After connecting to Wi‑Fi and restarting, the Edge explicitly reported "no updates available" at 15.50.
 - Garmin's exact-model download pages were reviewed. Edge 1000's public update page lists 15.50 via Express. The fēnix 5X US collection offers an older 24.71 beta while a separate APAC page lists 25.10. The user confirms this watch uses ROW firmware, so APAC 25.10 is not an update candidate. No matching production package with official checksum and tested recovery path was established for a Linux installer.
+- Read-only map inventory found 28 IMG files across Edge 1000 internal/SD and fēnix 5X internal storage. Embedded IMG names and versions are recorded in `docs/map-inventory.md`. Entitlements and update availability remain unverified.
 
 ## Next
 
-Next: inventory the map products installed on the Edge 1000 internal storage and SD card and on the fēnix 5X, read-only, without copying map data into Git (milestone 6). A browser import of an activity missing from Connect, a real user-supplied course, and Omarchy validation remain pending.
+Next: research Garmin's documented map delivery and entitlement paths for the Edge 1000 and ROW fēnix 5X, then classify installed map families only where the source or user's account supports it (milestone 6). A browser import of an activity missing from Connect, a real user-supplied course, and Omarchy validation remain pending.
 
 ## Completed
 
@@ -50,6 +51,12 @@ Next: inventory the map products installed on the Edge 1000 internal storage and
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Map delivery and licensing remain to be assessed in milestone 6.
 
 ## Session log
+
+### 2026-10-03 — Read-only installed-map inventory
+
+- Mounted Edge 1000 internal storage, its SD card, and fēnix 5X internal storage individually with `ro` confirmed by `findmnt`. Scanned 28 IMG file headers with gmapinfo in information-only mode; recorded embedded names, versions, and file sizes in `docs/map-inventory.md`. All three volumes were safely unmounted. No device file was written and no map, unlock, or license content was copied into Git.
+- The Edge SD card contains both 2022.11 and 2024.10 Europe West cycle IMG files. This alone does not show whether either is active or redundant. Several user-named OpenMTBMap/VeloMap files have composite or truncated header labels. `.gma`/`.unl` sidecars were not opened and cannot prove entitlement from presence alone.
+- Verification: IMG reader returned metadata without errors for all 28 files; checked mount flags and unmounts. Files changed: `docs/map-inventory.md`, `PLAN.md`, `STATUS.md`. Next action: official map delivery and entitlement research for these models and map families.
 
 ### 2026-10-03 — ROW confirmation and update-availability check underway
 
