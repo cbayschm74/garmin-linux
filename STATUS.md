@@ -28,7 +28,7 @@ Last updated: 2026-10-03
 
 ## Next
 
-Next: finish the active read-only map backup at `~/Downloads/GarminMapBuild-China/device-backups/20261003T043417Z`. A `COMPLETE` marker and `manifest.json` appear only after all four Edge China files and the fēnix China file have been copied and SHA-256 verified. The user asked to pause Codex usage while the slow USB copy continues. **Do not remove old maps or install new ones until the backup marker and manifest are checked.** Then resume the authorized guarded replacement and have the user check map enable/disable lists and rendering. The read-only archive/IMG inspection command, Garmin Express account check, browser activity import, real user-supplied course, and Omarchy validation remain pending.
+Next: monitor the detached, guarded map replacement recorded in `~/Downloads/GarminMapBuild-China/device-backups/20261003T054513Z/install.log`. The complete five-file backup and manifest are in that directory. The transfer is started, but an `INSTALL_COMPLETE` marker exists only after both new map sets have been copied, SHA-256 verified, and safely unmounted; `INSTALL_FAILED` records a stop needing recovery. **Do not disconnect either Garmin before the transfer result has been checked.** When complete, ask the user to check map enable/disable lists and rendering. The read-only archive/IMG inspection command, Garmin Express account check, browser activity import, real user-supplied course, and Omarchy validation remain pending.
 
 ## Completed
 
@@ -52,6 +52,13 @@ Next: finish the active read-only map backup at `~/Downloads/GarminMapBuild-Chin
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-03 — Recovered map backup and started guarded replacement
+
+- The original foreground copy stopped when the Codex turn ended. The detached watchdog restarted a fresh read-only backup at `~/Downloads/GarminMapBuild-China/device-backups/20261003T054513Z`. It independently copied and hash-verified all four Edge China IMGs, then stopped because the fēnix volume had become unmounted. This was a mount-state failure, not an IMG write failure.
+- Remounted the fēnix read-only, verified the four Edge backup hashes against the watchdog log, copied and verified the 414,605,312-byte fēnix IMG, and wrote a five-file `manifest.json` and `COMPLETE` marker. Original map files remained intact through this point.
+- With the user's earlier authorization to replace the maps, launched a detached guarded installer using the verified backup. The installer checks backup and new-image hashes, device UUIDs and writable mounts, stages each IMG as a `.partial` file, verifies its hash, removes only the backed-up China IMGs, gives the new files distinct names, and unmounts after each device. The transfer may take considerable time over USB 2.0. Check `install.log`, `INSTALL_COMPLETE`/`INSTALL_FAILED`, and device mounts before telling the user to disconnect.
+- Files changed: `STATUS.md`.
 
 ### 2026-10-03 — Device map backup started; installation pending
 
