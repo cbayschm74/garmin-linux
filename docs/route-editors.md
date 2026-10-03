@@ -16,6 +16,12 @@ Checked 2026-10-03. These are companion tools for planning and reviewing courses
 3. Create or edit a route, then export a GPX with its **full track geometry**. Verify the exported GPX has the expected shape and point count; a QMapShack route export may contain only routing control points, so convert the route to a track before export if needed. This distinction is discussed in a [QMapShack project issue](https://github.com/Maproom/qmapshack/issues/708).
 4. Use this project's `inspect-course --file` to preview the GPX. The tested Edge 1000 path is `import-edge-course` with GPX. For the fēnix 5X, `convert-gpx-course` creates a FIT course, then `import-fenix-course` transfers it. Both import commands make a fresh selected-data backup and hash-check the copy. See [course evidence](course-compatibility.md). Do not use an editor's untested direct device-write function for these two models yet.
 
+## Maps: desktop display versus device installation
+
+- **QMapShack desktop maps:** The [QMapShack map setup guide](https://github.com/Maproom/qmapshack/wiki/DocInstallMapDem) says to put Garmin `.img` files in a local maps folder, then choose **File → Setup Map Paths** and activate the map. A user-downloaded OpenMTBMap `gmapsupp.img` is the appropriate first test. QMapShack's ability to display an IMG does not mean it installs that image onto a GPS. Its routing uses Routino or BRouter, rather than promising to use the IMG's own routing data.
+- **Viking desktop maps:** Its [map layer documentation](https://viking-gps.github.io/help/index.html) focuses on online tile maps and raster/offline tile caches. Garmin vector IMG support is not documented, so it is not the preferred viewer for the user's OpenMTBMap IMG files.
+- **Garmin device maps:** [OpenMTBMap's own instructions](https://openmtbmap.org/download/gmapsupp/) describe unpacking its member IMG archives, optionally renaming the IMG, and placing it in the Garmin directory on a compatible device or SD card. We will implement a guarded, user-supplied OpenMTBMap transfer in this project after archive inspection and a map-specific backup/recovery design. Garmin-branded licensed maps remain under [Garmin Express](map-feasibility.md).
+
 ## Limits to check in a hands-on trial
 
 - Open one backed-up Edge FIT course and one fēnix FIT course in QMapShack and confirm names, geometry, and point counts against `inspect-course` before trusting FIT display/editing.

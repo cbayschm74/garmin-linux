@@ -88,6 +88,7 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 ### 7. Desktop app
 
 - [ ] Build a small GUI over the tested core: device status, backup, activities, courses, and update guidance.
+- [ ] Add guarded installation of user-downloaded OpenMTBMap IMG files after archive inspection, map-specific backup/recovery design, and on-device validation for each model. QMapShack can display these IMG maps for planning; it is not the project's map transfer path. Keep Garmin-licensed map delivery in Express.
 - [ ] Keep long operations cancellable and show their result and destination.
 - [ ] Package and smoke-test on Kubuntu and Omarchy, including unplugged-device behavior.
 - **Done when:** ordinary tasks work without using the terminal on both machines.

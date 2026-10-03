@@ -52,6 +52,11 @@ Next: design and implement a read-only local OpenMTBMap archive/IMG inspection c
 
 ## Session log
 
+### 2026-10-03 — Map role of route editors versus the companion app
+
+- Checked QMapShack's official IMG/map-path guidance, Viking's map-layer documentation, and OpenMTBMap's Garmin-device installation instructions. QMapShack can display OpenMTBMap-style IMG files on the desktop; Viking documents online and raster/offline tile maps rather than Garmin IMG. Neither was verified here as an IMG installer for the Edge 1000 or fēnix 5X.
+- Decision: use QMapShack for planning/viewing; add guarded transfer of user-downloaded OpenMTBMap maps to this app only after archive inspection and map-specific backup/recovery and device checks. Garmin-licensed maps remain with Express. Updated `docs/route-editors.md`, `docs/map-feasibility.md`, `PLAN.md`, and `STATUS.md`. No device was mounted or changed. The read-only OpenMTBMap archive-inspection command remains **Next**.
+
 ### 2026-10-03 — Linux route editor comparison
 
 - Compared current official QMapShack, Viking, GPXSee, and gpx.studio documentation with the project's tested Edge GPX and fēnix FIT course paths. Wrote `docs/route-editors.md`. QMapShack is the strongest candidate for offline map-backed editing; Viking is a simpler editor; GPXSee is mainly for viewing.
