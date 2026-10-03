@@ -52,6 +52,12 @@ Next: design and implement a read-only local OpenMTBMap archive/IMG inspection c
 
 ## Session log
 
+### 2026-10-03 — ZombieTrackerGPS download check
+
+- The old `https://www.zombietrackergps.net/repo/zombietrackergps.deb` URL returns HTTP 403. The project's current page, `https://www.zombietrackergps.net/ztgps/`, links to version 1.15 at `Downloads/1.15/zombietrackergps_1.15_amd64.deb`, which returns HTTP 200. Downloaded it to `/home/cbayschm/Downloads/zombietrackergps_1.15_amd64.deb`; SHA-256 matches the publisher's `sha256sums.txt` (`05b2909a79c15396736a6e0715cb159316df8f14b0180d2d3e17594ab7e8ed80`).
+- This is a GPX/TCX/FIT/KML track manager, not a Garmin map entitlement or firmware updater. Its 1.15 Debian package depends on Qt5 Marble (`libmarblewidget-qt5-28`), unavailable in this Kubuntu 26.04 package set. `apt-get -s install` failed on that dependency. The package was not installed; a source port or compatible older environment would be separate work. The project GitLab lists version 1.15 as its latest tag and publishes Qt5 build instructions.
+- Files changed: `STATUS.md`. The map feasibility follow-up marked **Next** remains the next Garmin Linux project step.
+
 ### 2026-10-03 — Map delivery and entitlement research
 
 - Incorporated the user's account context: OpenMTBMap is the principal map source; the user bought one Chile topographical Garmin map for the Edge. The installed Edge `D4172020A.img` has the matching embedded title **Topo Chile Deluxe 2014.20**, likely that purchase, though purchase records were not accessed.
