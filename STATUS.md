@@ -21,12 +21,12 @@ Last updated: 2026-10-03
 - The guarded fēnix command copied a distinct valid FIT course after a fresh verified backup and safe unmount. The user confirmed `Ruta Posible 1` appears under **Courses**.
 - `convert-gpx-course --file ...` creates a verified FIT course privately from one GPX route or single-segment track. Synthetic tests and a 556-point private GPX conversion passed Garmin's FIT decoder; the user confirmed that generated `GLinux Replay` appears under **Courses** on the fēnix 5X.
 - `docs/connect-sync-feasibility.md` maps activity and course flows. Local USB activity reading and course transfer are tested; Connect web/phone import, export, and send flows are documented but not yet tested in this account. Garmin's official Connect Developer Program is business-only and requires approval, so automatic account access is blocked for this personal app through that program.
-- `docs/firmware-feasibility.md` records live read-only main software fields: Edge 1000 `1550` (rendered 15.50) and fēnix 5X `2500` (rendered 25.00). Official Garmin update routes are documented; no update availability check or firmware write was performed.
+- `docs/firmware-feasibility.md` records live read-only main software fields: Edge 1000 `1550` (rendered 15.50) and fēnix 5X `2500` (rendered 25.00). The user synced the fēnix with Garmin Connect on a phone; it still showed 25.00 and no update prompt. After connecting to Wi‑Fi and restarting, the Edge explicitly reported "no updates available" at 15.50.
 - Garmin's exact-model download pages were reviewed. Edge 1000's public update page lists 15.50 via Express. The fēnix 5X US collection offers an older 24.71 beta while a separate APAC page lists 25.10. The user confirms this watch uses ROW firmware, so APAC 25.10 is not an update candidate. No matching production package with official checksum and tested recovery path was established for a Linux installer.
 
 ## Next
 
-Next: record the user's fēnix phone-sync and Edge Wi‑Fi update-check results, including any update prompt and displayed versions. Both connections are already set up, and the user has been given the device steps. A browser import of an activity missing from Connect, a real user-supplied course, map inventory, and Omarchy validation remain pending.
+Next: inventory the map products installed on the Edge 1000 internal storage and SD card and on the fēnix 5X, read-only, without copying map data into Git (milestone 6). A browser import of an activity missing from Connect, a real user-supplied course, and Omarchy validation remain pending.
 
 ## Completed
 
@@ -47,15 +47,15 @@ Next: record the user's fēnix phone-sync and Edge Wi‑Fi update-check results,
 - The fēnix 5X connector remains intermittent (`error -71` during USB enumeration on 2026-10-02). Several verified backups and small course writes succeeded once Mass Storage mounted stably. Prefer a reliable data cable/connector for future work; keep incomplete-copy detection.
 - All Omarchy tests remain pending. Both models now have complete selected-data backups on Kubuntu; maps, firmware, and other device folders are outside the current backup selection. A device restore procedure remains to be validated before offering restoration in the app.
 - Repository working name is `garmin-linux`; MIT license chosen for project code and documentation.
-- Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
+- No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Map delivery and licensing remain to be assessed in milestone 6.
 
 ## Session log
 
 ### 2026-10-03 — ROW confirmation and update-availability check underway
 
 - The user confirmed that the fēnix 5X uses ROW, not APAC, firmware. Updated the firmware note accordingly; the APAC 25.10 release is not a candidate for this watch.
-- The user confirmed the watch is paired with Garmin Connect on a phone and the Edge 1000 has Wi‑Fi set up. Checked Garmin's model manuals for fēnix manual sync and Edge Wi‑Fi updates, then provided the exact device steps. Awaiting the user's update-prompt and version observations. No device volume was mounted or written by the project.
-- Files changed: `docs/firmware-feasibility.md`, `STATUS.md`. Next action: record the user-reported result and decide whether the firmware gate is complete.
+- The user confirmed the watch is paired with Garmin Connect on a phone and the Edge 1000 has Wi‑Fi set up. Checked Garmin's model manuals for fēnix manual sync and Edge Wi‑Fi updates, then provided the exact device steps. The fēnix synced, showed 25.00, and gave no update prompt. The Edge connected to Wi‑Fi, then after restarting explicitly reported "no updates available" and showed 15.50. This completes the supported update-route check for main software; it does not establish the status of maps or all internal components. No device volume was mounted or written by the project.
+- Files changed: `docs/firmware-feasibility.md`, `PLAN.md`, `STATUS.md`. Next action: read-only installed-map inventory on Kubuntu.
 
 ### 2026-10-03 — Exact-model firmware package and recovery research
 

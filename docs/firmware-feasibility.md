@@ -7,7 +7,7 @@ Checked 2026-10-03 on Kubuntu. Both devices were mounted **read-only** one at a 
 | Edge 1000 | `1550` | `15.50` | Live read-only XML and complete backups agree. Garmin [announced Edge 1000 version 15.50](https://forums.garmin.com/sports-fitness/sports-fitness/f/edge1000/235062/new-edge-1000-version-15-50-now-available); the decimal rendering is inferred from that announcement. |
 | fēnix 5X | `2500` | `25.00` | Live read-only XML and complete backups agree. Garmin [announced fēnix 5 series version 25.00](https://forums.garmin.com/outdoor-recreation/outdoor-recreation-archive/f/fenix-5-series/286901/software-version-25-00), mentioning fēnix 5X component updates; the decimal rendering is inferred from that announcement. |
 
-The release announcements establish that these versions were publicly released. They do **not** establish whether newer updates are currently offered to these particular units or whether every component (GPS, sensor hub, maps) is current. The project has not queried Garmin Express or Garmin Connect for available updates.
+The release announcements establish that these versions were publicly released. They do **not** establish whether newer updates are currently offered to these particular units or whether every component (GPS, sensor hub, maps) is current. The later phone/Wi‑Fi check is recorded below; Garmin Express was not run.
 
 ## Supported update paths
 
@@ -41,4 +41,4 @@ The user confirms this fēnix 5X uses ROW firmware and is paired with Garmin Con
 2. Turn the Edge on near its saved Wi‑Fi network and confirm it connects. Garmin says [connected Wi‑Fi can download software](https://www8.garmin.com/manuals/webhelp/edge1000/EN-US/GUID-E17F9BDA-E382-414B-8198-7ED9C12BF63E.html) and prompt to install it on the next startup.
 3. Record any update prompt and each displayed software version after the check. A completed sync with no prompt does not, by itself, prove that every firmware component is current.
 
-Result: **awaiting the user's device-screen report**. No firmware availability or installation outcome is claimed yet.
+Result on 2026-10-03: the fēnix synced with the phone, showed **25.00**, and displayed no software-update prompt. The Edge connected to Wi‑Fi, then after a restart explicitly reported **“no updates available”** and showed **15.50**. This is a device-reported availability check for those main software versions, not proof that every sensor, GPS, or map component is current. No update was installed by the project.
