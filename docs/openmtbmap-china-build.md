@@ -1,38 +1,49 @@
-# Local OpenMTBMap China map build
+# Local OpenMTBMap China builds
 
-Verified on Kubuntu, 2026-10-03. This is a local build from the user's downloads, not an installation on a Garmin device.
+Verified on Kubuntu, 2026-10-03. These are local Garmin IMG builds from the user's downloads. No new IMG has been installed on either device.
 
-## How contours are stored
+## What the Windows installer does with contours
 
-The Windows installer accepts the separate `china_contours.7z` archive and selects contour tiles when assembling a device map. It does not need to redraw the contour data into the road/map tiles. The installed fēnix China IMG has 11 `6555` map tiles and 22 `7555` contour tiles inside one IMG container. Across the Edge's three China IMGs, there are 111 map tiles and 814 contour tiles. Two Edge containers hold contour tiles only; the third holds both. The new local images likewise place map and contour tiles in one container.
+The downloaded `mtbchina.exe` is an NSIS archive containing map tiles. The separate `china_contours.7z` contains 20 m contour tiles. When building an IMG, the selected contour tiles become separate subfiles **inside the same Garmin IMG container** as the selected map tiles; they are not redrawn into the map tiles. The older installed fēnix IMG contains both kinds of tile. Across the Edge's older three-part China set, two IMG files contain contours only and the third contains maps plus contours.
 
-## Inputs and compatibility
+## Inputs and method
 
-| Input | Role | SHA-256 |
+| Input | SHA-256 | Role |
 | --- | --- | --- |
-| `~/Downloads/mtbchina.exe` | NSIS archive containing 2026-09-19 China map tiles and TYP layouts | `51359ba44420f6ab74fca4f8256d5e58826e154c01f591323fe30b15be1b8a` |
-| `~/Downloads/china_contours.7z` | Separate 20 m contour tile archive dated 2021-07-11 | `5a64f3a8166f6fc3b8defb9dc5d29970c58ed6146cab0002657b694cca75bf07` |
+| `~/Downloads/mtbchina.exe` | `51359ba44420f6ab74fca4f8256d5e58826e154c01f591323fe30b15be1b8a` | 119 September 2026 China map tiles; fēnix and Edge layout TYP files |
+| `~/Downloads/china_contours.7z` | `5a64f3a8166f6fc3b8defb9dc5d29970c58ed6146cab0002657b694cca75bf07` | 814 contour tiles dated July 2021 |
 
-The inspected source map tile `65550103.LBL` declares code page **1252**, and both selected TYP files declare 1252. Thus the inspected tiles are non-Unicode. The download filename and current public download-page MD5 did not identify the archive variant reliably: the local EXE is newer than the public checksum page checked on 2026-10-03. The code page is direct evidence from the downloaded tile, but device loading remains untested. [OpenMTBMap says the Edge 1000 and devices introduced in 2016 or later need its non-Unicode maps](https://openmtbmap.org/download/odbl/).
+All 119 extracted map tiles declare code page **1252** in their LBL headers; the chosen `fenxcn.TYP` and `widecn.TYP` files also declare 1252. This is direct evidence that the extracted tiles are non-Unicode, the format [OpenMTBMap requires for the Edge 1000 and devices introduced from 2016 onward](https://openmtbmap.org/download/odbl/). A matching publisher checksum for this September EXE remains to be found; the public MD5 page checked on 2026-10-03 described an older download.
 
-The selected tiles match the older map's **fēnix region selection**, not all of China. The source map tile list is `65550093` and `65550101` through `65550110`. The contour tile list is `75550122`, `75550184`–`75550187`, `75550201`–`75550206`, `75550214`–`75550219`, `75550228`, `75550231`–`75550233`, and `75550238`. These were extracted by name with `7z e`; the Windows executable was never run. The fēnix build uses `fenxcn.TYP`, and the Edge build uses `widecn.TYP`, following the archive's embedded Linux instructions for those layouts. Both use family ID 6555 and product ID 1.
+The EXE was read with 7-Zip, never executed. The tiles were assembled with [mkgmap r4924](https://www.mkgmap.org.uk/download/mkgmap.html), `--gmapsupp`, `--code-page=1252`, family ID 6555, product ID 1, and the appropriate TYP. The map-bearing images include `--index`; contour-only Edge images do not need an address index. [OpenMTBMap documents this cross-platform mkgmap method](https://openmtbmap.org/about-2/archive/mkgmap/). Build inputs, tile bounding-box CSV, per-build manifests, logs, mkgmap, and output IMGs are under `~/Downloads/GarminMapBuild-China/`, outside Git.
 
-The files were assembled using [mkgmap r4924](https://www.mkgmap.org.uk/download/mkgmap.html) with `--gmapsupp --index --code-page=1252 --family-id=6555 --product-id=1` and the 33 named tiles plus the device layout TYP. [OpenMTBMap's mkgmap instructions](https://openmtbmap.org/about-2/archive/mkgmap/) describe this cross-platform approach. The downloaded mkgmap release, extracted tiles, build logs, and output images are under `~/Downloads/GarminMapBuild-China/`, outside Git.
+## fēnix 5X: Guangdong, Hong Kong, Macao
 
-## Results
+The user's intended watch region is around Shenzhen. We selected every tile intersecting a 20.0–25.6°N, 109.3–117.7°E bounding box. This deliberately includes some neighboring areas at the borders. The resulting IMG has **18 map tiles and 40 contour tiles**, including distinct `CN-Shenzhen`, `HK-Hong Kong`, and `MO-Macau` map tiles. Bounding-box checks found map and contour coverage at representative coordinates in all three places.
 
-| Target layout | Local output | Bytes | SHA-256 |
-| --- | --- | ---: | --- |
-| fēnix 5X | `~/Downloads/GarminMapBuild-China/fenix-subset/output/gmapsupp.img` | 388,734,976 | `bc0ecb98f58d700ebb4a6022712c00c0342ef27c87304e25bf70da92f45fc1e9` |
-| Edge 1000 | `~/Downloads/GarminMapBuild-China/edge-subset/output/gmapsupp.img` | 388,644,864 | `e59fdc38e321a0ab4dd6dc998d108632203c6ca25a3927ff079136f64d38c6ff` |
+| Output | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `~/Downloads/GarminMapBuild-China/fenix-guangdong-hk-macao/output/gmapsupp.img` | 674,889,728 | `01c19cae2fae955e9d2feee7323bcf465de6a1c14f6aec4582785dd470dd83c0` |
 
-Both mkgmap jobs exited successfully with zero reported map/exit exceptions. Independent IMG inspection found the exact 33 expected tile IDs in each output, including 11 map and 22 contour tiles, one TYP layout, and an MDR search index. Both outputs are below the FAT32 single-file limit. This establishes that the archives can be assembled into structurally valid Garmin IMG containers on Linux. It does **not** establish that the devices render the new maps, contours, search index, or routing correctly.
+The watch's internal VFAT volume is 14.6 GiB, with about 3.2 GiB free at the read-only check. The output is under the single-file limit and fits the reported free space. It must not coexist with the older China map because the family and tile IDs can overlap; preserving and replacing the old image requires a map-specific backup and recovery plan.
 
-## Next checks before transfer
+## Edge 1000: complete downloaded China tile set
 
-1. Verify source package identity against the matching publisher checksum for its September 2026 edition, if available; the currently linked public checksum describes an older file.
-2. Preview the built map and contours in a Garmin IMG viewer if one is available, or proceed to a controlled device test after a map-specific full backup and recovery plan.
-3. Do not load this trial alongside the installed China maps: the tile IDs and family ID overlap. On the Edge, the existing three-part China set covers much more territory than this 389 MB regional selection. Replacing that set with this trial would reduce coverage. The fēnix image is closest in tile selection, but its existing map should be preserved before any transfer.
-4. If the regional test passes, develop a split full-China build for the Edge with each IMG below FAT32's file limit. Check map and contour coverage and route continuity across the splits.
+All **119 map tiles and 814 contour tiles** from the two archives were included once across three IMG files. Splitting keeps each file below FAT32's 4 GiB single-file limit. Part 1 holds all map tiles and 109 contour tiles, plus the address index. Parts 2 and 3 hold the remaining contour tiles. Each part includes the Edge `widecn.TYP` layout. The older Edge China installation uses the same broad arrangement: multiple files, with some contour-only parts.
 
-No Garmin storage was written. Both devices were mounted read-only for comparison and unmounted after inspection.
+| Output | Map tiles | Contour tiles | Bytes | SHA-256 |
+| --- | ---: | ---: | ---: | --- |
+| `~/Downloads/GarminMapBuild-China/edge-full-china/part1/output/gmapsupp.img` | 119 | 109 | 3,069,313,024 | `69f8edb4823742c47e54cb23897ae58c8d3388614c83223b69a4aef43adfe046` |
+| `~/Downloads/GarminMapBuild-China/edge-full-china/part2/output/gmapsupp.img` | 0 | 330 | 3,144,417,280 | `01724a2053dee62441f46dc6d1ab87aaa591945571a173e363be5375278a7eb6` |
+| `~/Downloads/GarminMapBuild-China/edge-full-china/part3/output/gmapsupp.img` | 0 | 375 | 3,124,035,584 | `47172eb518d588ea90d8feeec506bc99fc12915967cafa5257707d0a4341a465` |
+
+The Edge's 29.8 GiB SD card had about 4.5 GiB free at the read-only check. The new 9.34 GB set will not fit alongside the older approximately 8.8 GB China set. A transfer would require a verified local backup of the older three files and a controlled replacement, with distinct final filenames for the new parts.
+
+## Verification and limits
+
+- All four corrected builds exited successfully with zero mkgmap map/exit exceptions. Independent IMG inspection matched every expected tile ID in each output, found the chosen TYP, and found an MDR index in each map-bearing output. The Edge tile sets are disjoint and their union is exactly the 933 extracted tiles.
+- File sizes and SHA-256 hashes were checked after the builds. Both Garmin volumes were mounted read-only for comparison and free-space checks, then unmounted. No device map was changed.
+- IMG structure, tile bounds, free space, and code page checks do **not** establish that either device renders the map, contours, search, or routing correctly. An on-device trial remains necessary after backup and recovery preparation.
+- The first exploratory images were assembled by reusing tile **numbers** from the older fēnix map. Those numbers had shifted in the new map edition, producing the wrong region. Their output files were renamed `SUPERSEDED_wrong_region.img`; they are not candidates for device transfer. The corrected watch selection uses geographic bounds and map names instead.
+
+Next: add a read-only archive/IMG inspector to the companion app, then prepare map-specific backups and a controlled fēnix and Edge acceptance test. Full device installation is not yet automated.
