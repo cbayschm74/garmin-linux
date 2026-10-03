@@ -72,7 +72,7 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 
 ### 5. Firmware feasibility gate
 
-- [ ] Record installed firmware versions and available official update paths for each exact model.
+- [x] Record the observed main software version fields for both exact models from live read-only XML and complete backups, and document official update paths. Availability of a newer update was not checked.
 - [ ] Test the supported phone or Wi-Fi update route, if the user wants to use it, and provide clear instructions in the app.
 - [ ] Investigate whether Garmin publishes a model-specific downloadable firmware package and checksum. Only offer local installation if the official source, model match, and recovery path are established.
 - **Done when:** the app can report device versions and direct the user to a verified update method. Automatic Express-like firmware delivery remains out of scope unless a supported source is established.

@@ -1,6 +1,6 @@
 # Garmin Linux companion: session status
 
-Last updated: 2026-10-02
+Last updated: 2026-10-03
 
 ## Current state
 
@@ -21,10 +21,11 @@ Last updated: 2026-10-02
 - The guarded fēnix command copied a distinct valid FIT course after a fresh verified backup and safe unmount. The user confirmed `Ruta Posible 1` appears under **Courses**.
 - `convert-gpx-course --file ...` creates a verified FIT course privately from one GPX route or single-segment track. Synthetic tests and a 556-point private GPX conversion passed Garmin's FIT decoder; the user confirmed that generated `GLinux Replay` appears under **Courses** on the fēnix 5X.
 - `docs/connect-sync-feasibility.md` maps activity and course flows. Local USB activity reading and course transfer are tested; Connect web/phone import, export, and send flows are documented but not yet tested in this account. Garmin's official Connect Developer Program is business-only and requires approval, so automatic account access is blocked for this personal app through that program.
+- `docs/firmware-feasibility.md` records live read-only main software fields: Edge 1000 `1550` (rendered 15.50) and fēnix 5X `2500` (rendered 25.00). Official Garmin update routes are documented; no update availability check or firmware write was performed.
 
 ## Next
 
-Next: inventory installed firmware versions for the Edge 1000 and fēnix 5X and identify their official update routes (milestone 5), without writing firmware. A browser import of an activity missing from Connect, a real user-supplied course, and Omarchy validation remain pending.
+Next: investigate Garmin's exact-model firmware download pages for production packages, official checksums, and recovery instructions (milestone 5), without downloading to or writing either device. A phone/Wi‑Fi update availability check, a browser import of an activity missing from Connect, a real user-supplied course, and Omarchy validation remain pending.
 
 ## Completed
 
@@ -48,6 +49,12 @@ Next: inventory installed firmware versions for the Edge 1000 and fēnix 5X and 
 - Official Garmin map and firmware delivery APIs for a personal Linux client have not been found. Resolve through milestones 5 and 6 rather than assuming availability.
 
 ## Session log
+
+### 2026-10-03 — Read-only firmware version inventory and official routes
+
+- Both connected devices were mounted one at a time read-only on Kubuntu. `GarminDevice.xml` identified the Edge 1000 with raw `SoftwareVersion=1550` and the fēnix 5X with `2500`. These agree with their complete backup manifests. Both volumes were safely unmounted. No device file was changed.
+- Garmin's model manuals document Edge 1000 updates through Express or previously configured Wi‑Fi, and fēnix 5X updates through a paired Connect phone app, Express, or Wi‑Fi on some variants. Garmin offers Express for Windows and Mac, not Linux. Public Garmin release notices correspond to 15.50 and 25.00, but current update availability has not been queried.
+- Verification: checked the mount flags, XML fields, backup manifest fields, and Garmin primary sources. Wrote `docs/firmware-feasibility.md`; updated `PLAN.md`, `README.md`, and `STATUS.md`. Next action: exact-model production firmware source/checksum and recovery research.
 
 ### 2026-10-02 — Activity and course sync feasibility
 
