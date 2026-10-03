@@ -2,7 +2,7 @@
 
 An early-stage, unofficial Linux companion for Garmin devices. The first targets are the Edge 1000 and fēnix 5X on Kubuntu and Omarchy 4.0.4-1.
 
-The project will start with safe USB detection, backups, activity files, and courses. Garmin Connect integration, firmware delivery, and licensed map downloads each require separate feasibility checks; see [PLAN.md](PLAN.md). The [Connect sync assessment](docs/connect-sync-feasibility.md) records account paths and API limits; the [firmware assessment](docs/firmware-feasibility.md) records observed device versions and official update routes. This project is not affiliated with Garmin.
+The project will start with safe USB detection, backups, activity files, and courses. Garmin Connect integration, firmware delivery, and licensed map downloads each require separate feasibility checks; see [PLAN.md](PLAN.md). The [Connect sync assessment](docs/connect-sync-feasibility.md) records account paths and API limits; the [firmware assessment](docs/firmware-feasibility.md) records observed device versions and official update routes; the [map assessment](docs/map-feasibility.md) covers Garmin Express and user-downloaded OpenMTBMap maps. This project is not affiliated with Garmin.
 
 ## Current state
 

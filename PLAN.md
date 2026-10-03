@@ -80,10 +80,10 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 ### 6. Maps feasibility gate
 
 - [x] Inventory installed IMG files and embedded map names/versions on both devices, read-only. See `docs/map-inventory.md`.
-- [ ] Identify which map updates are free, purchased, or device licensed using documented sources or account evidence; do not infer entitlement from files.
-- [ ] Check official Garmin delivery methods for these exact models and whether a Linux-accessible, documented entitlement/download path exists.
-- [ ] If not, document a practical Express-on-Windows option and separately assess legal, user-supplied map alternatives without presenting them as Garmin map updates.
-- **Done when:** each map type has an honest supported update route or a recorded blocker. No automated Garmin map download is claimed without a documented or authorized interface.
+- [x] Classify known map sources and update terms; explicitly mark account-specific Garmin entitlements and offers unknown. The user reports an OpenMTBMap account and one purchased Chile topo map. See `docs/map-feasibility.md`.
+- [x] Check documented Garmin delivery methods for the Edge 1000 and ROW fēnix 5X. Express is the documented map entitlement/update route; no personal Linux Garmin map download interface was established.
+- [x] Document a practical Express-on-Windows-or-Mac check and separately assess user-downloaded OpenMTBMap/VeloMap updates on Linux.
+- **Gate result:** Garmin-branded maps use Express for account/device-specific offers, with the purchased Chile topo map requiring a new purchase for newer content if available. OpenMTBMap member IMG archives offer a Linux path for user-supplied updates. No automated Garmin map download is claimed. Actual account offers remain untested.
 
 ### 7. Desktop app
 

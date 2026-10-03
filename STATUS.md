@@ -23,11 +23,11 @@ Last updated: 2026-10-03
 - `docs/connect-sync-feasibility.md` maps activity and course flows. Local USB activity reading and course transfer are tested; Connect web/phone import, export, and send flows are documented but not yet tested in this account. Garmin's official Connect Developer Program is business-only and requires approval, so automatic account access is blocked for this personal app through that program.
 - `docs/firmware-feasibility.md` records live read-only main software fields: Edge 1000 `1550` (rendered 15.50) and fēnix 5X `2500` (rendered 25.00). The user synced the fēnix with Garmin Connect on a phone; it still showed 25.00 and no update prompt. After connecting to Wi‑Fi and restarting, the Edge explicitly reported "no updates available" at 15.50.
 - Garmin's exact-model download pages were reviewed. Edge 1000's public update page lists 15.50 via Express. The fēnix 5X US collection offers an older 24.71 beta while a separate APAC page lists 25.10. The user confirms this watch uses ROW firmware, so APAC 25.10 is not an update candidate. No matching production package with official checksum and tested recovery path was established for a Linux installer.
-- Read-only map inventory found 28 IMG files across Edge 1000 internal/SD and fēnix 5X internal storage. Embedded IMG names and versions are recorded in `docs/map-inventory.md`. Entitlements and update availability remain unverified.
+- Read-only map inventory found 28 IMG files across Edge 1000 internal/SD and fēnix 5X internal storage. Embedded IMG names and versions are recorded in `docs/map-inventory.md`. `docs/map-feasibility.md` records Garmin and OpenMTBMap delivery paths. The user has an OpenMTBMap account and reports one purchased Edge Chile topo map; actual account-specific update offers remain unverified.
 
 ## Next
 
-Next: research Garmin's documented map delivery and entitlement paths for the Edge 1000 and ROW fēnix 5X, then classify installed map families only where the source or user's account supports it (milestone 6). A browser import of an activity missing from Connect, a real user-supplied course, and Omarchy validation remain pending.
+Next: design and implement a read-only local OpenMTBMap archive/IMG inspection command on Kubuntu, using user-downloaded files and no account credentials or device writes. Then validate it on a real archive supplied through the user's OpenMTBMap account. A Garmin Express account-specific map-offer check on Windows/Mac, a browser activity import, a real user-supplied course, and Omarchy validation remain pending.
 
 ## Completed
 
@@ -48,9 +48,15 @@ Next: research Garmin's documented map delivery and entitlement paths for the Ed
 - The fēnix 5X connector remains intermittent (`error -71` during USB enumeration on 2026-10-02). Several verified backups and small course writes succeeded once Mass Storage mounted stably. Prefer a reliable data cable/connector for future work; keep incomplete-copy detection.
 - All Omarchy tests remain pending. Both models now have complete selected-data backups on Kubuntu; maps, firmware, and other device folders are outside the current backup selection. A device restore procedure remains to be validated before offering restoration in the app.
 - Repository working name is `garmin-linux`; MIT license chosen for project code and documentation.
-- No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Map delivery and licensing remain to be assessed in milestone 6.
+- No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-03 — Map delivery and entitlement research
+
+- Incorporated the user's account context: OpenMTBMap is the principal map source; the user bought one Chile topographical Garmin map for the Edge. The installed Edge `D4172020A.img` has the matching embedded title **Topo Chile Deluxe 2014.20**, likely that purchase, though purchase records were not accessed.
+- Checked Garmin's official Edge map, purchased-map, watch-map, and Express guidance and OpenMTBMap's own Linux/IMG download instructions. Garmin says supplemental purchased maps do not get newer content as free updates and Cycle Maps were discontinued in 2025; account-specific offers must be checked in Express. OpenMTBMap offers member IMG archives and an explicitly documented Linux transfer route, including Non Unicode maps for Edge 1000. No documented personal Linux Garmin map entitlement/download interface was established.
+- Wrote `docs/map-feasibility.md` with a map-family route table, limits, and a plan for user-downloaded archive inspection. No account was accessed, map downloaded, or device mounted/written. Files changed: `docs/map-feasibility.md`, `PLAN.md`, `STATUS.md`, `README.md`. Next action: local read-only OpenMTBMap archive/IMG inspection command.
 
 ### 2026-10-03 — Read-only installed-map inventory
 
