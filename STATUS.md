@@ -52,6 +52,12 @@ Next: design and implement a read-only local OpenMTBMap archive/IMG inspection c
 
 ## Session log
 
+### 2026-10-03 — Linux route editor comparison
+
+- Compared current official QMapShack, Viking, GPXSee, and gpx.studio documentation with the project's tested Edge GPX and fēnix FIT course paths. Wrote `docs/route-editors.md`. QMapShack is the strongest candidate for offline map-backed editing; Viking is a simpler editor; GPXSee is mainly for viewing.
+- Ubuntu 26.04 APT offers QMapShack 1.20.0 and Viking 1.11, and dependency simulations resolve for both. Upstream QMapShack is at 1.21.1. No editor was installed and no Garmin device was mounted or changed.
+- Files changed: `docs/route-editors.md`, `STATUS.md`, `README.md`. The OpenMTBMap archive-inspection step remains **Next**; an optional hands-on editor trial can be scheduled separately.
+
 ### 2026-10-03 — ZombieTrackerGPS download check
 
 - The old `https://www.zombietrackergps.net/repo/zombietrackergps.deb` URL returns HTTP 403. The project's current page, `https://www.zombietrackergps.net/ztgps/`, links to version 1.15 at `Downloads/1.15/zombietrackergps_1.15_amd64.deb`, which returns HTTP 200. Downloaded it to `/home/cbayschm/Downloads/zombietrackergps_1.15_amd64.deb`; SHA-256 matches the publisher's `sha256sums.txt` (`05b2909a79c15396736a6e0715cb159316df8f14b0180d2d3e17594ab7e8ed80`).
