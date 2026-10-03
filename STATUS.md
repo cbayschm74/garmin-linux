@@ -28,7 +28,7 @@ Last updated: 2026-10-03
 
 ## Next
 
-Next: implement a read-only local OpenMTBMap archive/IMG inspection command on Kubuntu. Validate it on `~/Downloads/mtbchina.exe`, `china_contours.7z`, the corrected Guangdong/HK/Macao watch IMG, and all three full-China Edge IMGs. Report archive-versus-ready-IMG, map/contour tile counts, code page, family ID, size, and SHA-256 without account credentials or device writes. Then design a map-specific backup/recovery flow and controlled on-device trial. The old Edge China set must be removed to fit the new one on SD, but only after a verified local backup and a tested recovery procedure. A Garmin Express account-specific map-offer check on Windows/Mac, a browser activity import, a real user-supplied course, and Omarchy validation remain pending.
+Next: finish the active read-only map backup at `~/Downloads/GarminMapBuild-China/device-backups/20261003T043417Z`. A `COMPLETE` marker and `manifest.json` appear only after all four Edge China files and the fēnix China file have been copied and SHA-256 verified. The user asked to pause Codex usage while the slow USB copy continues. **Do not remove old maps or install new ones until the backup marker and manifest are checked.** Then resume the authorized guarded replacement and have the user check map enable/disable lists and rendering. The read-only archive/IMG inspection command, Garmin Express account check, browser activity import, real user-supplied course, and Omarchy validation remain pending.
 
 ## Completed
 
@@ -52,6 +52,13 @@ Next: implement a read-only local OpenMTBMap archive/IMG inspection command on K
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-03 — Device map backup started; installation pending
+
+- With both devices connected, confirmed Edge internal `/dev/sdj` (UUID `C20C-CA3D`), Edge SD `/dev/sdk1` (UUID `9016-4EF8`), and fēnix internal `/dev/sdl` (UUID `DC51-1EC5`). All three volumes were mounted read-only. The Edge SD also has a 2023 `china_gmapsupp.img` that shares tile IDs with the newer China set; it is included in the four-file Edge backup.
+- Started a local backup of those four Edge China IMGs and the one fēnix China IMG into `~/Downloads/GarminMapBuild-China/device-backups/20261003T043417Z`. The script checks mount identity and SHA-256 of each copied file and will write `manifest.json` and `COMPLETE` only after all five pass. The 2023 Edge IMG has passed; the largest 2026 Edge IMG is currently copying slowly over USB 2.0. A detached read-only watchdog at `~/Downloads/GarminMapBuild-China/device-backups/watch_backup.sh` observes the copy; if the active process stops before `COMPLETE`, it restarts a fresh backup in a new timestamped directory. Check `watchdog.log` and locate the latest complete backup on return.
+- No device files have been removed or written. The new map installation has **not** started. The user asked to pause assistant polling to conserve Codex usage while the backup proceeds. On return, check for the marker, manifest, process state, and mount state before any transfer.
+- Files changed: `STATUS.md`.
 
 ### 2026-10-03 — Corrected watch region and built full China for Edge
 
