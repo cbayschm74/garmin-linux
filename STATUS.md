@@ -27,7 +27,7 @@ Last updated: 2026-10-03
 
 ## Next
 
-Next: design and implement a read-only local OpenMTBMap archive/IMG inspection command on Kubuntu, using user-downloaded files and no account credentials or device writes. Then validate it on a real archive supplied through the user's OpenMTBMap account. A Garmin Express account-specific map-offer check on Windows/Mac, a browser activity import, a real user-supplied course, and Omarchy validation remain pending.
+Next: design and implement a read-only local OpenMTBMap archive/IMG inspection command on Kubuntu. Validate it on the existing `~/Downloads/mtbchina.exe` and `china_contours.7z`, distinguishing tile packages that need assembly from ready-to-copy IMG downloads. No account credentials or device writes. A Garmin Express account-specific map-offer check on Windows/Mac, a browser activity import, a real user-supplied course, and Omarchy validation remain pending.
 
 ## Completed
 
@@ -51,6 +51,12 @@ Next: design and implement a read-only local OpenMTBMap archive/IMG inspection c
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-03 — Inspected downloaded OpenMTBMap China packages without execution
+
+- `file` identifies `~/Downloads/mtbchina.exe` as a Windows NSIS self-extracting installer (about 1.4 GB), but 7-Zip lists its archive contents on Linux: 125 IMG entries, desktop mapset support, and embedded Linux instructions. No prebuilt `gmapsupp.img` or bundled Linux script was found. The instructions describe assembling a device IMG with Java `mkgmap`; OpenMTBMap's own download page says 7-Zip extraction on Linux is supported.
+- `~/Downloads/china_contours.7z` (about 6.1 GB) is a standard archive with 815 IMG entries and 20 m contour data dated 2021-07-11. It is an optional tile package, not a device-ready image. Neither archive was fully extracted or run; no device was mounted or written.
+- Added the package distinction to `docs/map-feasibility.md` and made the two real archives the next inspector test cases. Files changed: `docs/map-feasibility.md`, `STATUS.md`.
 
 ### 2026-10-03 — Map role of route editors versus the companion app
 
