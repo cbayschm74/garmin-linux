@@ -1,6 +1,6 @@
 # Garmin Linux companion: session status
 
-Last updated: 2026-10-03
+Last updated: 2026-10-04
 
 ## Current state
 
@@ -28,7 +28,7 @@ Last updated: 2026-10-03
 
 ## Next
 
-Next: monitor the detached, guarded map replacement recorded in `~/Downloads/GarminMapBuild-China/device-backups/20261003T054513Z/install.log`. The complete five-file backup and manifest are in that directory. The transfer is started, but an `INSTALL_COMPLETE` marker exists only after both new map sets have been copied, SHA-256 verified, and safely unmounted; `INSTALL_FAILED` records a stop needing recovery. **Do not disconnect either Garmin before the transfer result has been checked.** When complete, ask the user to check map enable/disable lists and rendering. The read-only archive/IMG inspection command, Garmin Express account check, browser activity import, real user-supplied course, and Omarchy validation remain pending.
+Next: monitor the running Edge SD transfer (`resume_edge_install.py`, process 24338 at 2026-10-04 11:56 local time) and inspect `EDGE_INSTALL_COMPLETE` or `EDGE_INSTALL_FAILED` in `~/Downloads/GarminMapBuild-China/device-backups/20261003T054513Z`. The SD card writes slowly, so leave it connected until the script has verified all three parts and unmounted it. Then reconnect read-only, check the three final IMG files and absence of old/partial China maps, and ask the user to confirm the new maps appear in the Edge's map enable/disable list. The fēnix Guangdong IMG has already been hash-verified on the device; ask the user to confirm its map list too. For Edge Wi‑Fi after factory reset, try on-device **Settings → Wi‑Fi → Add Network**; Garmin's manual also documents Express-based initial setup. The archive/IMG inspection command, Garmin Express account check, browser activity import, real user-supplied course, and Omarchy validation remain pending.
 
 ## Completed
 
@@ -52,6 +52,15 @@ Next: monitor the detached, guarded map replacement recorded in `~/Downloads/Gar
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-04 — USB hub interruption and Edge reset
+
+- User reports the Orico USB hub disconnected all USB devices during yesterday's map transfer. `install.log` confirms the new fēnix Guangdong IMG was staged and hash-verified, the old fēnix China IMG removed, the new IMG installed, and the watch safely unmounted. The Edge failed with `OSError: [Errno 5] Input/output error` at about 2.1 GB into the `.partial` copy of part 1; the script had not reached its old-Edge-file removal step. `INSTALL_FAILED` exists; `INSTALL_COMPLETE` does not.
+- The fēnix `/dev/sdj` (UUID `DC51-1EC5`) was mounted read-only and its new 674,889,728-byte IMG on the watch passed full SHA-256 verification (`01c19cae2fae955e9d2feee7323bcf465de6a1c14f6aec4582785dd470dd83c0`).
+- User reconnected the Edge. Edge internal `/dev/sdk` (UUID `C20C-CA3D`) and SD `/dev/sdl1` (UUID `9016-4EF8`) were detected on the same USB device. All four original Edge China IMGs were still present at expected sizes; only the interrupted 2,366,853,120-byte `.partial` file was additional. The read-only UDisks filesystem check returned inconsistent. UDisks repair succeeded, and a second check returned consistent. The SD was mounted read-only for file inspection, then remounted read-write for the guarded resume.
+- New private `~/Downloads/GarminMapBuild-China/device-backups/resume_edge_install.py` checks the complete backup and all new source SHA-256 hashes, current SD UUID/mount, original files, and the exact interrupted partial before deleting the partial. It stages each replacement, flushes and hashes the device copy, removes the four backed-up originals only after part 1 verifies, and unmounts the card after all three parts. It was started on 2026-10-04. Preflight passed; the interrupted partial was removed; part 1 copy reached its full size and is still flushing to the SD at roughly 1–2 MB/s. No old file has been removed yet at this point. Process 24338; check `ps` and the completion/failure marker before claiming success.
+- The user factory-reset the Edge after Bluetooth pairing trouble. Garmin's Edge 1000 manual documents an on-device **Settings → Wi‑Fi → Add Network** flow, while its setup page directs initial Wi‑Fi configuration through Garmin Express. No Wi‑Fi settings file has been written from Linux.
+- Files changed: `STATUS.md`.
 
 ### 2026-10-03 — Recovered map backup and started guarded replacement
 
