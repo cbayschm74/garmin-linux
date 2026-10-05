@@ -1,6 +1,6 @@
 # Garmin Linux companion: project plan
 
-Last updated: 2026-10-03
+Last updated: 2026-10-05
 
 ## Goal
 
@@ -85,11 +85,13 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 - [x] Document a practical Express-on-Windows-or-Mac check and separately assess user-downloaded OpenMTBMap/VeloMap updates on Linux.
 - [x] Prove Linux assembly of map and contour tiles for both layouts; the first number-based geographic selection was superseded after tile names showed the region had shifted. See `docs/openmtbmap-china-build.md`.
 - [x] Correct the watch selection by geographic bounds for Guangdong/Hong Kong/Macao and assemble the entire downloaded China map plus contours into three FAT32-sized Edge IMGs. See `docs/openmtbmap-china-build.md`.
+- [x] Back up and install those OpenMTBMap China builds; user confirmed both the Edge 1000 and fēnix 5X load the new maps. See `docs/openmtbmap-china-build.md`.
 - **Gate result:** Garmin-branded maps use Express for account/device-specific offers, with the purchased Chile topo map requiring a new purchase for newer content if available. OpenMTBMap member IMG archives offer a Linux path for user-supplied updates. No automated Garmin map download is claimed. Actual account offers remain untested.
 
 ### 7. Desktop app
 
 - [ ] Build a small GUI over the tested core: device status, backup, activities, courses, and update guidance.
+- [x] Add a read-only local archive/IMG inspector with file size, checksum, tile counts, and ready-IMG detection. Verified against the user's China downloads and corrected fēnix build.
 - [ ] Add guarded installation of user-downloaded OpenMTBMap IMG files after archive inspection, map-specific backup/recovery design, and on-device validation for each model. QMapShack can display these IMG maps for planning; it is not the project's map transfer path. Keep Garmin-licensed map delivery in Express.
 - [ ] Keep long operations cancellable and show their result and destination.
 - [ ] Package and smoke-test on Kubuntu and Omarchy, including unplugged-device behavior.

@@ -33,6 +33,9 @@ def main() -> int:
     inspect_command = commands.add_parser("inspect-course", help="preview a local GPX or FIT course")
     inspect_command.add_argument("--file", required=True, type=Path)
     inspect_command.add_argument("--json", action="store_true", help="print full preview")
+    map_command = commands.add_parser("inspect-map", help="preview a local Garmin IMG or map archive without extracting it")
+    map_command.add_argument("--file", required=True, type=Path)
+    map_command.add_argument("--json", action="store_true", help="print full preview")
     import_command = commands.add_parser("import-edge-course", help="back up and copy a GPX course to a mounted Edge 1000")
     import_command.add_argument("--volume", required=True, help="current Edge internal volume path from scan")
     import_command.add_argument("--file", required=True, type=Path, help="local GPX route or track")
@@ -124,6 +127,22 @@ def main() -> int:
                     print(f"Laps: {preview['laps']}; records: {preview['record_points']}; distance: {preview['distance_meters']} m")
                 else:
                     print(f"Routes: {preview['routes']} ({preview['route_points']} points); tracks: {preview['tracks']} ({preview['track_points']} points); waypoints: {preview['waypoints']}")
+        elif args.command == 'inspect-map':
+            from .map_inspect import inspect_map
+            preview = inspect_map(args.file)
+            if args.json:
+                print(json.dumps(preview, indent=2))
+            elif preview['kind'] == 'garmin_img':
+                print(f"Garmin IMG: {preview['header_label'] or 'unnamed'}")
+                print(f"Size: {preview['size_bytes']} bytes; fits FAT32 single-file limit: {preview['fits_fat32_single_file']}")
+                print(f"SHA-256: {preview['sha256']}")
+                print(preview['note'])
+            else:
+                print(f"{preview['archive_type']} archive: {preview['member_count']} members, {preview['img_count']} IMG files")
+                print(f"Numbered tiles: {preview['numbered_tile_count']}; ready gmapsupp.img entries: {preview['ready_gmapsupp_count']}")
+                print(f"Encrypted members: {preview['encrypted_member_count']}; size: {preview['size_bytes']} bytes")
+                print(f"SHA-256: {preview['sha256']}")
+                print(preview['note'])
         elif args.command == 'import-edge-course':
             from .import_course import import_edge_gpx
             result = import_edge_gpx(args.volume, args.file, args.backups)

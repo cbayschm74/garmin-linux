@@ -4,7 +4,7 @@ Last updated: 2026-10-05
 
 ## Current state
 
-- Git repository, documentation, and a read-only USB detector now exist. The Edge 1000 has two verified GPX test imports. The fēnix 5X GPX test did not become a course, but its FIT course test appeared under **Courses**. No other device data was changed by this project.
+- Git repository, documentation, and a read-only USB detector now exist. The Edge 1000 has two verified GPX test imports. The fēnix 5X GPX test did not become a course, but its FIT course test appeared under **Courses**. The user's authorized OpenMTBMap China maps were installed and confirmed to load on both devices.
 - Target desktops: Kubuntu on the current machine; Omarchy 4.0.4-1 on the laptop.
 - Target devices: Garmin Edge 1000 and fēnix 5X.
 - Edge 1000 inspected on Kubuntu with both USB volumes mounted read-only. See `docs/device-compatibility.md`. Re-detect volume paths before every later use.
@@ -24,11 +24,12 @@ Last updated: 2026-10-05
 - `docs/firmware-feasibility.md` records live read-only main software fields: Edge 1000 `1550` (rendered 15.50) and fēnix 5X `2500` (rendered 25.00). The user synced the fēnix with Garmin Connect on a phone; it still showed 25.00 and no update prompt. After connecting to Wi‑Fi and restarting, the Edge explicitly reported "no updates available" at 15.50.
 - Garmin's exact-model download pages were reviewed. Edge 1000's public update page lists 15.50 via Express. The fēnix 5X US collection offers an older 24.71 beta while a separate APAC page lists 25.10. The user confirms this watch uses ROW firmware, so APAC 25.10 is not an update candidate. No matching production package with official checksum and tested recovery path was established for a Linux installer.
 - Read-only map inventory found 28 IMG files across Edge 1000 internal/SD and fēnix 5X internal storage. Embedded IMG names and versions are recorded in `docs/map-inventory.md`. `docs/map-feasibility.md` records Garmin and OpenMTBMap delivery paths. The user has an OpenMTBMap account and reports one purchased Edge Chile topo map; actual account-specific update offers remain unverified.
-- Corrected local OpenMTBMap China builds were installed: a 675 MB fēnix IMG covering Guangdong/Hong Kong/Macao (18 map and 40 contour tiles) and a three-part, 9.34 GB full-China Edge set (all 119 map and 814 contour tiles). The Edge loaded its new map successfully, as confirmed by the user. The fēnix IMG is hash-verified on the watch but awaits its map-menu check. The first trial reused old tile IDs that had shifted geographic meaning in the new edition; its outputs were renamed `SUPERSEDED_wrong_region.img`. Builds and verified old-map backups remain in `~/Downloads/GarminMapBuild-China/`. See `docs/openmtbmap-china-build.md`.
+- Corrected local OpenMTBMap China builds were installed: a 675 MB fēnix IMG covering Guangdong/Hong Kong/Macao (18 map and 40 contour tiles) and a three-part, 9.34 GB full-China Edge set (all 119 map and 814 contour tiles). The user confirmed both maps load and the fēnix map renders. The first trial reused old tile IDs that had shifted geographic meaning in the new edition; its outputs were renamed `SUPERSEDED_wrong_region.img`. Builds and verified old-map backups remain in `~/Downloads/GarminMapBuild-China/`. See `docs/openmtbmap-china-build.md`.
+- `inspect-map --file` now previews local Garmin IMG headers or lists `.exe`, `.7z`, and `.zip` archives read-only with 7-Zip. It reports SHA-256, sizes, tile counts, and whether a ready `gmapsupp.img` candidate is present; no archive is executed or extracted. Verified against the user's China downloads and corrected fēnix and Edge images.
 
 ## Next
 
-Next: obtain the user's fēnix 5X map-menu/rendering result. On the watch, use START → Map, hold MENU, select Map Settings → Map → Configure Maps, enable the new OpenMTBMap China/Guangdong entry, and inspect the map around Shenzhen. The watch was safely unmounted and disconnected on 2026-10-05; its installed IMG already passed SHA-256 verification. If the map appears and renders, mark the acceptance test complete, then implement the read-only archive/IMG inspector as the next Kubuntu app step. If it is absent or blank, investigate map metadata and device logs without changing the verified backup. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: implement a reusable map-specific backup command for explicitly selected Garmin IMG files on a confirmed volume. It should save a private manifest with size/SHA-256, reject backup destinations on Garmin volumes, and leave the device untouched. Verify with synthetic files and a local dry run before designing guarded map installation and disconnect recovery. Both map acceptance checks and the read-only archive/IMG inspector are complete. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -52,6 +53,14 @@ Next: obtain the user's fēnix 5X map-menu/rendering result. On the watch, use S
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-05 — both map checks complete; read-only inspector
+
+- User confirmed the new Guangdong/Hong Kong/Macao map loads and renders correctly on the fēnix 5X. Both device map acceptance checks are now complete. Contour detail, search, and routing were not separately tested.
+- Added `inspect-map --file` for local `.img`, `.exe`, `.7z`, and `.zip` files. IMG preview reads the Garmin header label and reports size, SHA-256, and FAT32 single-file fit. Archive preview uses `7z l -slt`, without extraction or execution, to count members, IMG entries, numbered tiles, ready `gmapsupp.img` candidates, and encrypted members. JSON and text output are available. It does not assert map compatibility or publisher authenticity.
+- Live read-only checks: `mtbchina.exe` is an NSIS installer with 125 IMG entries, 119 numbered tiles, and no ready `gmapsupp.img`; `china_contours.7z` has 815 IMG entries, 814 numbered tiles, and no ready `gmapsupp.img`. The corrected fēnix and Edge part 1 images report expected Garmin labels, sizes, and SHA-256 hashes. This exposed a two-character omission in the documented EXE hash; corrected it to the actual 64-character digest. The contour archive hash matched its documentation.
+- `python3 -m unittest discover -s tests -v` passed all 18 tests, including two new inspector checks. No device file was read or changed in this session.
+- Files changed: `garmin_companion/map_inspect.py`, `garmin_companion/__main__.py`, `tests/test_map_inspect.py`, `README.md`, `PLAN.md`, `docs/openmtbmap-china-build.md`, `STATUS.md`.
 
 ### 2026-10-05 — fēnix map acceptance check requested
 

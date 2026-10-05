@@ -99,6 +99,18 @@ To turn a local GPX route into a FIT course for the fēnix, run:
 
 The verified FIT file is saved privately under `~/GarminBackups/ForDevice`. Use its printed path with `import-fenix-course` after reconnecting and mounting the watch. Conversion accepts one route or one track with one segment, containing 2 to 10,000 valid coordinates. It preserves the route shape and a name of up to 15 characters; it calculates distance and estimated pacing. GPX timestamps, elevation, waypoints, and turn cues are not carried into the FIT file. Garmin's [FIT course specification](https://developer.garmin.com/fit/file-types/course/) defines the required messages. The user confirmed one generated course, `GLinux Replay`, appears under **Courses** on the fēnix 5X after import.
 
+## Local map inspection
+
+The read-only `inspect-map` command previews a downloaded `.exe`, `.7z`, or `.zip` archive with 7-Zip, or a Garmin `.img` file by reading its header. It never executes or extracts an installer, mounts a device, or copies a map. Install the system `7z` command for archive previews.
+
+```sh
+python3 -m garmin_companion inspect-map --file ~/Downloads/mtbchina.exe
+python3 -m garmin_companion inspect-map --file ~/Downloads/china_contours.7z --json
+python3 -m garmin_companion inspect-map --file /path/to/gmapsupp.img
+```
+
+Archive previews count IMG entries, numbered map tiles, and ready `gmapsupp.img` candidates. IMG previews show the header label, byte size, SHA-256, and whether the file is below FAT32's single-file limit. The checksum identifies the local file; compare it with a trusted publisher checksum if one is available. A recognized header or archive entry does not establish map coverage, contour quality, device compatibility, or a right to install it. The verified China build and on-device results are in [docs/openmtbmap-china-build.md](docs/openmtbmap-china-build.md).
+
 ## Privacy and device safety
 
 - Do not commit real activities, routes, device XML, serial numbers, credentials, maps, or firmware.
