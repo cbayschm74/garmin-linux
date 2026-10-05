@@ -8,7 +8,7 @@ For planning and viewing tracks alongside this app, see the [Linux route editor 
 
 ## Current state
 
-The command-line core can detect and back up both devices, summarize activities, and transfer courses through model-specific USB paths. A first read-only desktop screen shows current device status; its other sections are navigation placeholders. See [STATUS.md](STATUS.md) for the next step and [docs/device-compatibility.md](docs/device-compatibility.md) for observed hardware details.
+The command-line core can detect and back up both devices, summarize activities, and transfer courses through model-specific USB paths. The desktop app shows devices, verified backups, activities, courses, and local map inspection. Its current pages read existing data; device transfers remain CLI commands. See [STATUS.md](STATUS.md) for the next step and [docs/device-compatibility.md](docs/device-compatibility.md) for observed hardware details.
 
 ## Desktop preview on Kubuntu
 
@@ -20,9 +20,27 @@ python3 -m venv --system-site-packages .venv
 .venv/bin/python -m garmin_companion gui
 ```
 
-The Devices page refreshes every 15 seconds or when you press **Refresh**. It reads the same USB scan as the CLI and shows connected, unmounted volumes without mounting them. The Backups page reads immediate backup directories under `~/GarminBackups`, checks each complete manifest's file sizes and SHA-256 hashes, and distinguishes verified, incomplete, and damaged copies. The Activities page reads verified FIT files from complete backups and offers sortable date, sport, duration, distance, and device columns. The Courses page shows course names, types, formats, point counts, and source devices; select a row to see its saved file path. Backup, activity, and course checks run in the background. Older manual backups stored elsewhere are not listed. The Maps page lets you choose a local IMG, EXE, 7z, or ZIP file and inspect its header or archive contents, size, and SHA-256. It shows checksum progress and supports cancellation; archives are listed without extraction or execution. A Kubuntu taskbar launcher and Omarchy packaging are later steps.
+The Devices page refreshes every 15 seconds or when you press **Refresh**. It reads the same USB scan as the CLI and shows connected, unmounted volumes without mounting them. The Backups page reads immediate backup directories under `~/GarminBackups`, checks each complete manifest's file sizes and SHA-256 hashes, and distinguishes verified, incomplete, and damaged copies. The Activities page reads verified FIT files from complete backups and offers sortable date, sport, duration, distance, and device columns. The Courses page shows course names, types, formats, point counts, and source devices; select a row to see its saved file path. Backup, activity, and course checks run in the background. Older manual backups stored elsewhere are not listed. The Maps page lets you choose a local IMG, EXE, 7z, or ZIP file and inspect its header or archive contents, size, and SHA-256. It shows checksum progress and supports cancellation; archives are listed without extraction or execution. Kubuntu launcher setup is described below; Omarchy packaging remains pending.
 
 The first Activities load decodes each distinct FIT file and can take several seconds. Later loads reuse decoded metadata from a private cache at `~/.cache/garmin-linux/activity-decoded.json`; each backup FIT file is still checked against its saved size and SHA-256 before its cached summary is displayed. The cache contains activity dates and summary metrics, so keep it private. Delete that file to force a fresh decode. No backup or device file is changed by the cache.
+
+## Kubuntu application menu and taskbar
+
+Install the launcher from this checkout:
+
+```sh
+.venv/bin/python -m garmin_companion install-desktop
+```
+
+Open **Garmin Linux Companion** from the application menu, then right-click its taskbar icon and choose the pin option. The installer writes a launch script under `~/.local/bin`, a desktop entry under `~/.local/share/applications`, and an SVG icon under `~/.local/share/icons/hicolor/scalable/apps`. It uses this checkout's `.venv` and works when launched from another directory. Rerun the installer after moving the checkout. Omarchy shell integration remains pending.
+
+Remove the launcher and icon with:
+
+```sh
+.venv/bin/python -m garmin_companion install-desktop --remove
+```
+
+Removal leaves the project, backups, and activity cache in place. The installer refuses to replace or remove unrelated files at its target paths.
 
 From this repository directory, list connected Garmin USB volumes without mounting or changing them:
 

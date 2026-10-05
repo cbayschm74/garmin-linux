@@ -36,10 +36,11 @@ Last updated: 2026-10-05
 - Decoded activity summaries are cached privately at `~/.cache/garmin-linux/activity-decoded.json`. The GUI still checks every FIT copy's size and SHA-256 before using cached metadata; a repeat load of the 165 activities now takes about 0.07 seconds on Kubuntu.
 - The read-only Courses page shows 11 distinct backed-up course/waypoint files with name, type, format, numeric point count, source devices, and a selectable saved path. It verifies file hashes and reads courses in a background worker.
 - The Maps page now inspects local IMG/EXE/7z/ZIP files with a file chooser, background checksum progress, cancellation, and header/archive details. It lists archives without extraction or execution.
+- The Kubuntu application-menu launcher is installed under `~/.local`, using this checkout's Qt/FIT environment and an SVG icon. Desktop-entry launch, syntax, and matching KDE desktop identity/taskbar class were verified. The user can open Garmin Linux Companion from the menu and pin its taskbar icon.
 
 ## Next
 
-Next: add and verify a Kubuntu desktop launcher for the current app, using the project's Qt/FIT virtual environment and a stable icon. Provide a repeatable user-local install/removal path, verify desktop entry syntax and launch, and document how to pin it to KDE's taskbar. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: add a device-data backup action to the GUI for an explicitly selected, currently mounted Garmin volume. Use the existing verified backup core in a background worker, show the destination and result, and refuse unmounted or disconnected volumes. Verify the action with synthetic volumes before using it on real devices. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -63,6 +64,12 @@ Next: add and verify a Kubuntu desktop launcher for the current app, using the p
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-05 — Kubuntu desktop launcher
+
+- Added `install-desktop` and `install-desktop --remove`, which manage only this app's user-local launch script, desktop entry, and SVG icon. Installation checks the checkout's PyQt6/FIT environment and validates desktop syntax when the validator is available. Reinstall updates the checkout path; unrelated files at managed paths are refused.
+- Installed the launcher on this Kubuntu account. The app sets a stable desktop file ID, icon, and `garmin-linux-companion` window class. `gtk-launch org.garminlinux.Companion` opened the app; X11 properties showed the matching WM_CLASS and `_KDE_NET_WM_DESKTOP_FILE`. The test windows were closed afterward. Pinning instructions are in README; the user's pin action remains unverified.
+- Verification: temporary-prefix install (including spaces), reinstall, removal, collision refusal, desktop validation, actual installed launch, and all 48 existing tests passed. No Garmin or backup files were changed. Files changed: `assets/org.garminlinux.Companion.svg`, `garmin_companion/desktop.py`, `garmin_companion/__main__.py`, `garmin_companion/gui.py`, `README.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-05 — read-only Maps page
 

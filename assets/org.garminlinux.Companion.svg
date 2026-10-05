@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- Garmin Linux Companion icon -->
+  <rect x="4" y="4" width="120" height="120" rx="28" fill="#153a42"/>
+  <path d="M27 96C27 72 68 92 68 70S40 61 47 39" fill="none" stroke="#73c6b1" stroke-width="9" stroke-linecap="round"/>
+  <path d="M88 25l21 51-21-10-21 10z" fill="#f4faf8" stroke="#f4faf8" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="27" cy="96" r="8" fill="#f4faf8"/>
+</svg>

@@ -111,7 +111,7 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 
 - [ ] Omarchy 4.0.4-1: add a native Quickshell `bar-widget` plugin with a device-status icon and click action that opens the app. Keep Garmin credentials and file operations in the shared app, outside the shell plugin.
 - [ ] Validate the plugin with `omarchy plugin validate` and test enable, disable, and bar placement on the laptop.
-- [ ] Kubuntu: install a `.desktop` launcher and verify it can be pinned to KDE's taskbar.
+- [x] Kubuntu: install a `.desktop` launcher and SVG icon, verify launch and matching KDE desktop identity/WM_CLASS, and document taskbar pinning. The user's pin action remains to be confirmed.
 - **Done when:** each desktop launches the same app from its bar/taskbar and displays the expected device status.
 
 ### 9. Release and maintenance

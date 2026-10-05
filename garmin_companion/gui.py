@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractItemView, QApplication, QFileDialog, QFrame, QHeaderView, QHBoxLayout, QLabel,
     QListWidget, QMainWindow, QPushButton, QScrollArea, QStackedWidget,
@@ -17,6 +18,7 @@ from PyQt6.QtWidgets import (
 from .activities import activity_library
 from .courses import course_library
 from .map_inspect import inspect_map
+from .desktop import DESKTOP_ID, ICON_PATH, LAUNCHER_NAME
 from .detector import GarminVolume, scan
 from .backup_catalog import BackupSummary, list_backups
 
@@ -672,8 +674,11 @@ class CompanionWindow(QMainWindow):
 
 
 def main() -> int:
-    app = QApplication(sys.argv)
-    app.setApplicationName('Garmin Linux Companion')
+    app = QApplication([LAUNCHER_NAME, *sys.argv[1:]])
+    app.setApplicationName(LAUNCHER_NAME)
+    app.setApplicationDisplayName('Garmin Linux Companion')
+    app.setDesktopFileName(DESKTOP_ID)
+    app.setWindowIcon(QIcon(str(ICON_PATH)))
     window = CompanionWindow()
     window.show()
     return app.exec()

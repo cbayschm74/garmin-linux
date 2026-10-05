@@ -16,6 +16,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Local Garmin device tools")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser('gui', help='open the read-only desktop device view')
+    desktop_command = commands.add_parser('install-desktop', help='install or remove the user-local desktop launcher')
+    desktop_command.add_argument('--prefix', type=Path, default=Path.home() / '.local')
+    desktop_command.add_argument('--remove', action='store_true', help='remove this app launcher and icon')
     scan_command = commands.add_parser("scan", help="list Garmin USB volumes")
     scan_command.add_argument("--json", action="store_true", help="print machine-readable output")
     inventory_command = commands.add_parser("inventory", help="summarize selected files without copying")
@@ -78,6 +81,13 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
+        if args.command == 'install-desktop':
+            from .desktop import install_desktop
+            paths = install_desktop(args.prefix, remove=args.remove)
+            print('Launcher removed.' if args.remove else 'Launcher installed. Find Garmin Linux Companion in the application menu.')
+            for path in paths:
+                print(path)
+            return 0
         if args.command == 'gui':
             from .gui import main as gui_main
             return gui_main()
