@@ -31,18 +31,18 @@ Last updated: 2026-10-05
 - New map backups record the volume UUID and size privately. `plan-map-install` accepts an Edge SD card in a generic USB reader only when that USB FAT volume's UUID, size, and label match the complete backup; it then checks the old map file hashes. Synthetic reader checks passed. Older manual backups without identity fields cannot establish this reader path.
 - `install-maps` and `resume-map-install` now use the planner and reader identity checks to replace explicitly backed-up IMGs. A private durable state record allows resuming interrupted partial copies, incomplete old-map removal, and failed unmounts. The installer was verified on synthetic volumes only; the working maps on the real devices were not rewritten.
 - A first PyQt6 desktop screen now opens on Kubuntu with the current Garmin USB volume list, a clear unplugged state, manual and 15-second refresh, and navigation placeholders for Backups, Activities, Courses, and Maps. It uses the existing read-only scanner.
-- The Backups page now lists generated device and map backups under `~/GarminBackups`, showing date, model, volume label, count, size, and verified/incomplete/problem state. Its background worker rechecks every listed file's size and SHA-256; the nine current device backups verified successfully.
+- The Backups page now lists generated device and map backups under `~/GarminBackups`, showing date, model, volume label, count, size, and verified/incomplete/problem state. Its background worker rechecks every listed file's size and SHA-256; all 12 current device backups verified successfully.
 - The read-only Activities page now shows 165 distinct local FIT activities in a sortable table with local date, sport, duration, distance, and device. FIT reading runs in the background; the Kubuntu virtual environment now exposes both system PyQt6 and the Garmin FIT SDK.
 - Decoded activity summaries are cached privately at `~/.cache/garmin-linux/activity-decoded.json`. The GUI still checks every FIT copy's size and SHA-256 before using cached metadata; a repeat load of the 165 activities now takes about 0.07 seconds on Kubuntu.
 - The read-only Courses page shows 11 distinct backed-up course/waypoint files with name, type, format, numeric point count, source devices, and a selectable saved path. It verifies file hashes and reads courses in a background worker.
 - The Maps page now inspects local IMG/EXE/7z/ZIP files with a file chooser, background checksum progress, cancellation, and header/archive details. It lists archives without extraction or execution.
 - The Kubuntu application-menu launcher is installed under `~/.local`, using this checkout's Qt/FIT environment and an SVG icon. Desktop-entry launch, syntax, and matching KDE desktop identity/taskbar class were verified. The user can open Garmin Linux Companion from the menu and pin its taskbar icon.
-- The Devices page now offers **Back up data** for each mounted volume, saving verified activity/course/metadata backups under `~/GarminBackups`. It reselects the current volume, checks its identity and mount instance, runs in the background with progress/cancellation, and displays the verified destination. Synthetic checks passed; no real device was backed up through the GUI yet.
+- The Devices page now offers **Back up data** for each mounted volume, saving verified activity/course/metadata backups under `~/GarminBackups`. It reselects the current volume, checks its identity and mount instance, runs in the background with progress/cancellation, and displays the verified destination. The full GUI worker flow passed live checks on Edge internal storage (14 files), Edge SD (96 files), and fēnix 5X (74 files), with independent verification and safe unmount afterward.
 - The Devices page now offers **Mount read-only** and **Safely unmount**, using UDisks after fresh Garmin detection, USB UUID, and mount-instance checks. Controls are disabled during backup or another mount action. Live read-only Edge mount/unmount and synthetic error cases passed.
 
 ## Next
 
-Next: verify the complete GUI mount → data backup → safe-unmount flow on the physical Edge 1000 and fēnix 5X, one volume at a time. Re-detect paths, mount read-only through the app, run the new backup action, independently check the saved hashes, and safely unmount afterward. Record any device-specific failures. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: add an Activities-page action to prepare a selected activity for manual Garmin Connect upload, using the existing verified export core. Show the exported FIT location and brief browser-import guidance; make the action available only for an explicit selected row, perform export in the background, and verify valid and damaged-backup cases with synthetic data first. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -66,6 +66,11 @@ Next: verify the complete GUI mount → data backup → safe-unmount flow on the
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-05 — live GUI backup flow on both devices
+
+- Ran the actual GUI action methods and background workers in an offscreen Qt window, one physical volume at a time. Each volume was freshly detected, mounted read-only, backed up through the GUI worker, and safely unmounted through the GUI worker. Edge internal storage saved 14 files / 484,442 bytes; Edge SD saved 96 files / 9,906,554 bytes; fēnix 5X saved 74 files / 2,315,955 bytes. No device-specific failures occurred in this run.
+- Independently reread every saved file and compared SHA-256/size to the new complete manifests, checked file and byte totals, and confirmed all three volumes were unmounted afterward. The full catalog now has 12 backups, all verified. Private backup paths and the verification report remain outside Git in `~/GarminBackups/gui-flow-verification.json`. No source device file was changed; no maps or firmware were copied. Files changed: `README.md`, `PLAN.md`, `STATUS.md`. No implementation changed in this verification step.
 
 ### 2026-10-05 — GUI mount and safe-unmount controls
 
