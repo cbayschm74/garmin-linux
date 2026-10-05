@@ -12,11 +12,11 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractItemView, QApplication, QFileDialog, QFrame, QHeaderView, QHBoxLayout, QLabel,
     QListWidget, QMainWindow, QPushButton, QScrollArea, QStackedWidget,
-    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
+    QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget,
 )
 
 from .activities import activity_library
-from .courses import course_library
+from .courses import course_library, inspect_course
 from .map_inspect import inspect_map
 from .desktop import DESKTOP_ID, ICON_PATH, LAUNCHER_NAME
 from .detector import GarminVolume, scan
@@ -255,6 +255,26 @@ class ActivityExportWorker(QThread):
         self.results.emit(str(path))
 
 
+class CoursePreviewWorker(QThread):
+    results = pyqtSignal(object)
+    failed = pyqtSignal(str)
+
+    def __init__(self, path: Path, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.path = path
+
+    def run(self) -> None:
+        try:
+            if self.isInterruptionRequested():
+                return
+            preview = inspect_course(self.path)
+        except Exception as exc:
+            self.failed.emit(str(exc))
+            return
+        if not self.isInterruptionRequested():
+            self.results.emit(preview)
+
+
 class CompanionWindow(QMainWindow):
     def __init__(self, scanner=scan, *, auto_refresh: bool = True,
                  backup_root: Path | None = None, activity_cache_path: Path | None = None) -> None:
@@ -272,6 +292,8 @@ class CompanionWindow(QMainWindow):
         self._device_backup_worker: DeviceBackupWorker | None = None
         self._mount_worker: MountWorker | None = None
         self._export_worker: ActivityExportWorker | None = None
+        self._course_preview_worker: CoursePreviewWorker | None = None
+        self._local_course_preview: dict | None = None
         self.setWindowTitle('Garmin Linux Companion')
         self.resize(900, 620)
         self.setMinimumSize(650, 420)
@@ -568,12 +590,19 @@ class CompanionWindow(QMainWindow):
         heading = QHBoxLayout()
         titles = QVBoxLayout()
         titles.addWidget(_label('Courses', kind='pageTitle'))
-        titles.addWidget(_label('Courses, routes, and waypoints from complete local backups', kind='pageIntro'))
+        titles.addWidget(_label('Browse backed-up courses or preview a local GPX/FIT file', kind='pageIntro'))
         heading.addLayout(titles, 1)
         self.course_refresh_button = QPushButton('Refresh')
         self.course_refresh_button.clicked.connect(self.refresh_courses)
         heading.addWidget(self.course_refresh_button, alignment=Qt.AlignmentFlag.AlignTop)
         layout.addLayout(heading)
+        self.course_tabs = QTabWidget()
+        layout.addWidget(self.course_tabs, 1)
+        backed_up = QWidget()
+        layout = QVBoxLayout(backed_up)
+        layout.setContentsMargins(0, 16, 0, 0)
+        layout.setSpacing(16)
+        self.course_tabs.addTab(backed_up, 'Backed-up courses')
         self.course_summary = _label('Open this page to read courses.', kind='pageIntro')
         layout.addWidget(self.course_summary)
         self.course_table = QTableWidget(0, 5)
@@ -592,7 +621,88 @@ class CompanionWindow(QMainWindow):
         self.course_path.setTextFormat(Qt.TextFormat.PlainText)
         self.course_path.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         layout.addWidget(self.course_path)
+        self.course_tabs.addTab(self._local_course_page(), 'Local file')
+        self.course_tabs.currentChanged.connect(lambda index: self.course_refresh_button.setVisible(index == 0))
         return page
+
+    def _local_course_page(self) -> QWidget:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(0, 16, 0, 0)
+        layout.setSpacing(16)
+        self.course_choose_button = QPushButton('Choose GPX/FIT file…')
+        self.course_choose_button.clicked.connect(self._choose_course_file)
+        layout.addWidget(self.course_choose_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.local_course_summary = _label('Choose a file to see its course details.', kind='pageIntro')
+        layout.addWidget(self.local_course_summary)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        content = QWidget()
+        self.local_course_layout = QVBoxLayout(content)
+        self.local_course_layout.setContentsMargins(0, 0, 0, 0)
+        scroll.setWidget(content)
+        layout.addWidget(scroll, 1)
+        return page
+
+    def _choose_course_file(self) -> None:
+        filename, _ = QFileDialog.getOpenFileName(
+            self, 'Preview course file', str(Path.home() / 'Downloads'),
+            'Course files (*.gpx *.GPX *.fit *.FIT)')
+        if filename:
+            self.preview_course_file(Path(filename))
+
+    def preview_course_file(self, path: Path) -> None:
+        if self._course_preview_worker is not None:
+            return
+        self.course_tabs.setCurrentIndex(1)
+        self._local_course_preview = None
+        self._clear_layout(self.local_course_layout)
+        self.local_course_summary.setText(f'Reading {path.name}…')
+        self.course_choose_button.setEnabled(False)
+        worker = CoursePreviewWorker(path, self)
+        self._course_preview_worker = worker
+        worker.results.connect(self._show_local_course)
+        worker.failed.connect(lambda message: self.local_course_summary.setText(f'Could not preview file: {message}'))
+        worker.finished.connect(self._course_preview_finished)
+        worker.finished.connect(worker.deleteLater)
+        worker.start()
+
+    def _show_local_course(self, preview: dict) -> None:
+        self._local_course_preview = preview
+        kinds = {'course': 'FIT course', 'course_candidate': 'GPX route/track',
+                 'waypoints': 'Waypoint-only GPX', 'empty_or_unsupported': 'Empty or unsupported GPX content'}
+        self.local_course_summary.setText('Preview complete')
+        card = QFrame()
+        card.setObjectName('deviceCard')
+        layout = QVBoxLayout(card)
+        layout.setSpacing(12)
+        title = _label(preview['name'] or Path(preview['path']).name, kind='cardTitle')
+        title.setTextFormat(Qt.TextFormat.PlainText)
+        layout.addWidget(title)
+        fields = [('Type', kinds.get(preview['kind'], preview['kind'])), ('Format', preview['format'])]
+        if preview['format'] == 'GPX':
+            fields += [('Routes', preview['routes']), ('Tracks', preview['tracks']),
+                       ('Route/track points', preview['route_points'] + preview['track_points']),
+                       ('Waypoints', preview['waypoints'])]
+        else:
+            fields += [('Points', preview['record_points']), ('Course cues', preview['course_points']),
+                       ('Sport', preview['sport'] or 'Unknown')]
+            if preview['distance_meters'] is not None:
+                fields.append(('Distance', f'{preview["distance_meters"] / 1000:,.2f} km'))
+        fields += [('Size', f'{preview["size_bytes"]:,} bytes'), ('SHA-256', preview['sha256']),
+                   ('File', preview['path'])]
+        for name, value in fields:
+            label = _label(f'{name}: {value}')
+            label.setTextFormat(Qt.TextFormat.PlainText)
+            label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+            layout.addWidget(label)
+        self.local_course_layout.addWidget(card)
+        self.local_course_layout.addStretch(1)
+
+    def _course_preview_finished(self) -> None:
+        self._course_preview_worker = None
+        self.course_choose_button.setEnabled(True)
 
     def refresh_courses(self) -> None:
         if self._course_worker is not None:
@@ -845,6 +955,9 @@ class CompanionWindow(QMainWindow):
         self.backup_refresh_button.setEnabled(True)
 
     def closeEvent(self, event) -> None:
+        if self._course_preview_worker is not None:
+            self._course_preview_worker.requestInterruption()
+            self._course_preview_worker.wait()
         if self._export_worker is not None:
             self._export_worker.requestInterruption()
             self._export_worker.wait()
