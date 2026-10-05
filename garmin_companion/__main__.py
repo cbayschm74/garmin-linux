@@ -37,6 +37,15 @@ def main() -> int:
                               help='local source IMG and target name as SOURCE=TARGET.img; repeat as needed')
     plan_command.add_argument('--backup', type=Path, required=True, help='complete map backup directory')
     plan_command.add_argument('--json', action='store_true', help='print full read-only plan')
+    install_command = commands.add_parser('install-maps', help='install verified IMGs with recoverable state')
+    install_command.add_argument('--volume', required=True, help='current device or USB reader volume path')
+    install_command.add_argument('--replace', action='append', required=True, dest='old_maps')
+    install_command.add_argument('--new', action='append', required=True, dest='new_maps', help='SOURCE=TARGET.img')
+    install_command.add_argument('--backup', type=Path, required=True, help='complete exact map backup')
+    install_command.add_argument('--state-root', type=Path, default=Path.home() / 'GarminBackups' / 'MapInstalls')
+    resume_command = commands.add_parser('resume-map-install', help='resume an interrupted verified map install')
+    resume_command.add_argument('--volume', required=True, help='current device or USB reader volume path')
+    resume_command.add_argument('--state', type=Path, required=True, help='private map-install state directory')
     activities_command = commands.add_parser("activities", help="summarize activities from complete backups")
     activities_command.add_argument("--backups", type=Path, default=Path.home() / "GarminBackups")
     activities_command.add_argument("--json", action="store_true", help="print full summaries and backup paths")
@@ -114,6 +123,18 @@ def main() -> int:
                 for step in plan['steps']:
                     print(f'  - {step}')
                 print(plan['note'])
+        elif args.command == 'install-maps':
+            from .map_identity import select_map_volume
+            from .map_install import start_map_install
+            result = start_map_install(select_map_volume(args.volume, args.backup), args.old_maps,
+                                       args.new_maps, args.backup, args.state_root)
+            print(f"Verified maps installed and volume safely unmounted. State: {result['state_dir']}")
+        elif args.command == 'resume-map-install':
+            from .map_identity import select_map_volume
+            from .map_install import load_map_install, resume_map_install
+            state = load_map_install(args.state)
+            result = resume_map_install(select_map_volume(args.volume, Path(state['backup'])), args.state)
+            print(f"Map install {result['status']}; state: {result['state_dir']}")
         elif args.command == "activities":
             from .activities import activity_library
             if args.limit < 1:

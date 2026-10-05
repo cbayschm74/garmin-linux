@@ -133,6 +133,23 @@ python3 -m garmin_companion plan-map-install --volume /dev/sdX \
 
 The backup must have been created by `backup-maps` for exactly the old filenames on that volume. Checking large IMGs over a device USB interface may be slow. If the Edge SD card is later moved to a generic USB reader, `plan-map-install` can accept its current `/dev/sdX1` path when the USB FAT card's UUID, size, and label match that complete private backup; it then hashes the card's selected old maps against the backup. Older backups without the UUID/size fields cannot establish this reader identity. The command only prints a plan; it never writes map files.
 
+`install-maps` uses the same arguments and a writable mount. It saves a private state directory before writing, stages each image as `TARGET.img.partial`, flushes and reads the copy back for SHA-256, removes only the backed-up old images after the first new image verifies, then safely unmounts. Keep the old and new filenames distinct. Example:
+
+```sh
+python3 -m garmin_companion install-maps --volume /dev/sdX1 \
+  --replace old_map.img --new /path/to/new_map.img=new_map.img \
+  --backup /path/to/complete_map_backup
+```
+
+If USB disconnects, use the state directory printed in the error after reconnecting the same card read-write:
+
+```sh
+python3 -m garmin_companion resume-map-install --volume /dev/sdX1 \
+  --state /home/USER/GarminBackups/MapInstalls/map-install-XXXX
+```
+
+Resume rechecks card identity, the full backup, the local new images, and each current map or partial file. A changed installed IMG stops the operation for inspection. The installer is verified on synthetic volumes only; the maps already working on the user's devices have not been rewritten with this command.
+
 ## Privacy and device safety
 
 - Do not commit real activities, routes, device XML, serial numbers, credentials, maps, or firmware.

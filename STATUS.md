@@ -29,10 +29,11 @@ Last updated: 2026-10-05
 - `backup-maps --volume ... --file ...` now copies only named top-level `Garmin/*.img` files from a currently detected USB volume into a private, verified backup. It does not write to the device. Synthetic failure checks and a local IMG dry run passed; no new live device map backup was needed this session.
 - `plan-map-install` now produces a read-only replacement plan from current device IMG files, an exact complete map backup, and proposed local new IMGs. It validates hashes, header/size, collisions, current mount identity, and staging/final space. Synthetic failure cases and a local real-IMG dry run passed. Its reader identity path accepts a backed-up Edge SD card in a generic USB reader.
 - New map backups record the volume UUID and size privately. `plan-map-install` accepts an Edge SD card in a generic USB reader only when that USB FAT volume's UUID, size, and label match the complete backup; it then checks the old map file hashes. Synthetic reader checks passed. Older manual backups without identity fields cannot establish this reader path.
+- `install-maps` and `resume-map-install` now use the planner and reader identity checks to replace explicitly backed-up IMGs. A private durable state record allows resuming interrupted partial copies, incomplete old-map removal, and failed unmounts. The installer was verified on synthetic volumes only; the working maps on the real devices were not rewritten.
 
 ## Next
 
-Next: implement a guarded map installer and resume state around the completed planner and reader identity path. It should stage each IMG with a partial filename, flush and verify the device copy, remove backed-up old IMGs only after the first new image verifies, persist enough state to recover from a disconnect, and safely unmount after completion. Recheck card identity, backup hashes, and current files on every resume. Verify interruption points with synthetic volumes first; both current device maps already work, so do not rewrite them merely to test code. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: build the first read-only Kubuntu desktop app shell over the existing core. Start with device status from `scan`, an unplugged-device state, and navigation placeholders for backups, activities, courses, and maps. Verify it starts locally without a Garmin device and update this file. Do not rewrite the working device maps merely to exercise the new installer. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -56,6 +57,13 @@ Next: implement a guarded map installer and resume state around the completed pl
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-05 — guarded resumable map installer
+
+- Added `install-maps` and `resume-map-install`. The initial command runs the read-only replacement planner, requires a writable FAT mount, and saves private state before writing. Each target is staged as `.partial`, flushed with `fsync`, and read back for SHA-256. Old IMGs are removed only after the first new IMG verifies against its expected hash and its state transition has been persisted. Final IMGs are verified again before safe unmount.
+- On resume, the CLI uses the complete map backup to authenticate the current Garmin volume or generic USB-reader card. It rechecks the full backup hashes, source IMG hashes, remaining old files, and staged/final files. An incomplete partial is replaced; a valid partial is reused. Changed old or final maps and missing old files before the first verified state are refused. New and old filenames must be distinct in this first installer version.
+- Six synthetic installer tests cover success, interruption during first staging with old map retained, interruption after old removal, corrupt backup refusal, missing old map refusal, changed or unexpected final map refusal, and failed unmount retry. The full `.venv/bin/python -m unittest discover -s tests -q` suite passed: 37 tests. Both CLI help commands and `git diff --check` passed. No physical Garmin volume was mounted or written in this session.
+- Files changed: `garmin_companion/map_install.py`, `garmin_companion/__main__.py`, `tests/test_map_install.py`, `README.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-05 — reader identity for map planning
 

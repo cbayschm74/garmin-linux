@@ -95,6 +95,7 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 - [x] Add map-specific backup of explicitly selected IMG files, with a private verified manifest and incomplete-copy detection. Synthetic checks and a local IMG dry run passed; live device validation remains separate.
 - [x] Add a read-only map replacement planner that checks current maps, their complete backup, new IMG sources, filenames, and staging space before any device write. Synthetic failures and a local real-IMG dry run passed.
 - [x] Allow read-only planning after an Edge SD card is moved to a generic USB reader, requiring its USB FAT UUID, size, and label to match the private map backup before comparing map hashes. Synthetic integration checks passed; the card stayed in the Edge.
+- [x] Add a guarded, resumable CLI installer that stages and verifies each IMG, keeps old maps until the first new image verifies, and safely unmounts. Synthetic interruption checks passed; physical-device use remains untested because the current maps work.
 - [ ] Add guarded installation of user-downloaded OpenMTBMap IMG files after archive inspection, map-specific backup/recovery design, and on-device validation for each model. QMapShack can display these IMG maps for planning; it is not the project's map transfer path. Keep Garmin-licensed map delivery in Express.
 - [ ] Keep long operations cancellable and show their result and destination.
 - [ ] Package and smoke-test on Kubuntu and Omarchy, including unplugged-device behavior.
