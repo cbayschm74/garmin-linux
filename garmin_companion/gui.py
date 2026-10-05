@@ -341,6 +341,14 @@ class CompanionWindow(QMainWindow):
             QTableWidget { background: white; alternate-background-color: #f7faf9; border: 1px solid #dce5e7; }
             QHeaderView::section { background: #e8f0ef; color: #183b41; border: 0;
                                    border-bottom: 1px solid #c5d6d7; padding: 8px; font-weight: 600; }
+            #courseTabs::pane { background: #f5f7f8; border: 1px solid #c5d6d7; }
+            #courseTabs QTabBar::tab { background: #e8f0ef; color: #183b41;
+                                      border: 1px solid #b6cccd; padding: 10px 16px;
+                                      margin-right: 4px; border-top-left-radius: 6px;
+                                      border-top-right-radius: 6px; }
+            #courseTabs QTabBar::tab:!selected:hover { background: #d2e5e2; color: #153a42; }
+            #courseTabs QTabBar::tab:selected { background: #246b70; color: #ffffff;
+                                               border-color: #246b70; font-weight: 600; }
         ''')
         self.refresh_devices()
         self._refresh_timer = QTimer(self)
@@ -597,6 +605,7 @@ class CompanionWindow(QMainWindow):
         heading.addWidget(self.course_refresh_button, alignment=Qt.AlignmentFlag.AlignTop)
         layout.addLayout(heading)
         self.course_tabs = QTabWidget()
+        self.course_tabs.setObjectName('courseTabs')
         layout.addWidget(self.course_tabs, 1)
         backed_up = QWidget()
         layout = QVBoxLayout(backed_up)

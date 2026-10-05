@@ -69,6 +69,11 @@ Next: add a Prepare FIT for fēnix action to the local Courses preview for eligi
 
 ## Session log
 
+### 2026-10-05 — course tab contrast fix
+
+- User reported unreadable inactive course tabs under the KDE theme. Added explicit scoped tab colors: inactive pale teal with dark text, selected teal with white text, and a distinct inactive hover color. The pane and borders now also have explicit colors.
+- Verification: rendered and visually inspected both selected-tab states under a deliberately dark palette, and rendered hover state. Compilation and `git diff --check` passed. The next GPX-to-FIT GUI step remains unchanged. Files changed: `garmin_companion/gui.py`, `STATUS.md`.
+
 ### 2026-10-05 — local course preview in the GUI
 
 - Split the Courses page into Backed-up courses and Local file tabs. Added a GPX/FIT chooser and background worker around the existing course inspector. The result shows name/type/format, route/track/waypoint counts or FIT record/cue counts, available FIT distance/sport, size, selectable SHA-256, and path. Malformed files clear any prior preview before showing an error. The existing backup table and saved-path selection remain available.
