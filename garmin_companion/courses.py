@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from typing import Callable
 from xml.etree import ElementTree
 
 MAX_COURSE_BYTES = 50 * 1024 * 1024
@@ -92,7 +93,7 @@ def inspect_course(path: Path, *, data: bytes | None = None) -> dict:
     return {'path': str(path), 'sha256': hashlib.sha256(data).hexdigest(), 'size_bytes': len(data), **preview}
 
 
-def course_library(root: Path) -> dict:
+def course_library(root: Path, *, check_cancel: Callable[[], bool] | None = None) -> dict:
     root = root.expanduser().resolve()
     if not root.is_dir():
         raise ValueError('Backup directory does not exist')
@@ -100,14 +101,24 @@ def course_library(root: Path) -> dict:
     problems = []
     duplicates = 0
     for backup in sorted(root.iterdir()):
+        if check_cancel and check_cancel():
+            raise InterruptedError('Course scan cancelled')
         if not backup.is_dir() or backup.name.startswith('.incomplete-') or not (backup / 'COMPLETE').is_file():
             continue
         try:
-            entries = json.loads((backup / 'manifest.json').read_text())['files']
+            manifest = json.loads((backup / 'manifest.json').read_text())
+            entries = manifest['files']
+            if not isinstance(entries, list):
+                raise ValueError('Manifest files must be a list')
         except (OSError, ValueError, KeyError, TypeError):
             problems.append({'backup': str(backup), 'error': 'Unreadable backup manifest'})
             continue
+        device = manifest.get('device_name') or manifest.get('model') or 'Unknown device'
+        if not isinstance(device, str):
+            device = 'Unknown device'
         for entry in entries:
+            if check_cancel and check_cancel():
+                raise InterruptedError('Course scan cancelled')
             if not isinstance(entry, dict) or not isinstance(entry.get('relative_path'), str):
                 problems.append({'backup': str(backup), 'error': 'Invalid manifest file entry'})
                 continue
@@ -125,10 +136,13 @@ def course_library(root: Path) -> dict:
                     raise ValueError('Backup file failed its saved integrity check')
                 if digest in courses:
                     courses[digest]['backup_paths'].append(str(path))
+                    if device not in courses[digest]['source_devices']:
+                        courses[digest]['source_devices'].append(device)
                     duplicates += 1
                     continue
                 preview = inspect_course(path, data=data)
                 preview['backup_paths'] = [str(path)]
+                preview['source_devices'] = [device]
                 courses[digest] = preview
             except (OSError, ValueError, KeyError, TypeError) as exc:
                 problems.append({'path': str(path), 'error': str(exc)})

@@ -35,12 +35,42 @@ class CourseTests(unittest.TestCase):
             path.write_bytes(data)
             (backup / 'COMPLETE').touch()
             entry = {'relative_path': 'Garmin/GPX/sample.gpx', 'size_bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
-            (backup / 'manifest.json').write_text(json.dumps({'files': [entry]}))
+            (backup / 'manifest.json').write_text(json.dumps({'files': [entry], 'device_name': 'Edge 1000'}))
             self.assertEqual(len(course_library(Path(directory))['courses']), 1)
+            self.assertEqual(course_library(Path(directory))['courses'][0]['source_devices'], ['Edge 1000'])
             path.write_bytes(data + b' ')
             library = course_library(Path(directory))
             self.assertEqual(len(library['courses']), 0)
             self.assertRegex(library['problems'][0]['error'], 'integrity')
+
+    def test_malformed_manifest_and_cancel_are_reported(self):
+        with tempfile.TemporaryDirectory() as directory:
+            backup = Path(directory) / 'backup'
+            backup.mkdir()
+            (backup / 'COMPLETE').touch()
+            (backup / 'manifest.json').write_text(json.dumps({'files': None}))
+            library = course_library(Path(directory))
+            self.assertEqual(library['courses'], [])
+            self.assertEqual(len(library['problems']), 1)
+            with self.assertRaises(InterruptedError):
+                course_library(Path(directory), check_cancel=lambda: True)
+
+    def test_same_course_tracks_multiple_source_devices(self):
+        with tempfile.TemporaryDirectory() as directory:
+            data = b'<gpx><rte><name>Shared</name><rtept lat="1" lon="2"/></rte></gpx>'
+            for name, device in [('one', 'Edge 1000'), ('two', 'fenix 5x')]:
+                backup = Path(directory) / name
+                path = backup / 'Garmin/GPX/shared.gpx'
+                path.parent.mkdir(parents=True)
+                path.write_bytes(data)
+                (backup / 'COMPLETE').touch()
+                entry = {'relative_path': 'Garmin/GPX/shared.gpx', 'size_bytes': len(data),
+                         'sha256': hashlib.sha256(data).hexdigest()}
+                (backup / 'manifest.json').write_text(json.dumps({'files': [entry], 'device_name': device}))
+            library = course_library(Path(directory))
+            self.assertEqual(len(library['courses']), 1)
+            self.assertEqual(library['duplicate_copies'], 1)
+            self.assertEqual(library['courses'][0]['source_devices'], ['Edge 1000', 'fenix 5x'])
 
 
 if __name__ == '__main__':

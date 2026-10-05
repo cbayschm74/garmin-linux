@@ -95,6 +95,7 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 - [x] Show complete local device and map backups with date, model, volume label, file count, size, and verified/incomplete/problem states. SHA-256 verification runs in a worker thread; synthetic and live backup checks passed.
 - [x] Add a read-only sortable Activities page from complete verified FIT backups; the Kubuntu virtual environment now exposes system PyQt6 alongside the project FIT SDK. Live and empty/damaged-backup checks passed.
 - [x] Cache decoded activity metadata outside the backups and Git while rechecking each FIT file's saved size and SHA-256 on every load. The repeat GUI load fell from about 13 seconds to under 0.1 second on Kubuntu.
+- [x] Add a read-only Courses page with names, types, formats, point counts, source devices, and selected backup paths. Live, empty, and malformed-course checks passed.
 - [x] Add a read-only local archive/IMG inspector with file size, checksum, tile counts, and ready-IMG detection. Verified against the user's China downloads and corrected fēnix build.
 - [x] Add map-specific backup of explicitly selected IMG files, with a private verified manifest and incomplete-copy detection. Synthetic checks and a local IMG dry run passed; live device validation remains separate.
 - [x] Add a read-only map replacement planner that checks current maps, their complete backup, new IMG sources, filenames, and staging space before any device write. Synthetic failures and a local real-IMG dry run passed.

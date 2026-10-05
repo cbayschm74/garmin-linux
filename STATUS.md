@@ -34,10 +34,11 @@ Last updated: 2026-10-05
 - The Backups page now lists generated device and map backups under `~/GarminBackups`, showing date, model, volume label, count, size, and verified/incomplete/problem state. Its background worker rechecks every listed file's size and SHA-256; the nine current device backups verified successfully.
 - The read-only Activities page now shows 165 distinct local FIT activities in a sortable table with local date, sport, duration, distance, and device. FIT reading runs in the background; the Kubuntu virtual environment now exposes both system PyQt6 and the Garmin FIT SDK.
 - Decoded activity summaries are cached privately at `~/.cache/garmin-linux/activity-decoded.json`. The GUI still checks every FIT copy's size and SHA-256 before using cached metadata; a repeat load of the 165 activities now takes about 0.07 seconds on Kubuntu.
+- The read-only Courses page shows 11 distinct backed-up course/waypoint files with name, type, format, numeric point count, source devices, and a selectable saved path. It verifies file hashes and reads courses in a background worker.
 
 ## Next
 
-Next: build a read-only Courses page from the existing complete-backup course library. Show source device, course name/type, format, point count, and available file path without changing devices; handle an empty library and malformed backed-up course. Verify the page offscreen and update this file. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: build the read-only Maps page around the existing local IMG/archive inspector. Add a file chooser for IMG, EXE, 7z, and ZIP files, run inspection in the background, and show size, SHA-256, map header or archive tile/ready-image information. Verify valid and invalid local samples without extracting or executing archives. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -61,6 +62,11 @@ Next: build a read-only Courses page from the existing complete-backup course li
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-05 — read-only Courses page
+
+- Added a background Courses scan with a sortable table for name, course/route/waypoint type, format, numeric point count, and source device. Selecting a row shows a selectable saved path and the number of additional backup copies. The library now tracks all source devices for identical course files and handles malformed manifest lists and cancellation.
+- Verification: the live page showed 11 distinct course/waypoint files, 21 duplicate backup copies, and zero read problems in about 0.43 seconds. Offscreen checks covered empty libraries, malformed GPX, and selected-path display; the rendered page was inspected. Two new library tests cover malformed manifests/cancellation and identical courses across both device sources. All 48 tests passed. No backup or Garmin file changed. Files changed: `garmin_companion/courses.py`, `garmin_companion/gui.py`, `tests/test_courses.py`, `README.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-05 — faster repeated Activities loads
 

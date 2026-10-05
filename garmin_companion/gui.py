@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
 )
 
 from .activities import activity_library
+from .courses import course_library
 from .detector import GarminVolume, scan
 from .backup_catalog import BackupSummary, list_backups
 
@@ -122,6 +123,26 @@ class SortableItem(QTableWidgetItem):
         return super().__lt__(other)
 
 
+class CourseScanWorker(QThread):
+    results = pyqtSignal(object)
+    failed = pyqtSignal(str)
+
+    def __init__(self, root: Path, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.root = root
+
+    def run(self) -> None:
+        try:
+            result = (course_library(self.root, check_cancel=self.isInterruptionRequested)
+                      if self.root.is_dir() else {'courses': [], 'duplicate_copies': 0, 'problems': []})
+        except InterruptedError:
+            return
+        except Exception as exc:
+            self.failed.emit(str(exc))
+            return
+        self.results.emit(result)
+
+
 class CompanionWindow(QMainWindow):
     def __init__(self, scanner=scan, *, auto_refresh: bool = True,
                  backup_root: Path | None = None, activity_cache_path: Path | None = None) -> None:
@@ -133,6 +154,8 @@ class CompanionWindow(QMainWindow):
         self._backups_loaded = False
         self._activity_worker: ActivityScanWorker | None = None
         self._activities_loaded = False
+        self._course_worker: CourseScanWorker | None = None
+        self._courses_loaded = False
         self.setWindowTitle('Garmin Linux Companion')
         self.resize(900, 620)
         self.setMinimumSize(650, 420)
@@ -154,8 +177,8 @@ class CompanionWindow(QMainWindow):
         self.pages.addWidget(self._devices_page())
         self.pages.addWidget(self._backups_page())
         self.pages.addWidget(self._activities_page())
+        self.pages.addWidget(self._courses_page())
         for name, description in (
-            ('Courses', 'Preview and prepare courses for your devices.'),
             ('Maps', 'Inspect local maps and review guarded install plans.'),
         ):
             self.pages.addWidget(self._placeholder_page(name, description))
@@ -259,6 +282,104 @@ class CompanionWindow(QMainWindow):
             self.refresh_backups()
         elif index == 2 and not self._activities_loaded:
             self.refresh_activities()
+        elif index == 3 and not self._courses_loaded:
+            self.refresh_courses()
+
+    def _courses_page(self) -> QWidget:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(30, 28, 30, 25)
+        layout.setSpacing(16)
+        heading = QHBoxLayout()
+        titles = QVBoxLayout()
+        titles.addWidget(_label('Courses', kind='pageTitle'))
+        titles.addWidget(_label('Courses, routes, and waypoints from complete local backups', kind='pageIntro'))
+        heading.addLayout(titles, 1)
+        self.course_refresh_button = QPushButton('Refresh')
+        self.course_refresh_button.clicked.connect(self.refresh_courses)
+        heading.addWidget(self.course_refresh_button, alignment=Qt.AlignmentFlag.AlignTop)
+        layout.addLayout(heading)
+        self.course_summary = _label('Open this page to read courses.', kind='pageIntro')
+        layout.addWidget(self.course_summary)
+        self.course_table = QTableWidget(0, 5)
+        self.course_table.setHorizontalHeaderLabels(('Name', 'Type', 'Format', 'Points', 'Source device'))
+        self.course_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.course_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.course_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.course_table.setAlternatingRowColors(True)
+        self.course_table.verticalHeader().setVisible(False)
+        self.course_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.course_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.course_table.setSortingEnabled(True)
+        self.course_table.itemSelectionChanged.connect(self._course_selected)
+        layout.addWidget(self.course_table, 1)
+        self.course_path = _label('Select a row to see its saved file path.', kind='pageIntro')
+        self.course_path.setTextFormat(Qt.TextFormat.PlainText)
+        self.course_path.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(self.course_path)
+        return page
+
+    def refresh_courses(self) -> None:
+        if self._course_worker is not None:
+            return
+        self._courses_loaded = True
+        self.course_summary.setText('Checking and reading backed-up courses…')
+        self.course_refresh_button.setEnabled(False)
+        worker = CourseScanWorker(self._backup_root, self)
+        self._course_worker = worker
+        worker.results.connect(self._show_courses)
+        worker.failed.connect(self._course_error)
+        worker.finished.connect(self._course_finished)
+        worker.finished.connect(worker.deleteLater)
+        worker.start()
+
+    def _show_courses(self, library: dict) -> None:
+        rows = library['courses']
+        problems = len(library['problems'])
+        kinds = {'course': 'Course', 'course_candidate': 'Route/track',
+                 'waypoints': 'Waypoints', 'empty_or_unsupported': 'Other'}
+        self.course_table.setSortingEnabled(False)
+        self.course_table.setRowCount(len(rows))
+        self.course_path.setText('Select a row to see its saved file path.')
+        for index, row in enumerate(rows):
+            points = row.get('record_points', row.get('route_points', 0) + row.get('track_points', 0))
+            if row['kind'] == 'waypoints':
+                points = row.get('waypoints', 0)
+            values = (row['name'] or Path(row['path']).name, kinds.get(row['kind'], row['kind']),
+                      row['format'], str(points), ', '.join(row.get('source_devices', [])) or 'Unknown')
+            for column, value in enumerate(values):
+                item = SortableItem(value)
+                item.setToolTip(value)
+                if column == 0:
+                    item.setData(Qt.ItemDataRole.UserRole, row['backup_paths'])
+                elif column == 3:
+                    item.setData(Qt.ItemDataRole.UserRole, points)
+                self.course_table.setItem(index, column, item)
+        self.course_table.setSortingEnabled(True)
+        self.course_table.sortItems(0, Qt.SortOrder.AscendingOrder)
+        if not rows and not problems:
+            self.course_summary.setText('No courses found in complete backups')
+        else:
+            noun = 'file' if problems == 1 else 'files'
+            self.course_summary.setText(f'{len(rows)} course/waypoint files · {library["duplicate_copies"]} duplicate copies · {problems} {noun} could not be read')
+
+    def _course_selected(self) -> None:
+        selected = self.course_table.selectionModel().selectedRows()
+        if selected:
+            paths = self.course_table.item(selected[0].row(), 0).data(Qt.ItemDataRole.UserRole)
+            suffix = f'\nAlso present in {len(paths) - 1} other backup copies.' if len(paths) > 1 else ''
+            self.course_path.setText('Saved file:\n' + paths[0] + suffix)
+        else:
+            self.course_path.setText('Select a row to see its saved file path.')
+
+    def _course_error(self, message: str) -> None:
+        self.course_table.setRowCount(0)
+        self.course_path.setText('')
+        self.course_summary.setText(f'Could not read courses: {message}')
+
+    def _course_finished(self) -> None:
+        self._course_worker = None
+        self.course_refresh_button.setEnabled(True)
 
     def _activities_page(self) -> QWidget:
         page = QWidget()
@@ -403,6 +524,9 @@ class CompanionWindow(QMainWindow):
         if self._activity_worker is not None:
             self._activity_worker.requestInterruption()
             self._activity_worker.wait()
+        if self._course_worker is not None:
+            self._course_worker.requestInterruption()
+            self._course_worker.wait()
         super().closeEvent(event)
 
     def refresh_devices(self) -> None:
