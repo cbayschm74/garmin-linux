@@ -47,7 +47,9 @@ class BackupTests(unittest.TestCase):
         self.addCleanup(self.scan_patch.stop)
 
     def test_publishes_only_verified_copy(self) -> None:
-        destination, listing = backup_module.backup(self.volume, self.root / "backups")
+        progress = []
+        destination, listing = backup_module.backup(self.volume, self.root / "backups",
+                                                   progress=lambda done, total: progress.append((done, total)))
         self.assertEqual(len(listing.files), 1)
         self.assertTrue((destination / "COMPLETE").is_file())
         self.assertEqual(
@@ -57,6 +59,25 @@ class BackupTests(unittest.TestCase):
         manifest = json.loads((destination / "manifest.json").read_text())
         self.assertEqual(manifest["file_count"], 1)
         self.assertEqual(len(manifest["files"][0]["sha256"]), 64)
+        self.assertEqual(progress[-1], (listing.total_bytes, listing.total_bytes))
+
+    def test_cancel_during_copy_never_publishes_complete(self) -> None:
+        activity = self.source / 'Garmin/Activities/synthetic.fit'
+        activity.write_bytes(b'x' * (backup_module.COPY_CHUNK + 1))
+        cancelled = False
+
+        def progress(done, total):
+            nonlocal cancelled
+            cancelled = True
+
+        with self.assertRaises(InterruptedError):
+            backup_module.backup(self.volume, self.root / 'backups',
+                                 check_cancel=lambda: cancelled, progress=progress)
+        copies = list((self.root / 'backups').iterdir())
+        self.assertEqual(len(copies), 1)
+        self.assertFalse((copies[0] / 'COMPLETE').exists())
+        self.assertEqual((copies[0] / 'Garmin/Activities/synthetic.fit').stat().st_size,
+                         backup_module.COPY_CHUNK)
 
     def test_copy_failure_never_publishes_complete_backup(self) -> None:
         with patch.object(backup_module, "_copy_verified", side_effect=OSError("disconnect")):

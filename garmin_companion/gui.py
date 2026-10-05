@@ -21,6 +21,7 @@ from .map_inspect import inspect_map
 from .desktop import DESKTOP_ID, ICON_PATH, LAUNCHER_NAME
 from .detector import GarminVolume, scan
 from .backup_catalog import BackupSummary, list_backups
+from .backup import backup as create_backup, select_volume, _mount_id, _mounted_source
 
 
 PAGES = ('Devices', 'Backups', 'Activities', 'Courses', 'Maps')
@@ -34,7 +35,7 @@ def _label(text: str, *, kind: str = '') -> QLabel:
     return label
 
 
-def _device_card(volume: GarminVolume) -> QFrame:
+def _device_card(volume: GarminVolume, backup_callback=None, *, busy: bool = False) -> QFrame:
     card = QFrame()
     card.setObjectName('deviceCard')
     layout = QVBoxLayout(card)
@@ -52,6 +53,13 @@ def _device_card(volume: GarminVolume) -> QFrame:
         layout.addWidget(_label(f'Software version field: {volume.software_version}'))
     if volume.warning:
         layout.addWidget(_label(f'Warning: {volume.warning}', kind='warningText'))
+    if backup_callback:
+        button = QPushButton('Back up data')
+        button.setEnabled(bool(volume.mountpoint) and not busy)
+        button.clicked.connect(lambda checked=False: backup_callback(volume))
+        layout.addWidget(button, alignment=Qt.AlignmentFlag.AlignLeft)
+        if not volume.mountpoint:
+            layout.addWidget(_label('Mount this volume in the file manager, then Refresh to enable backup.', kind='pageIntro'))
     return card
 
 
@@ -169,6 +177,37 @@ class MapInspectWorker(QThread):
         self.results.emit(result)
 
 
+class DeviceBackupWorker(QThread):
+    results = pyqtSignal(object)
+    failed = pyqtSignal(str)
+    progress = pyqtSignal(int)
+    cancelled = pyqtSignal()
+
+    def __init__(self, volume: GarminVolume, root: Path, mount_id: str, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.volume = volume
+        self.root = root
+        self.mount_id = mount_id
+
+    def run(self) -> None:
+        try:
+            current = select_volume(self.volume.path)
+            fields = ('model', 'label', 'size_bytes', 'mountpoint', 'filesystem', 'device_name')
+            if (any(getattr(current, field) != getattr(self.volume, field) for field in fields)
+                    or _mount_id(_mounted_source(current)) != self.mount_id):
+                raise ValueError('Selected volume changed or was remounted; Refresh and select it again')
+            destination, listing = create_backup(
+                current, self.root, check_cancel=self.isInterruptionRequested,
+                progress=lambda done, total: self.progress.emit(min(99, int(done * 100 / total))))
+        except InterruptedError:
+            self.cancelled.emit()
+            return
+        except Exception as exc:
+            self.failed.emit(str(exc))
+            return
+        self.results.emit({'path': str(destination), 'files': len(listing.files), 'bytes': listing.total_bytes})
+
+
 class CompanionWindow(QMainWindow):
     def __init__(self, scanner=scan, *, auto_refresh: bool = True,
                  backup_root: Path | None = None, activity_cache_path: Path | None = None) -> None:
@@ -183,6 +222,7 @@ class CompanionWindow(QMainWindow):
         self._course_worker: CourseScanWorker | None = None
         self._courses_loaded = False
         self._map_worker: MapInspectWorker | None = None
+        self._device_backup_worker: DeviceBackupWorker | None = None
         self.setWindowTitle('Garmin Linux Companion')
         self.resize(900, 620)
         self.setMinimumSize(650, 420)
@@ -252,6 +292,15 @@ class CompanionWindow(QMainWindow):
         self.refresh_button.clicked.connect(self.refresh_devices)
         heading.addWidget(self.refresh_button, alignment=Qt.AlignmentFlag.AlignTop)
         layout.addLayout(heading)
+        self.backup_job_status = _label(
+            f'Data backups save activities, courses, and device metadata to {self._backup_root}.', kind='pageIntro')
+        self.backup_job_status.setTextFormat(Qt.TextFormat.PlainText)
+        self.backup_job_status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(self.backup_job_status)
+        self.backup_cancel_button = QPushButton('Cancel backup')
+        self.backup_cancel_button.clicked.connect(self._cancel_device_backup)
+        self.backup_cancel_button.setVisible(False)
+        layout.addWidget(self.backup_cancel_button, alignment=Qt.AlignmentFlag.AlignLeft)
         self.summary = _label('Checking for devices…', kind='pageIntro')
         layout.addWidget(self.summary)
         self.scroll = QScrollArea()
@@ -264,6 +313,45 @@ class CompanionWindow(QMainWindow):
         self.scroll.setWidget(self.list_content)
         layout.addWidget(self.scroll, 1)
         return page
+
+    def start_device_backup(self, volume: GarminVolume) -> None:
+        if self._device_backup_worker is not None:
+            return
+        try:
+            mount_id = _mount_id(_mounted_source(volume))
+        except (OSError, ValueError) as exc:
+            self.backup_job_status.setText(f'Cannot start backup: {exc}')
+            return
+        worker = DeviceBackupWorker(volume, self._backup_root, mount_id, self)
+        self._device_backup_worker = worker
+        self.backup_job_status.setText(f'Copying and verifying {volume.label or volume.model}…')
+        self.backup_cancel_button.setEnabled(True)
+        self.backup_cancel_button.setVisible(True)
+        worker.results.connect(self._device_backup_complete)
+        worker.failed.connect(lambda message: self.backup_job_status.setText(f'Backup failed: {message}'))
+        worker.cancelled.connect(lambda: self.backup_job_status.setText('Backup cancelled. Any partial copy remains incomplete.'))
+        worker.progress.connect(lambda percent: self.backup_job_status.setText(f'Copying and verifying data… {percent}%'))
+        worker.finished.connect(self._device_backup_finished)
+        worker.finished.connect(worker.deleteLater)
+        self.refresh_devices()
+        worker.start()
+
+    def _cancel_device_backup(self) -> None:
+        if self._device_backup_worker is not None:
+            self._device_backup_worker.requestInterruption()
+            self.backup_cancel_button.setEnabled(False)
+
+    def _device_backup_complete(self, result: dict) -> None:
+        noun = 'file' if result['files'] == 1 else 'files'
+        self.backup_job_status.setText(f'Backup verified: {result["files"]} {noun}, {result["bytes"]:,} bytes\n{result["path"]}')
+        self._backups_loaded = False
+        self._activities_loaded = False
+        self._courses_loaded = False
+
+    def _device_backup_finished(self) -> None:
+        self._device_backup_worker = None
+        self.backup_cancel_button.setVisible(False)
+        self.refresh_devices()
 
     @staticmethod
     def _placeholder_page(name: str, description: str) -> QWidget:
@@ -632,6 +720,9 @@ class CompanionWindow(QMainWindow):
         self.backup_refresh_button.setEnabled(True)
 
     def closeEvent(self, event) -> None:
+        if self._device_backup_worker is not None:
+            self._device_backup_worker.requestInterruption()
+            self._device_backup_worker.wait()
         if self._map_worker is not None:
             self._map_worker.requestInterruption()
             self._map_worker.wait()
@@ -669,7 +760,8 @@ class CompanionWindow(QMainWindow):
             count = len(volumes)
             self.summary.setText(f'{count} Garmin volume{"s" if count != 1 else ""} detected')
             for volume in volumes:
-                self.list_layout.addWidget(_device_card(volume))
+                self.list_layout.addWidget(_device_card(volume, self.start_device_backup,
+                                                        busy=self._device_backup_worker is not None))
         self.list_layout.addStretch(1)
 
 

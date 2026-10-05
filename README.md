@@ -8,7 +8,7 @@ For planning and viewing tracks alongside this app, see the [Linux route editor 
 
 ## Current state
 
-The command-line core can detect and back up both devices, summarize activities, and transfer courses through model-specific USB paths. The desktop app shows devices, verified backups, activities, courses, and local map inspection. Its current pages read existing data; device transfers remain CLI commands. See [STATUS.md](STATUS.md) for the next step and [docs/device-compatibility.md](docs/device-compatibility.md) for observed hardware details.
+The command-line core can detect and back up both devices, summarize activities, and transfer courses through model-specific USB paths. The desktop app shows devices, verified backups, activities, courses, and local map inspection, and can create device-data backups. Course and map transfers remain CLI commands. See [STATUS.md](STATUS.md) for the next step and [docs/device-compatibility.md](docs/device-compatibility.md) for observed hardware details.
 
 ## Desktop preview on Kubuntu
 
@@ -52,6 +52,8 @@ python3 -m garmin_companion scan --json
 An unmounted Garmin USB volume is reported as a **candidate**. A mounted volume becomes **confirmed** when its `Garmin/GarminDevice.xml` description can be read. SD card volumes may remain candidates because they need not contain that file. Paths are reported for the current connection only.
 
 ## Inventory and backup
+
+In the desktop app, each mounted Garmin volume has a **Back up data** button on the Devices page. Mount the volume through the file manager, then press **Refresh** if needed. The app saves activities, courses, and device metadata under `~/GarminBackups`, shows progress and a verified destination, and offers **Cancel backup**. Maps and firmware are outside this selection. Each volume is backed up separately; a disconnected or remounted selection is refused. Cancelled attempts retain an incomplete folder without a COMPLETE marker. The GUI action has been verified using synthetic volumes; live device validation remains pending.
 
 Mount one volume read-only using the current device path from `scan`, then inspect the proposed backup before copying it:
 

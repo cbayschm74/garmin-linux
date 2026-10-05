@@ -37,10 +37,11 @@ Last updated: 2026-10-05
 - The read-only Courses page shows 11 distinct backed-up course/waypoint files with name, type, format, numeric point count, source devices, and a selectable saved path. It verifies file hashes and reads courses in a background worker.
 - The Maps page now inspects local IMG/EXE/7z/ZIP files with a file chooser, background checksum progress, cancellation, and header/archive details. It lists archives without extraction or execution.
 - The Kubuntu application-menu launcher is installed under `~/.local`, using this checkout's Qt/FIT environment and an SVG icon. Desktop-entry launch, syntax, and matching KDE desktop identity/taskbar class were verified. The user can open Garmin Linux Companion from the menu and pin its taskbar icon.
+- The Devices page now offers **Back up data** for each mounted volume, saving verified activity/course/metadata backups under `~/GarminBackups`. It reselects the current volume, checks its identity and mount instance, runs in the background with progress/cancellation, and displays the verified destination. Synthetic checks passed; no real device was backed up through the GUI yet.
 
 ## Next
 
-Next: add a device-data backup action to the GUI for an explicitly selected, currently mounted Garmin volume. Use the existing verified backup core in a background worker, show the destination and result, and refuse unmounted or disconnected volumes. Verify the action with synthetic volumes before using it on real devices. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: add explicit mount-read-only and safe-unmount controls to the Devices page using UDisks for a freshly detected Garmin volume, so the backup flow can run without a terminal or file-manager detour. Disable mount/unmount while a device backup runs, report failures clearly, and verify synthetic command/disconnect cases first. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -64,6 +65,12 @@ Next: add a device-data backup action to the GUI for an explicitly selected, cur
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-05 — GUI device-data backup action
+
+- Added a Back up data button per mounted Garmin volume, a background copy worker, progress, Cancel backup, and a selectable verified destination. The worker freshly selects the clicked volume and checks model, label, size, filesystem, device name, mountpoint, and the original mount instance before copying. Unmounted and remounted selections are refused. Successful copies invalidate cached GUI library views so later navigation refreshes them.
+- Added cancellation and byte progress callbacks to the existing backup core. Cancellation during copying or verification retains an incomplete attempt without publishing COMPLETE. The existing CLI and map-backup callers retain their default behavior.
+- Verification: all 49 tests passed, including a new mid-copy cancellation check and progress assertions. Offscreen synthetic GUI checks covered successful copy with independently verified backup hash, cancellation, remount refusal, and unmounted refusal. The live Devices layout was inspected with three unmounted Garmin volumes; none was mounted or written, and no live backup ran. Files changed: `garmin_companion/backup.py`, `garmin_companion/gui.py`, `tests/test_backup.py`, `README.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-05 — Kubuntu desktop launcher
 

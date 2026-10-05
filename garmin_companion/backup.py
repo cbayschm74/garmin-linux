@@ -11,6 +11,7 @@ import tempfile
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Callable
 
 from .detector import GarminVolume, scan
 
@@ -117,15 +118,17 @@ def inventory(volume: GarminVolume) -> Inventory:
     return Inventory(volume, sorted(files, key=lambda file: file.relative_path))
 
 
-def _sha256(path: Path) -> str:
+def _sha256(path: Path, check_cancel=None) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
         for chunk in iter(lambda: stream.read(COPY_CHUNK), b""):
+            if check_cancel and check_cancel():
+                raise InterruptedError('Backup cancelled')
             digest.update(chunk)
     return digest.hexdigest()
 
 
-def _copy_verified(source: Path, target: Path, expected: FileEntry) -> str:
+def _copy_verified(source: Path, target: Path, expected: FileEntry, *, check_cancel=None, progress=None) -> str:
     before = source.stat()
     if before.st_size != expected.size_bytes or before.st_mtime_ns != expected.mtime_ns:
         raise ValueError(f"Source changed since inventory: {expected.relative_path}")
@@ -133,14 +136,18 @@ def _copy_verified(source: Path, target: Path, expected: FileEntry) -> str:
     digest = hashlib.sha256()
     with source.open("rb") as reader, target.open("xb") as writer:
         for chunk in iter(lambda: reader.read(COPY_CHUNK), b""):
+            if check_cancel and check_cancel():
+                raise InterruptedError('Backup cancelled')
             writer.write(chunk)
             digest.update(chunk)
+            if progress:
+                progress(len(chunk))
         writer.flush()
         os.fsync(writer.fileno())
     after = source.stat()
     if (after.st_size, after.st_mtime_ns) != (before.st_size, before.st_mtime_ns):
         raise ValueError(f"Source changed during copy: {expected.relative_path}")
-    if target.stat().st_size != expected.size_bytes or _sha256(target) != digest.hexdigest():
+    if target.stat().st_size != expected.size_bytes or _sha256(target, check_cancel) != digest.hexdigest():
         raise ValueError(f"Copy verification failed: {expected.relative_path}")
     return digest.hexdigest()
 
@@ -149,7 +156,9 @@ def _slug(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9]+", "_", value).strip("_") or "Garmin"
 
 
-def backup(volume: GarminVolume, destination_root: Path) -> tuple[Path, Inventory]:
+def backup(volume: GarminVolume, destination_root: Path, *,
+           check_cancel: Callable[[], bool] | None = None,
+           progress: Callable[[int, int], None] | None = None) -> tuple[Path, Inventory]:
     """Copy selected files to a private staging directory, then publish atomically."""
     source = _mounted_source(volume)
     listing = inventory(volume)
@@ -158,6 +167,8 @@ def backup(volume: GarminVolume, destination_root: Path) -> tuple[Path, Inventor
     original_mount_id = _mount_id(source)
 
     def ensure_same_mount() -> None:
+        if check_cancel and check_cancel():
+            raise InterruptedError('Backup cancelled')
         _mounted_source(volume)
         if _mount_id(source) != original_mount_id:
             raise ValueError("Garmin volume disconnected or was remounted during backup")
@@ -176,11 +187,20 @@ def backup(volume: GarminVolume, destination_root: Path) -> tuple[Path, Inventor
     final = destination_root / final_name
     stage = Path(tempfile.mkdtemp(prefix=f".incomplete-{final_name}-", dir=destination_root))
     try:
+        copied_bytes = 0
+
+        def copied(count: int) -> None:
+            nonlocal copied_bytes
+            copied_bytes += count
+            if progress:
+                progress(copied_bytes, listing.total_bytes)
+
         manifest_files = []
         for entry in listing.files:
             ensure_same_mount()
             relative = Path(entry.relative_path)
-            digest = _copy_verified(source / relative, stage / relative, entry)
+            digest = _copy_verified(source / relative, stage / relative, entry,
+                                    check_cancel=check_cancel, progress=copied)
             manifest_files.append({**asdict(entry), "sha256": digest})
         ensure_same_mount()
         manifest = {
