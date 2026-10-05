@@ -1,6 +1,6 @@
 # Garmin Linux companion: session status
 
-Last updated: 2026-10-04
+Last updated: 2026-10-05
 
 ## Current state
 
@@ -28,7 +28,7 @@ Last updated: 2026-10-04
 
 ## Next
 
-Next: check the fēnix 5X map enable/disable menu for the installed Guangdong/Hong Kong/Macao OpenMTBMap IMG and confirm it renders locally. Its on-device file already passed SHA-256 verification. The Edge full-China map installation and on-device load check are complete. For Edge Wi‑Fi after factory reset, the user confirms its menu directs them to Garmin Express and offers no manual Add Network option; investigate a supported setup path separately. The archive/IMG inspection command, Garmin Express account check, browser activity import, real user-supplied course, and Omarchy validation remain pending.
+Next: obtain the user's fēnix 5X map-menu/rendering result. On the watch, use START → Map, hold MENU, select Map Settings → Map → Configure Maps, enable the new OpenMTBMap China/Guangdong entry, and inspect the map around Shenzhen. The watch was safely unmounted and disconnected on 2026-10-05; its installed IMG already passed SHA-256 verification. If the map appears and renders, mark the acceptance test complete, then implement the read-only archive/IMG inspector as the next Kubuntu app step. If it is absent or blank, investigate map metadata and device logs without changing the verified backup. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -52,6 +52,12 @@ Next: check the fēnix 5X map enable/disable menu for the installed Guangdong/Ho
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-05 — fēnix map acceptance check requested
+
+- Read the current plan and status. The fēnix was visible over USB but unmounted, then disconnected for the on-watch check. Garmin's exact-model manual gives START → Map, hold MENU, Map Settings → Map → Configure Maps to show or hide installed map data. Asked the user whether the new China/Guangdong map is listed and renders local roads or contours around Shenzhen; response pending.
+- Updated `docs/openmtbmap-china-build.md` to distinguish completed Edge installation and on-device loading, the fēnix file's device SHA-256 verification, and the still-pending watch rendering check. No device data was changed.
+- Files changed: `docs/openmtbmap-china-build.md`, `STATUS.md`.
 
 ### 2026-10-04 — USB hub interruption and Edge reset
 

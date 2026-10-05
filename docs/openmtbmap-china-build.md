@@ -1,6 +1,6 @@
 # Local OpenMTBMap China builds
 
-Verified on Kubuntu, 2026-10-03. These are local Garmin IMG builds from the user's downloads. No new IMG has been installed on either device.
+Built and structurally verified on Kubuntu, 2026-10-03. These are local Garmin IMG builds from the user's downloads. The corrected fēnix and Edge images were installed on 2026-10-03/04 after complete original-map backups; the user confirmed the Edge map loads on-device on 2026-10-04. The fēnix map-menu/rendering check remains pending.
 
 ## What the Windows installer does with contours
 
@@ -25,7 +25,7 @@ The user's intended watch region is around Shenzhen. We selected every tile inte
 | --- | ---: | --- |
 | `~/Downloads/GarminMapBuild-China/fenix-guangdong-hk-macao/output/gmapsupp.img` | 674,889,728 | `01c19cae2fae955e9d2feee7323bcf465de6a1c14f6aec4582785dd470dd83c0` |
 
-The watch's internal VFAT volume is 14.6 GiB, with about 3.2 GiB free at the read-only check. The output is under the single-file limit and fits the reported free space. It must not coexist with the older China map because the family and tile IDs can overlap; preserving and replacing the old image requires a map-specific backup and recovery plan.
+The watch's internal VFAT volume is 14.6 GiB. The output is under the single-file limit. The old China IMG was backed up and replaced because the family and tile IDs can overlap. The installed file passed an on-device SHA-256 read-back check on 2026-10-04; the map menu and rendering still need user confirmation.
 
 ## Edge 1000: complete downloaded China tile set
 
@@ -37,13 +37,13 @@ All **119 map tiles and 814 contour tiles** from the two archives were included 
 | `~/Downloads/GarminMapBuild-China/edge-full-china/part2/output/gmapsupp.img` | 0 | 330 | 3,144,417,280 | `01724a2053dee62441f46dc6d1ab87aaa591945571a173e363be5375278a7eb6` |
 | `~/Downloads/GarminMapBuild-China/edge-full-china/part3/output/gmapsupp.img` | 0 | 375 | 3,124,035,584 | `47172eb518d588ea90d8feeec506bc99fc12915967cafa5257707d0a4341a465` |
 
-The Edge's 29.8 GiB SD card had about 4.5 GiB free at the read-only check. The new 9.34 GB set will not fit alongside the older approximately 8.8 GB China set. A transfer would require a verified local backup of the older three files and a controlled replacement, with distinct final filenames for the new parts.
+The Edge's 29.8 GiB SD card could not hold the new set alongside its older China files. Four original China IMGs were backed up and hash-verified before replacement. A USB controller failure corrupted an initial transfer; the SD filesystem was repaired and the final transfer used a directly connected SanDisk reader. Each of the three new parts passed a device read-back SHA-256 check. After installation, the card's FAT check passed, the old/partial China files were absent, and 5.5 GiB remained free. The user confirmed that the Edge loads the new map.
 
 ## Verification and limits
 
 - All four corrected builds exited successfully with zero mkgmap map/exit exceptions. Independent IMG inspection matched every expected tile ID in each output, found the chosen TYP, and found an MDR index in each map-bearing output. The Edge tile sets are disjoint and their union is exactly the 933 extracted tiles.
-- File sizes and SHA-256 hashes were checked after the builds. Both Garmin volumes were mounted read-only for comparison and free-space checks, then unmounted. No device map was changed.
-- IMG structure, tile bounds, free space, and code page checks do **not** establish that either device renders the map, contours, search, or routing correctly. An on-device trial remains necessary after backup and recovery preparation.
+- File sizes and SHA-256 hashes were checked after the builds and again on the installed device files. A complete five-file original-map backup is at `~/Downloads/GarminMapBuild-China/device-backups/20261003T054513Z` with `manifest.json` and `COMPLETE`. The guarded Edge transfer wrote `EDGE_INSTALL_COMPLETE` after safe unmount.
+- The Edge map was confirmed to load on-device. Contours, search, and routing were not separately tested. The fēnix IMG passed on-device SHA-256 verification; its map-menu and rendering check remains pending.
 - The first exploratory images were assembled by reusing tile **numbers** from the older fēnix map. Those numbers had shifted in the new map edition, producing the wrong region. Their output files were renamed `SUPERSEDED_wrong_region.img`; they are not candidates for device transfer. The corrected watch selection uses geographic bounds and map names instead.
 
-Next: add a read-only archive/IMG inspector to the companion app, then prepare map-specific backups and a controlled fēnix and Edge acceptance test. Full device installation is not yet automated.
+Next: confirm the fēnix map appears and renders around Shenzhen. Then add a read-only archive/IMG inspector to the companion app. Turn the proven manual backup and transfer workflow into a guarded app command only after it can handle disconnects and resume safely. Garmin-licensed map delivery remains outside this path.
