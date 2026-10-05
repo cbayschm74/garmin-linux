@@ -6,6 +6,7 @@ import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Callable
 
 
 def _date(value: object) -> str | None:
@@ -21,7 +22,7 @@ def _total(sessions: list[dict], field: str) -> float | None:
     return sum(values) if values else None
 
 
-def activity_library(root: Path) -> dict:
+def activity_library(root: Path, *, check_cancel: Callable[[], bool] | None = None) -> dict:
     try:
         from garmin_fit_sdk import Decoder, Stream
     except ImportError as exc:
@@ -33,15 +34,21 @@ def activity_library(root: Path) -> dict:
     problems = []
     duplicates = 0
     for backup in sorted(root.iterdir()):
+        if check_cancel and check_cancel():
+            raise InterruptedError('Activity scan cancelled')
         if not backup.is_dir() or backup.name.startswith('.incomplete-') or not (backup / 'COMPLETE').is_file():
             continue
         try:
             manifest = json.loads((backup / 'manifest.json').read_text())
             entries = manifest['files']
-        except (OSError, ValueError, KeyError):
+            if not isinstance(entries, list):
+                raise ValueError('Manifest files must be a list')
+        except (OSError, ValueError, KeyError, TypeError):
             problems.append({'backup': str(backup), 'error': 'Unreadable backup manifest'})
             continue
         for entry in entries:
+            if check_cancel and check_cancel():
+                raise InterruptedError('Activity scan cancelled')
             if not isinstance(entry, dict) or not isinstance(entry.get('relative_path'), str):
                 problems.append({'backup': str(backup), 'error': 'Invalid manifest file entry'})
                 continue

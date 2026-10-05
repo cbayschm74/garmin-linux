@@ -9,10 +9,12 @@ from pathlib import Path
 
 from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
 from PyQt6.QtWidgets import (
-    QApplication, QFrame, QHBoxLayout, QLabel, QListWidget, QMainWindow,
-    QPushButton, QScrollArea, QStackedWidget, QVBoxLayout, QWidget,
+    QAbstractItemView, QApplication, QFrame, QHeaderView, QHBoxLayout, QLabel,
+    QListWidget, QMainWindow, QPushButton, QScrollArea, QStackedWidget,
+    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
+from .activities import activity_library
 from .detector import GarminVolume, scan
 from .backup_catalog import BackupSummary, list_backups
 
@@ -81,10 +83,41 @@ class BackupScanWorker(QThread):
             rows = list_backups(self.root, check_cancel=self.isInterruptionRequested)
         except InterruptedError:
             return
-        except (OSError, ValueError) as exc:
+        except Exception as exc:
             self.failed.emit(str(exc))
             return
         self.results.emit(rows)
+
+
+class ActivityScanWorker(QThread):
+    results = pyqtSignal(object)
+    failed = pyqtSignal(str)
+
+    def __init__(self, root: Path, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.root = root
+
+    def run(self) -> None:
+        try:
+            if self.root.is_dir():
+                result = activity_library(self.root, check_cancel=self.isInterruptionRequested)
+            else:
+                result = {'activities': [], 'duplicate_copies': 0, 'problems': []}
+        except InterruptedError:
+            return
+        except Exception as exc:
+            self.failed.emit(str(exc))
+            return
+        self.results.emit(result)
+
+
+class SortableItem(QTableWidgetItem):
+    def __lt__(self, other: QTableWidgetItem) -> bool:
+        left = self.data(Qt.ItemDataRole.UserRole)
+        right = other.data(Qt.ItemDataRole.UserRole)
+        if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+            return left < right
+        return super().__lt__(other)
 
 
 class CompanionWindow(QMainWindow):
@@ -95,6 +128,8 @@ class CompanionWindow(QMainWindow):
         self._backup_root = backup_root or Path.home() / 'GarminBackups'
         self._backup_worker: BackupScanWorker | None = None
         self._backups_loaded = False
+        self._activity_worker: ActivityScanWorker | None = None
+        self._activities_loaded = False
         self.setWindowTitle('Garmin Linux Companion')
         self.resize(900, 620)
         self.setMinimumSize(650, 420)
@@ -115,8 +150,8 @@ class CompanionWindow(QMainWindow):
         row.addWidget(self.pages, 1)
         self.pages.addWidget(self._devices_page())
         self.pages.addWidget(self._backups_page())
+        self.pages.addWidget(self._activities_page())
         for name, description in (
-            ('Activities', 'Browse activities saved in complete backups.'),
             ('Courses', 'Preview and prepare courses for your devices.'),
             ('Maps', 'Inspect local maps and review guarded install plans.'),
         ):
@@ -141,6 +176,9 @@ class CompanionWindow(QMainWindow):
             QPushButton { background: #246b70; color: white; border: 0; border-radius: 6px;
                           padding: 9px 16px; font-weight: 600; }
             QPushButton:hover { background: #1b555a; }
+            QTableWidget { background: white; alternate-background-color: #f7faf9; border: 1px solid #dce5e7; }
+            QHeaderView::section { background: #e8f0ef; color: #183b41; border: 0;
+                                   border-bottom: 1px solid #c5d6d7; padding: 8px; font-weight: 600; }
         ''')
         self.refresh_devices()
         self._refresh_timer = QTimer(self)
@@ -216,6 +254,96 @@ class CompanionWindow(QMainWindow):
     def _page_changed(self, index: int) -> None:
         if index == 1 and not self._backups_loaded:
             self.refresh_backups()
+        elif index == 2 and not self._activities_loaded:
+            self.refresh_activities()
+
+    def _activities_page(self) -> QWidget:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(30, 28, 30, 25)
+        layout.setSpacing(16)
+        heading = QHBoxLayout()
+        titles = QVBoxLayout()
+        titles.addWidget(_label('Activities', kind='pageTitle'))
+        titles.addWidget(_label('Rides and workouts from complete local backups', kind='pageIntro'))
+        heading.addLayout(titles, 1)
+        self.activity_refresh_button = QPushButton('Refresh')
+        self.activity_refresh_button.clicked.connect(self.refresh_activities)
+        heading.addWidget(self.activity_refresh_button, alignment=Qt.AlignmentFlag.AlignTop)
+        layout.addLayout(heading)
+        self.activity_summary = _label('Open this page to read activities.', kind='pageIntro')
+        layout.addWidget(self.activity_summary)
+        self.activity_table = QTableWidget(0, 5)
+        self.activity_table.setHorizontalHeaderLabels(('Date (local)', 'Sport', 'Duration', 'Distance', 'Device'))
+        self.activity_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.activity_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.activity_table.setAlternatingRowColors(True)
+        self.activity_table.verticalHeader().setVisible(False)
+        self.activity_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.activity_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
+        self.activity_table.setSortingEnabled(True)
+        layout.addWidget(self.activity_table, 1)
+        return page
+
+    def refresh_activities(self) -> None:
+        if self._activity_worker is not None:
+            return
+        self._activities_loaded = True
+        self.activity_summary.setText('Reading verified FIT activities…')
+        self.activity_refresh_button.setEnabled(False)
+        worker = ActivityScanWorker(self._backup_root, self)
+        self._activity_worker = worker
+        worker.results.connect(self._show_activities)
+        worker.failed.connect(self._activity_error)
+        worker.finished.connect(self._activity_finished)
+        worker.finished.connect(worker.deleteLater)
+        worker.start()
+
+    def _show_activities(self, library: dict) -> None:
+        rows = library['activities']
+        duplicates = library['duplicate_copies']
+        problems = len(library['problems'])
+        self.activity_table.setSortingEnabled(False)
+        self.activity_table.setRowCount(len(rows))
+        for index, row in enumerate(rows):
+            started = row['start_time_utc']
+            if started:
+                date = datetime.fromisoformat(started).astimezone().strftime('%Y-%m-%d %H:%M')
+            else:
+                date = 'Unknown'
+            sports = ', '.join(row['sports']) or 'Unknown'
+            duration = row['duration_seconds']
+            if duration is None:
+                duration_text = '—'
+            else:
+                minutes = int(round(duration / 60))
+                duration_text = f'{minutes // 60}h {minutes % 60:02d}m' if minutes >= 60 else f'{minutes} min'
+            distance = row['distance_meters']
+            distance_text = f'{distance / 1000:,.2f} km' if distance is not None else '—'
+            values = (date, sports, duration_text, distance_text, str(row['source_device'] or 'Unknown'))
+            for column, value in enumerate(values):
+                item = SortableItem(value)
+                if column == 2:
+                    item.setData(Qt.ItemDataRole.UserRole, duration if duration is not None else -1)
+                elif column == 3:
+                    item.setData(Qt.ItemDataRole.UserRole, distance if distance is not None else -1)
+                self.activity_table.setItem(index, column, item)
+        self.activity_table.setSortingEnabled(True)
+        self.activity_table.sortItems(0, Qt.SortOrder.DescendingOrder)
+        if not rows and not problems:
+            self.activity_summary.setText('No activities found in complete backups')
+        else:
+            problem_noun = 'file' if problems == 1 else 'files'
+            self.activity_summary.setText(
+                f'{len(rows)} activities · {duplicates} duplicate copies · {problems} {problem_noun} could not be summarized')
+
+    def _activity_error(self, message: str) -> None:
+        self.activity_table.setRowCount(0)
+        self.activity_summary.setText(f'Could not read activities: {message}')
+
+    def _activity_finished(self) -> None:
+        self._activity_worker = None
+        self.activity_refresh_button.setEnabled(True)
 
     @staticmethod
     def _clear_layout(layout: QVBoxLayout) -> None:
@@ -269,6 +397,9 @@ class CompanionWindow(QMainWindow):
         if self._backup_worker is not None:
             self._backup_worker.requestInterruption()
             self._backup_worker.wait()
+        if self._activity_worker is not None:
+            self._activity_worker.requestInterruption()
+            self._activity_worker.wait()
         super().closeEvent(event)
 
     def refresh_devices(self) -> None:

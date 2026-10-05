@@ -32,10 +32,11 @@ Last updated: 2026-10-05
 - `install-maps` and `resume-map-install` now use the planner and reader identity checks to replace explicitly backed-up IMGs. A private durable state record allows resuming interrupted partial copies, incomplete old-map removal, and failed unmounts. The installer was verified on synthetic volumes only; the working maps on the real devices were not rewritten.
 - A first PyQt6 desktop screen now opens on Kubuntu with the current Garmin USB volume list, a clear unplugged state, manual and 15-second refresh, and navigation placeholders for Backups, Activities, Courses, and Maps. It uses the existing read-only scanner.
 - The Backups page now lists generated device and map backups under `~/GarminBackups`, showing date, model, volume label, count, size, and verified/incomplete/problem state. Its background worker rechecks every listed file's size and SHA-256; the nine current device backups verified successfully.
+- The read-only Activities page now shows 165 distinct local FIT activities in a sortable table with local date, sport, duration, distance, and device. FIT reading runs in the background; the Kubuntu virtual environment now exposes both system PyQt6 and the Garmin FIT SDK.
 
 ## Next
 
-Next: add a read-only Activities page using the existing activity library over complete backups. Resolve the Kubuntu GUI runtime so PyQt6 and the Garmin FIT SDK are available together, then show a small, sortable activity list with date, sport, duration, distance, and device. Verify empty, valid, and damaged-backup states offscreen. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: build a read-only Courses page from the existing complete-backup course library. Show source device, course name/type, format, point count, and available file path without changing devices; handle an empty library and malformed backed-up course. Verify the page offscreen and update this file. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -59,6 +60,12 @@ Next: add a read-only Activities page using the existing activity library over c
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-05 — read-only Activities page
+
+- Exposed the system PyQt6 package to the existing project virtual environment with `include-system-site-packages = true`, allowing PyQt6 and `garmin-fit-sdk` imports in the same process. Updated the README setup command to use `python3 -m venv --system-site-packages .venv` and launch the GUI with `.venv/bin/python`.
+- Added a background FIT scan on the Activities page, using the existing activity library's manifest hash checks and duplicate suppression. The table shows local date, sport, timer duration, distance, and device; duration and distance sort numerically. Added cancellation checks between backups/files and improved malformed-manifest reporting.
+- Verification: live read-only scan showed 165 distinct activities, 276 duplicate backup copies, and zero unreadable files in about 14 seconds; the rendered table was inspected. Offscreen checks covered empty and damaged backups plus numeric sorting. Three new library tests passed; the full suite passed 45 tests, compilation and `git diff --check` passed. No Garmin volume or backup file was changed. Files changed: `garmin_companion/activities.py`, `garmin_companion/gui.py`, `tests/test_activities.py`, `README.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-05 — verified Backups page
 

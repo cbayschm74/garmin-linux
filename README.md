@@ -12,13 +12,15 @@ The command-line core can detect and back up both devices, summarize activities,
 
 ## Desktop preview on Kubuntu
 
-The Kubuntu system Python has PyQt6 (`python3-pyqt6`). From this repository, open the first desktop screen with:
+The Kubuntu system Python has PyQt6 (`python3-pyqt6`). Create the project environment with access to system packages, then install the FIT SDK and open the desktop app:
 
 ```sh
-python3 -m garmin_companion gui
+python3 -m venv --system-site-packages .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m garmin_companion gui
 ```
 
-The Devices page refreshes every 15 seconds or when you press **Refresh**. It reads the same USB scan as the CLI and shows connected, unmounted volumes without mounting them. The Backups page reads immediate backup directories under `~/GarminBackups`, checks each complete manifest's file sizes and SHA-256 hashes, and distinguishes verified, incomplete, and damaged copies. It runs the check in the background so larger backups do not freeze the window. Older manual backups stored elsewhere are not listed. Activities, Courses, and Maps are placeholders for the next app steps. Use the system `python3` command here; the project's `.venv` currently contains the FIT SDK but does not inherit system PyQt6. A Kubuntu taskbar launcher and Omarchy packaging are later steps.
+The Devices page refreshes every 15 seconds or when you press **Refresh**. It reads the same USB scan as the CLI and shows connected, unmounted volumes without mounting them. The Backups page reads immediate backup directories under `~/GarminBackups`, checks each complete manifest's file sizes and SHA-256 hashes, and distinguishes verified, incomplete, and damaged copies. The Activities page reads verified FIT files from complete backups and offers sortable date, sport, duration, distance, and device columns. Both backup and activity checks run in the background. Older manual backups stored elsewhere are not listed. Courses and Maps are placeholders for the next app steps. A Kubuntu taskbar launcher and Omarchy packaging are later steps.
 
 From this repository directory, list connected Garmin USB volumes without mounting or changing them:
 
@@ -48,7 +50,7 @@ Run this separately for each Garmin volume, including an SD card. The backup inc
 Install Garmin's official FIT decoder in a local environment:
 
 ```sh
-python3 -m venv .venv
+python3 -m venv --system-site-packages .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -m garmin_companion activities
 .venv/bin/python -m garmin_companion activities --json
