@@ -9,13 +9,14 @@ from pathlib import Path
 
 from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
 from PyQt6.QtWidgets import (
-    QAbstractItemView, QApplication, QFrame, QHeaderView, QHBoxLayout, QLabel,
+    QAbstractItemView, QApplication, QFileDialog, QFrame, QHeaderView, QHBoxLayout, QLabel,
     QListWidget, QMainWindow, QPushButton, QScrollArea, QStackedWidget,
     QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
 from .activities import activity_library
 from .courses import course_library
+from .map_inspect import inspect_map
 from .detector import GarminVolume, scan
 from .backup_catalog import BackupSummary, list_backups
 
@@ -143,6 +144,29 @@ class CourseScanWorker(QThread):
         self.results.emit(result)
 
 
+class MapInspectWorker(QThread):
+    results = pyqtSignal(object)
+    failed = pyqtSignal(str)
+    progress = pyqtSignal(int)
+    cancelled = pyqtSignal()
+
+    def __init__(self, path: Path, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.path = path
+
+    def run(self) -> None:
+        try:
+            result = inspect_map(self.path, check_cancel=self.isInterruptionRequested,
+                                 progress=lambda done, total: self.progress.emit(int(done * 100 / total)))
+        except InterruptedError:
+            self.cancelled.emit()
+            return
+        except Exception as exc:
+            self.failed.emit(str(exc))
+            return
+        self.results.emit(result)
+
+
 class CompanionWindow(QMainWindow):
     def __init__(self, scanner=scan, *, auto_refresh: bool = True,
                  backup_root: Path | None = None, activity_cache_path: Path | None = None) -> None:
@@ -156,6 +180,7 @@ class CompanionWindow(QMainWindow):
         self._activities_loaded = False
         self._course_worker: CourseScanWorker | None = None
         self._courses_loaded = False
+        self._map_worker: MapInspectWorker | None = None
         self.setWindowTitle('Garmin Linux Companion')
         self.resize(900, 620)
         self.setMinimumSize(650, 420)
@@ -178,10 +203,7 @@ class CompanionWindow(QMainWindow):
         self.pages.addWidget(self._backups_page())
         self.pages.addWidget(self._activities_page())
         self.pages.addWidget(self._courses_page())
-        for name, description in (
-            ('Maps', 'Inspect local maps and review guarded install plans.'),
-        ):
-            self.pages.addWidget(self._placeholder_page(name, description))
+        self.pages.addWidget(self._maps_page())
         self.navigation.currentRowChanged.connect(self.pages.setCurrentIndex)
         self.navigation.currentRowChanged.connect(self._page_changed)
         self.navigation.setCurrentRow(0)
@@ -202,6 +224,7 @@ class CompanionWindow(QMainWindow):
             QPushButton { background: #246b70; color: white; border: 0; border-radius: 6px;
                           padding: 9px 16px; font-weight: 600; }
             QPushButton:hover { background: #1b555a; }
+            QPushButton:disabled { background: #d5dfe0; color: #64767b; }
             QTableWidget { background: white; alternate-background-color: #f7faf9; border: 1px solid #dce5e7; }
             QHeaderView::section { background: #e8f0ef; color: #183b41; border: 0;
                                    border-bottom: 1px solid #c5d6d7; padding: 8px; font-weight: 600; }
@@ -284,6 +307,95 @@ class CompanionWindow(QMainWindow):
             self.refresh_activities()
         elif index == 3 and not self._courses_loaded:
             self.refresh_courses()
+
+    def _maps_page(self) -> QWidget:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(30, 28, 30, 25)
+        layout.setSpacing(16)
+        layout.addWidget(_label('Maps', kind='pageTitle'))
+        layout.addWidget(_label('Inspect a local Garmin image or downloaded map archive', kind='pageIntro'))
+        buttons = QHBoxLayout()
+        self.map_choose_button = QPushButton('Choose file…')
+        self.map_choose_button.clicked.connect(self._choose_map)
+        buttons.addWidget(self.map_choose_button)
+        self.map_cancel_button = QPushButton('Cancel')
+        self.map_cancel_button.clicked.connect(self._cancel_map)
+        self.map_cancel_button.setEnabled(False)
+        buttons.addWidget(self.map_cancel_button)
+        buttons.addStretch(1)
+        layout.addLayout(buttons)
+        self.map_summary = _label('Choose an IMG, EXE, 7z, or ZIP file to inspect.', kind='pageIntro')
+        layout.addWidget(self.map_summary)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        content = QWidget()
+        self.map_result_layout = QVBoxLayout(content)
+        self.map_result_layout.setContentsMargins(0, 0, 0, 0)
+        scroll.setWidget(content)
+        layout.addWidget(scroll, 1)
+        return page
+
+    def _choose_map(self) -> None:
+        filename, _ = QFileDialog.getOpenFileName(
+            self, 'Inspect map file', str(Path.home() / 'Downloads'),
+            'Garmin maps and archives (*.img *.IMG *.exe *.EXE *.7z *.zip *.ZIP)')
+        if filename:
+            self.inspect_map_file(Path(filename))
+
+    def inspect_map_file(self, path: Path) -> None:
+        if self._map_worker is not None:
+            return
+        self._clear_layout(self.map_result_layout)
+        self.map_summary.setText(f'Inspecting {path.name}…')
+        self.map_choose_button.setEnabled(False)
+        self.map_cancel_button.setEnabled(True)
+        worker = MapInspectWorker(path, self)
+        self._map_worker = worker
+        worker.results.connect(self._show_map)
+        worker.failed.connect(lambda message: self.map_summary.setText(f'Could not inspect file: {message}'))
+        worker.progress.connect(lambda percent: self.map_summary.setText(f'Calculating SHA-256… {percent}%'))
+        worker.cancelled.connect(lambda: self.map_summary.setText('Inspection cancelled.'))
+        worker.finished.connect(self._map_finished)
+        worker.finished.connect(worker.deleteLater)
+        worker.start()
+
+    def _cancel_map(self) -> None:
+        if self._map_worker is not None:
+            self._map_worker.requestInterruption()
+            self.map_cancel_button.setEnabled(False)
+
+    def _show_map(self, preview: dict) -> None:
+        self.map_summary.setText('Inspection complete')
+        card = QFrame()
+        card.setObjectName('deviceCard')
+        layout = QVBoxLayout(card)
+        layout.setSpacing(12)
+        layout.addWidget(_label(Path(preview['path']).name, kind='cardTitle'))
+        if preview['kind'] == 'garmin_img':
+            fields = [('Map header', preview['header_label'] or 'Unnamed'),
+                      ('Fits FAT32 single-file limit', 'Yes' if preview['fits_fat32_single_file'] else 'No')]
+        else:
+            fields = [('Archive type', preview['archive_type']), ('Members', preview['member_count']),
+                      ('IMG files', preview['img_count']), ('Numbered tiles', preview['numbered_tile_count']),
+                      ('Ready gmapsupp.img candidates', preview['ready_gmapsupp_count']),
+                      ('Encrypted members', preview['encrypted_member_count'])]
+        fields += [('Size', f'{preview["size_bytes"]:,} bytes ({preview["size_bytes"] / 1024**2:,.1f} MiB)'),
+                   ('SHA-256', preview['sha256']), ('File', preview['path'])]
+        for title, value in fields:
+            label = _label(f'{title}: {value}')
+            label.setTextFormat(Qt.TextFormat.PlainText)
+            label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+            layout.addWidget(label)
+        layout.addWidget(_label(preview['note'], kind='pageIntro'))
+        self.map_result_layout.addWidget(card)
+        self.map_result_layout.addStretch(1)
+
+    def _map_finished(self) -> None:
+        self._map_worker = None
+        self.map_choose_button.setEnabled(True)
+        self.map_cancel_button.setEnabled(False)
 
     def _courses_page(self) -> QWidget:
         page = QWidget()
@@ -518,6 +630,9 @@ class CompanionWindow(QMainWindow):
         self.backup_refresh_button.setEnabled(True)
 
     def closeEvent(self, event) -> None:
+        if self._map_worker is not None:
+            self._map_worker.requestInterruption()
+            self._map_worker.wait()
         if self._backup_worker is not None:
             self._backup_worker.requestInterruption()
             self._backup_worker.wait()

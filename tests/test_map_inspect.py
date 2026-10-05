@@ -23,6 +23,8 @@ class MapInspectTests(unittest.TestCase):
             self.assertEqual(preview['header_label'], 'Sample Map')
             self.assertEqual(preview['sha256'], hashlib.sha256(data).hexdigest())
             self.assertTrue(preview['fits_fat32_single_file'])
+            with self.assertRaises(InterruptedError):
+                inspect_map(path, check_cancel=lambda: True)
             path.write_bytes(b'not a Garmin image')
             with self.assertRaisesRegex(ValueError, 'recognized Garmin IMG header'):
                 inspect_map(path)

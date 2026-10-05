@@ -35,10 +35,11 @@ Last updated: 2026-10-05
 - The read-only Activities page now shows 165 distinct local FIT activities in a sortable table with local date, sport, duration, distance, and device. FIT reading runs in the background; the Kubuntu virtual environment now exposes both system PyQt6 and the Garmin FIT SDK.
 - Decoded activity summaries are cached privately at `~/.cache/garmin-linux/activity-decoded.json`. The GUI still checks every FIT copy's size and SHA-256 before using cached metadata; a repeat load of the 165 activities now takes about 0.07 seconds on Kubuntu.
 - The read-only Courses page shows 11 distinct backed-up course/waypoint files with name, type, format, numeric point count, source devices, and a selectable saved path. It verifies file hashes and reads courses in a background worker.
+- The Maps page now inspects local IMG/EXE/7z/ZIP files with a file chooser, background checksum progress, cancellation, and header/archive details. It lists archives without extraction or execution.
 
 ## Next
 
-Next: build the read-only Maps page around the existing local IMG/archive inspector. Add a file chooser for IMG, EXE, 7z, and ZIP files, run inspection in the background, and show size, SHA-256, map header or archive tile/ready-image information. Verify valid and invalid local samples without extracting or executing archives. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: add and verify a Kubuntu desktop launcher for the current app, using the project's Qt/FIT virtual environment and a stable icon. Provide a repeatable user-local install/removal path, verify desktop entry syntax and launch, and document how to pin it to KDE's taskbar. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -62,6 +63,11 @@ Next: build the read-only Maps page around the existing local IMG/archive inspec
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-05 — read-only Maps page
+
+- Added a file chooser and background inspection for local IMG, EXE, 7z, and ZIP files. The page shows IMG header/FAT32 fit or archive type/member/IMG/tile/ready-image/encryption counts, plus size, selectable SHA-256, and path. Hashing reports percentage progress. Cancellation stops hashing or the 7-Zip listing process; archive listing has a 120-second limit. The inspector rejects files changed during inspection.
+- Verification: all 48 tests passed, including the added hashing-cancellation assertion. Offscreen GUI checks covered valid IMG, ZIP with a ready candidate, invalid IMG, the user's OpenMTBMap China EXE (119 numbered tiles), and cancellation. The rendered page was inspected. No file was extracted, executed, or changed. Files changed: `garmin_companion/map_inspect.py`, `garmin_companion/gui.py`, `tests/test_map_inspect.py`, `README.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-05 — read-only Courses page
 
