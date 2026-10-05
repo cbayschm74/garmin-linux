@@ -39,10 +39,11 @@ Last updated: 2026-10-05
 - The Kubuntu application-menu launcher is installed under `~/.local`, using this checkout's Qt/FIT environment and an SVG icon. Desktop-entry launch, syntax, and matching KDE desktop identity/taskbar class were verified. The user can open Garmin Linux Companion from the menu and pin its taskbar icon.
 - The Devices page now offers **Back up data** for each mounted volume, saving verified activity/course/metadata backups under `~/GarminBackups`. It reselects the current volume, checks its identity and mount instance, runs in the background with progress/cancellation, and displays the verified destination. The full GUI worker flow passed live checks on Edge internal storage (14 files), Edge SD (96 files), and fēnix 5X (74 files), with independent verification and safe unmount afterward.
 - The Devices page now offers **Mount read-only** and **Safely unmount**, using UDisks after fresh Garmin detection, USB UUID, and mount-instance checks. Controls are disabled during backup or another mount action. Live read-only Edge mount/unmount and synthetic error cases passed.
+- The Activities page now offers **Prepare for Garmin Connect** for a single selected activity. It verifies the backup again, writes or reuses a matching FIT under `~/GarminBackups/ForUpload`, and shows its path and manual browser-import guidance. Synthetic success and damaged-backup cases passed.
 
 ## Next
 
-Next: add an Activities-page action to prepare a selected activity for manual Garmin Connect upload, using the existing verified export core. Show the exported FIT location and brief browser-import guidance; make the action available only for an explicit selected row, perform export in the background, and verify valid and damaged-backup cases with synthetic data first. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: add a local GPX/FIT course file chooser and preview to the Courses page, using the existing inspector in a background worker. Show course name/type, format, points, and available distance, distinguish waypoint-only files, and verify valid/invalid samples without device transfers. This prepares the GUI for later guarded course transfer. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -66,6 +67,12 @@ Next: add an Activities-page action to prepare a selected activity for manual Ga
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-05 — selected activity export in the GUI
+
+- Added Prepare for Garmin Connect on the Activities page, enabled for one selected row. The full activity SHA-256 travels with the sorted table row; a background worker uses the existing export core to recheck the backup and publish a verified private FIT under ForUpload. The result shows a selectable path and manual Garmin Connect web-import guidance. Refresh/selection are locked during export, and closing requests cancellation.
+- The export core now accepts the existing decoded-summary cache and cancellation callbacks. Cached summaries still require each FIT copy's saved size/hash verification, followed by rehashing the selected source before publishing. Identical prior exports are reused; conflicting destinations are refused.
+- Verification: four new synthetic core tests covered matching private copies/reuse, changed backups, destination conflicts, missing/ambiguous IDs, and cancellation. Synthetic offscreen GUI checks covered no-selection refusal, selected verified export, and damaged-backup failure; the rendered result was inspected. All 57 tests passed. No real activity was exported or uploaded in this step. Files changed: `garmin_companion/export.py`, `garmin_companion/gui.py`, `tests/test_export.py`, `README.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-05 — live GUI backup flow on both devices
 

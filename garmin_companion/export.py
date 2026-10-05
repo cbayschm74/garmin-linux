@@ -7,6 +7,7 @@ import os
 import re
 import tempfile
 from pathlib import Path
+from typing import Callable
 
 from .activities import activity_library
 from .detector import scan
@@ -15,17 +16,21 @@ from .detector import scan
 MAX_FIT_BYTES = 50 * 1024 * 1024
 
 
-def prepare_activity(backup_root: Path, activity_id: str, destination: Path) -> Path:
+def prepare_activity(backup_root: Path, activity_id: str, destination: Path, *,
+                     cache_path: Path | None = None,
+                     check_cancel: Callable[[], bool] | None = None) -> Path:
     activity_id = activity_id.lower()
     if len(activity_id) < 8 or not re.fullmatch(r'[0-9a-f]+', activity_id):
         raise ValueError('Use at least eight hexadecimal characters from an activity ID')
-    library = activity_library(backup_root)
+    library = activity_library(backup_root, cache_path=cache_path, check_cancel=check_cancel)
     matches = [row for row in library['activities'] if row['sha256'].startswith(activity_id)]
     if len(matches) != 1:
         raise ValueError(f'Activity ID matches {len(matches)} files; choose a longer or valid ID')
     row = matches[0]
     source = Path(row['backup_paths'][0])
     data = source.read_bytes()
+    if check_cancel and check_cancel():
+        raise InterruptedError('Activity export cancelled')
     if hashlib.sha256(data).hexdigest() != row['sha256']:
         raise ValueError('Selected backup file changed since the activity scan')
     if len(data) > MAX_FIT_BYTES:
@@ -56,6 +61,8 @@ def prepare_activity(backup_root: Path, activity_id: str, destination: Path) -> 
             os.fsync(output.fileno())
         if hashlib.sha256(temporary.read_bytes()).hexdigest() != row['sha256']:
             raise ValueError('Prepared copy failed its hash check')
+        if check_cancel and check_cancel():
+            raise InterruptedError('Activity export cancelled')
         os.link(temporary, target)
     finally:
         temporary.unlink(missing_ok=True)

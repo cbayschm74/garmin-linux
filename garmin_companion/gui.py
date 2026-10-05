@@ -23,6 +23,7 @@ from .detector import GarminVolume, scan
 from .backup_catalog import BackupSummary, list_backups
 from .backup import backup as create_backup, select_volume, _mount_id, _mounted_source
 from .mount_control import capture_volume, change_mount
+from .export import prepare_activity
 
 
 PAGES = ('Devices', 'Backups', 'Activities', 'Courses', 'Maps')
@@ -232,6 +233,28 @@ class MountWorker(QThread):
         self.results.emit(message)
 
 
+class ActivityExportWorker(QThread):
+    results = pyqtSignal(str)
+    failed = pyqtSignal(str)
+    cancelled = pyqtSignal()
+
+    def __init__(self, root: Path, activity_id: str, cache: Path, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.root, self.activity_id, self.cache = root, activity_id, cache
+
+    def run(self) -> None:
+        try:
+            path = prepare_activity(self.root, self.activity_id, self.root / 'ForUpload',
+                                    cache_path=self.cache, check_cancel=self.isInterruptionRequested)
+        except InterruptedError:
+            self.cancelled.emit()
+            return
+        except Exception as exc:
+            self.failed.emit(str(exc))
+            return
+        self.results.emit(str(path))
+
+
 class CompanionWindow(QMainWindow):
     def __init__(self, scanner=scan, *, auto_refresh: bool = True,
                  backup_root: Path | None = None, activity_cache_path: Path | None = None) -> None:
@@ -248,6 +271,7 @@ class CompanionWindow(QMainWindow):
         self._map_worker: MapInspectWorker | None = None
         self._device_backup_worker: DeviceBackupWorker | None = None
         self._mount_worker: MountWorker | None = None
+        self._export_worker: ActivityExportWorker | None = None
         self.setWindowTitle('Garmin Linux Companion')
         self.resize(900, 620)
         self.setMinimumSize(650, 420)
@@ -652,20 +676,67 @@ class CompanionWindow(QMainWindow):
         self.activity_table.setHorizontalHeaderLabels(('Date (local)', 'Sport', 'Duration', 'Distance', 'Device'))
         self.activity_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.activity_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.activity_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.activity_table.itemSelectionChanged.connect(self._activity_selected)
         self.activity_table.setAlternatingRowColors(True)
         self.activity_table.verticalHeader().setVisible(False)
         self.activity_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.activity_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
         self.activity_table.setSortingEnabled(True)
         layout.addWidget(self.activity_table, 1)
+        self.activity_export_button = QPushButton('Prepare for Garmin Connect')
+        self.activity_export_button.setEnabled(False)
+        self.activity_export_button.clicked.connect(self.export_selected_activity)
+        layout.addWidget(self.activity_export_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.activity_export_status = _label('Select an activity to prepare a verified FIT copy.', kind='pageIntro')
+        self.activity_export_status.setTextFormat(Qt.TextFormat.PlainText)
+        self.activity_export_status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(self.activity_export_status)
         return page
 
+    def _activity_selected(self) -> None:
+        if not hasattr(self, 'activity_export_button'):
+            return
+        selected = self.activity_table.selectionModel().selectedRows()
+        self.activity_export_button.setEnabled(bool(selected) and self._export_worker is None and self._activity_worker is None)
+
+    def export_selected_activity(self) -> None:
+        selected = self.activity_table.selectionModel().selectedRows()
+        if not selected or self._export_worker is not None or self._activity_worker is not None:
+            return
+        activity_id = self.activity_table.item(selected[0].row(), 0).data(Qt.ItemDataRole.UserRole)
+        worker = ActivityExportWorker(self._backup_root, activity_id, self._activity_cache_path, self)
+        self._export_worker = worker
+        self.activity_export_button.setEnabled(False)
+        self.activity_refresh_button.setEnabled(False)
+        self.activity_table.setEnabled(False)
+        self.activity_export_status.setText('Checking the selected backup and preparing its FIT copy…')
+        worker.results.connect(self._activity_export_complete)
+        worker.failed.connect(lambda message: self.activity_export_status.setText(f'Export failed: {message}'))
+        worker.cancelled.connect(lambda: self.activity_export_status.setText('Export cancelled.'))
+        worker.finished.connect(self._activity_export_finished)
+        worker.finished.connect(worker.deleteLater)
+        worker.start()
+
+    def _activity_export_complete(self, path: str) -> None:
+        self.activity_export_status.setText(
+            f'Verified FIT copy: {path}\nGarmin Connect web: upload icon → Import Data → Browse, then select this file.')
+
+    def _activity_export_finished(self) -> None:
+        self._export_worker = None
+        self.activity_refresh_button.setEnabled(True)
+        self.activity_table.setEnabled(True)
+        self._activity_selected()
+
     def refresh_activities(self) -> None:
-        if self._activity_worker is not None:
+        if self._activity_worker is not None or self._export_worker is not None:
             return
         self._activities_loaded = True
         self.activity_summary.setText('Reading verified FIT activities…')
         self.activity_refresh_button.setEnabled(False)
+        self.activity_table.clearSelection()
+        self.activity_export_button.setEnabled(False)
+        self.activity_export_status.setText('Select an activity to prepare a verified FIT copy.')
         worker = ActivityScanWorker(self._backup_root, self._activity_cache_path, self)
         self._activity_worker = worker
         worker.results.connect(self._show_activities)
@@ -698,7 +769,9 @@ class CompanionWindow(QMainWindow):
             values = (date, sports, duration_text, distance_text, str(row['source_device'] or 'Unknown'))
             for column, value in enumerate(values):
                 item = SortableItem(value)
-                if column == 2:
+                if column == 0:
+                    item.setData(Qt.ItemDataRole.UserRole, row['sha256'])
+                elif column == 2:
                     item.setData(Qt.ItemDataRole.UserRole, duration if duration is not None else -1)
                 elif column == 3:
                     item.setData(Qt.ItemDataRole.UserRole, distance if distance is not None else -1)
@@ -709,8 +782,9 @@ class CompanionWindow(QMainWindow):
             self.activity_summary.setText('No activities found in complete backups')
         else:
             problem_noun = 'file' if problems == 1 else 'files'
+            activity_noun = 'activity' if len(rows) == 1 else 'activities'
             self.activity_summary.setText(
-                f'{len(rows)} activities · {duplicates} duplicate copies · {problems} {problem_noun} could not be summarized')
+                f'{len(rows)} {activity_noun} · {duplicates} duplicate copies · {problems} {problem_noun} could not be summarized')
 
     def _activity_error(self, message: str) -> None:
         self.activity_table.setRowCount(0)
@@ -719,6 +793,7 @@ class CompanionWindow(QMainWindow):
     def _activity_finished(self) -> None:
         self._activity_worker = None
         self.activity_refresh_button.setEnabled(True)
+        self._activity_selected()
 
     @staticmethod
     def _clear_layout(layout: QVBoxLayout) -> None:
@@ -770,6 +845,9 @@ class CompanionWindow(QMainWindow):
         self.backup_refresh_button.setEnabled(True)
 
     def closeEvent(self, event) -> None:
+        if self._export_worker is not None:
+            self._export_worker.requestInterruption()
+            self._export_worker.wait()
         if self._mount_worker is not None:
             self._mount_worker.wait()
         if self._device_backup_worker is not None:

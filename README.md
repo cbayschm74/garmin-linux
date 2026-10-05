@@ -82,6 +82,8 @@ The reader uses complete backups under `~/GarminBackups` (override with `--backu
 
 To prepare one activity for Garmin Connect, copy its 12-character ID from `activities` and run `export-activity --id ID`. The command checks the original backup again and saves a private FIT copy in `~/GarminBackups/ForUpload`. For example, replace the sample ID here with one from your list:
 
+In the desktop app, select one row on **Activities** and click **Prepare for Garmin Connect**. The app rechecks the backup and prepares the same verified FIT copy in the background, then displays its selectable path and the browser-import steps. Repeating an export reuses an identical existing copy; a conflicting file is refused. For the CLI, use the commands below:
+
 ```sh
 .venv/bin/python -m garmin_companion activities --limit 20
 .venv/bin/python -m garmin_companion export-activity --id 0123456789ab
