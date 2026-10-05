@@ -27,10 +27,11 @@ Last updated: 2026-10-05
 - Corrected local OpenMTBMap China builds were installed: a 675 MB fēnix IMG covering Guangdong/Hong Kong/Macao (18 map and 40 contour tiles) and a three-part, 9.34 GB full-China Edge set (all 119 map and 814 contour tiles). The user confirmed both maps load and the fēnix map renders. The first trial reused old tile IDs that had shifted geographic meaning in the new edition; its outputs were renamed `SUPERSEDED_wrong_region.img`. Builds and verified old-map backups remain in `~/Downloads/GarminMapBuild-China/`. See `docs/openmtbmap-china-build.md`.
 - `inspect-map --file` now previews local Garmin IMG headers or lists `.exe`, `.7z`, and `.zip` archives read-only with 7-Zip. It reports SHA-256, sizes, tile counts, and whether a ready `gmapsupp.img` candidate is present; no archive is executed or extracted. Verified against the user's China downloads and corrected fēnix and Edge images.
 - `backup-maps --volume ... --file ...` now copies only named top-level `Garmin/*.img` files from a currently detected USB volume into a private, verified backup. It does not write to the device. Synthetic failure checks and a local IMG dry run passed; no new live device map backup was needed this session.
+- `plan-map-install` now produces a read-only replacement plan from current device IMG files, an exact complete map backup, and proposed local new IMGs. It validates hashes, header/size, collisions, current mount identity, and staging/final space. Synthetic failure cases and a local real-IMG dry run passed. Generic USB card readers are not yet accepted by the Garmin detector.
 
 ## Next
 
-Next: implement a read-only map replacement planner before any installer. Given a current Garmin volume, exact old IMG filenames, local new IMG files, and a complete map backup, it should validate device identity, source IMG headers and sizes, backup hashes, filename collisions, and staging space, then print a concrete transfer/recovery plan without modifying the device. Verify with synthetic disconnect, bad-backup, and insufficient-space cases. Only after that should a guarded installer and resume path be built. Both map acceptance checks, the archive/IMG inspector, and the map-specific backup command are complete. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: design the guarded map installer and resume state around the completed read-only planner. First add safe identity handling for an Edge SD card moved to a generic USB reader, using an explicit card identifier and backup evidence; the Garmin-vendor USB detector alone cannot recognize that reader. Then implement staged copy, device read-back hash, old-file removal only after a verified first part, interruption recovery, and safe unmount. Verify each failure path with synthetic volumes before considering another live map replacement. The current maps on both devices already load, so there is no reason to rewrite them for this test. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -54,6 +55,13 @@ Next: implement a read-only map replacement planner before any installer. Given 
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-05 — read-only map replacement planner
+
+- Added `plan-map-install --volume CURRENT_PATH --replace OLD.img [--replace ...] --new SOURCE.img=TARGET.img [--new ...] --backup COMPLETE_MAP_BACKUP [--json]`. It uses the current Garmin USB detector, checks the mount instance before/after reads, verifies each current old IMG against the exact complete backup (including backup copy SHA-256), requires new local IMG headers and FAT32-compatible sizes, rejects target/staging filename collisions, and checks first-stage and estimated final free space with a 16 MiB margin. The first `--new` is staged first in the proposed steps. It reports a plan and never writes to the device.
+- Four synthetic planner tests passed: ready plan leaves device unchanged; corrupt backup/changed current map refusal; insufficient first-stage space and collision refusal; remount and malformed IMG refusal. A local dry run used a complete synthetic-volume backup of a real 10,752-byte OpenMTBMap IMG and planned a replacement with the actual 674,889,728-byte fēnix IMG; source SHA-256 matched the prior build record and the mock device file remained unchanged. No Garmin device was mounted or written.
+- Reader limitation: the current `scan` only recognizes disks reporting Garmin as USB vendor, so an Edge microSD moved to the SanDisk reader needs a separate explicit identity route before the planner/installer can operate there.
+- Files changed: `garmin_companion/map_plan.py`, `garmin_companion/map_backup.py`, `garmin_companion/__main__.py`, `tests/test_map_plan.py`, `README.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-05 — map-specific backup command
 

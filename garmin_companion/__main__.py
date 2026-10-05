@@ -29,6 +29,14 @@ def main() -> int:
                                     help='exact IMG filename in Garmin/; repeat for multiple maps')
     map_backup_command.add_argument('--dest', type=Path, default=Path.home() / 'GarminBackups',
                                     help='private backup root outside Garmin volumes')
+    plan_command = commands.add_parser('plan-map-install', help='check a map replacement without writing to a device')
+    plan_command.add_argument('--volume', required=True, help='current Garmin USB volume path from scan')
+    plan_command.add_argument('--replace', action='append', required=True, dest='old_maps',
+                              help='exact old IMG filename in Garmin/; repeat as needed')
+    plan_command.add_argument('--new', action='append', required=True, dest='new_maps',
+                              help='local source IMG and target name as SOURCE=TARGET.img; repeat as needed')
+    plan_command.add_argument('--backup', type=Path, required=True, help='complete map backup directory')
+    plan_command.add_argument('--json', action='store_true', help='print full read-only plan')
     activities_command = commands.add_parser("activities", help="summarize activities from complete backups")
     activities_command.add_argument("--backups", type=Path, default=Path.home() / "GarminBackups")
     activities_command.add_argument("--json", action="store_true", help="print full summaries and backup paths")
@@ -92,6 +100,19 @@ def main() -> int:
             destination, entries = backup_maps(select_volume(args.volume), args.files, args.dest)
             print(f'Verified map backup: {destination}')
             print(f'Files: {len(entries)}; bytes: {sum(entry.size_bytes for entry in entries)}')
+        elif args.command == 'plan-map-install':
+            from .map_plan import plan_map_replacement
+            plan = plan_map_replacement(select_volume(args.volume), args.old_maps, args.new_maps, args.backup)
+            if args.json:
+                print(json.dumps(plan, indent=2))
+            else:
+                print(f"Read-only map plan: {plan['model']} at {plan['volume']}")
+                print(f"Verified backup: {plan['backup']}; old maps: {len(plan['old_maps'])}; new maps: {len(plan['new_maps'])}")
+                print(f"Space: {plan['free_bytes_before']} bytes free now; approximately {plan['free_bytes_after_estimate']} after replacement")
+                print(f"Stage first: {plan['new_maps'][0]['target']} ({plan['stage_first_bytes']} bytes)")
+                for step in plan['steps']:
+                    print(f'  - {step}')
+                print(plan['note'])
         elif args.command == "activities":
             from .activities import activity_library
             if args.limit < 1:

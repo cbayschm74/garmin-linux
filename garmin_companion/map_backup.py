@@ -13,11 +13,16 @@ from .backup import FileEntry, _copy_verified, _mount_id, _mounted_source, _slug
 from .detector import GarminVolume, scan
 
 
-def _map_entry(source: Path, name: str) -> FileEntry:
+def validate_img_name(name: str) -> str:
     relative = Path(name)
     if (relative.name != name or name in {'.', '..'} or not name.lower().endswith('.img')
             or name.startswith('.') or '/' in name or '\\' in name):
         raise ValueError('Select a map by its exact IMG filename in the Garmin folder')
+    return name
+
+
+def _map_entry(source: Path, name: str) -> FileEntry:
+    validate_img_name(name)
     directory = source / 'Garmin'
     path = directory / name
     if directory.is_symlink() or not directory.is_dir() or path.is_symlink() or not path.is_file():
