@@ -22,6 +22,8 @@ python3 -m venv --system-site-packages .venv
 
 The Devices page refreshes every 15 seconds or when you press **Refresh**. It reads the same USB scan as the CLI and shows connected, unmounted volumes without mounting them. The Backups page reads immediate backup directories under `~/GarminBackups`, checks each complete manifest's file sizes and SHA-256 hashes, and distinguishes verified, incomplete, and damaged copies. The Activities page reads verified FIT files from complete backups and offers sortable date, sport, duration, distance, and device columns. Both backup and activity checks run in the background. Older manual backups stored elsewhere are not listed. Courses and Maps are placeholders for the next app steps. A Kubuntu taskbar launcher and Omarchy packaging are later steps.
 
+The first Activities load decodes each distinct FIT file and can take several seconds. Later loads reuse decoded metadata from a private cache at `~/.cache/garmin-linux/activity-decoded.json`; each backup FIT file is still checked against its saved size and SHA-256 before its cached summary is displayed. The cache contains activity dates and summary metrics, so keep it private. Delete that file to force a fresh decode. No backup or device file is changed by the cache.
+
 From this repository directory, list connected Garmin USB volumes without mounting or changing them:
 
 ```sh

@@ -93,14 +93,16 @@ class ActivityScanWorker(QThread):
     results = pyqtSignal(object)
     failed = pyqtSignal(str)
 
-    def __init__(self, root: Path, parent: QWidget) -> None:
+    def __init__(self, root: Path, cache_path: Path, parent: QWidget) -> None:
         super().__init__(parent)
         self.root = root
+        self.cache_path = cache_path
 
     def run(self) -> None:
         try:
             if self.root.is_dir():
-                result = activity_library(self.root, check_cancel=self.isInterruptionRequested)
+                result = activity_library(self.root, check_cancel=self.isInterruptionRequested,
+                                          cache_path=self.cache_path)
             else:
                 result = {'activities': [], 'duplicate_copies': 0, 'problems': []}
         except InterruptedError:
@@ -122,10 +124,11 @@ class SortableItem(QTableWidgetItem):
 
 class CompanionWindow(QMainWindow):
     def __init__(self, scanner=scan, *, auto_refresh: bool = True,
-                 backup_root: Path | None = None) -> None:
+                 backup_root: Path | None = None, activity_cache_path: Path | None = None) -> None:
         super().__init__()
         self._scanner = scanner
         self._backup_root = backup_root or Path.home() / 'GarminBackups'
+        self._activity_cache_path = activity_cache_path or Path.home() / '.cache/garmin-linux/activity-decoded.json'
         self._backup_worker: BackupScanWorker | None = None
         self._backups_loaded = False
         self._activity_worker: ActivityScanWorker | None = None
@@ -291,7 +294,7 @@ class CompanionWindow(QMainWindow):
         self._activities_loaded = True
         self.activity_summary.setText('Reading verified FIT activities…')
         self.activity_refresh_button.setEnabled(False)
-        worker = ActivityScanWorker(self._backup_root, self)
+        worker = ActivityScanWorker(self._backup_root, self._activity_cache_path, self)
         self._activity_worker = worker
         worker.results.connect(self._show_activities)
         worker.failed.connect(self._activity_error)

@@ -33,6 +33,7 @@ Last updated: 2026-10-05
 - A first PyQt6 desktop screen now opens on Kubuntu with the current Garmin USB volume list, a clear unplugged state, manual and 15-second refresh, and navigation placeholders for Backups, Activities, Courses, and Maps. It uses the existing read-only scanner.
 - The Backups page now lists generated device and map backups under `~/GarminBackups`, showing date, model, volume label, count, size, and verified/incomplete/problem state. Its background worker rechecks every listed file's size and SHA-256; the nine current device backups verified successfully.
 - The read-only Activities page now shows 165 distinct local FIT activities in a sortable table with local date, sport, duration, distance, and device. FIT reading runs in the background; the Kubuntu virtual environment now exposes both system PyQt6 and the Garmin FIT SDK.
+- Decoded activity summaries are cached privately at `~/.cache/garmin-linux/activity-decoded.json`. The GUI still checks every FIT copy's size and SHA-256 before using cached metadata; a repeat load of the 165 activities now takes about 0.07 seconds on Kubuntu.
 
 ## Next
 
@@ -60,6 +61,11 @@ Next: build a read-only Courses page from the existing complete-backup course li
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-05 — faster repeated Activities loads
+
+- The user reported a 10–15 second Activities load. Added a private cache of decoded FIT summary metadata, keyed by the verified file SHA-256. The cache lives outside Git and backups at `~/.cache/garmin-linux/activity-decoded.json`; it contains no backup paths. Activity scanning still rereads and hashes every FIT copy before accepting cached metadata, so a changed backup file is reported as a problem. Cache writes are atomic and mode 0600; cache failures do not block the library.
+- Verification: the first live scan of 165 distinct activities took 13.2 seconds; a repeat took 0.04 seconds with 165 cache hits and zero problems. The offscreen GUI loaded the same 165 rows in 0.07 seconds. A new synthetic test confirmed decoding is skipped on repeat while a same-size file change is still rejected. All 46 tests and `git diff --check` passed. No backup or Garmin device file changed. Files changed: `garmin_companion/activities.py`, `garmin_companion/gui.py`, `tests/test_activities.py`, `README.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-05 — read-only Activities page
 
