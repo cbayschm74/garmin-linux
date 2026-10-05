@@ -30,10 +30,11 @@ Last updated: 2026-10-05
 - `plan-map-install` now produces a read-only replacement plan from current device IMG files, an exact complete map backup, and proposed local new IMGs. It validates hashes, header/size, collisions, current mount identity, and staging/final space. Synthetic failure cases and a local real-IMG dry run passed. Its reader identity path accepts a backed-up Edge SD card in a generic USB reader.
 - New map backups record the volume UUID and size privately. `plan-map-install` accepts an Edge SD card in a generic USB reader only when that USB FAT volume's UUID, size, and label match the complete backup; it then checks the old map file hashes. Synthetic reader checks passed. Older manual backups without identity fields cannot establish this reader path.
 - `install-maps` and `resume-map-install` now use the planner and reader identity checks to replace explicitly backed-up IMGs. A private durable state record allows resuming interrupted partial copies, incomplete old-map removal, and failed unmounts. The installer was verified on synthetic volumes only; the working maps on the real devices were not rewritten.
+- A first PyQt6 desktop screen now opens on Kubuntu with the current Garmin USB volume list, a clear unplugged state, manual and 15-second refresh, and navigation placeholders for Backups, Activities, Courses, and Maps. It uses the existing read-only scanner.
 
 ## Next
 
-Next: build the first read-only Kubuntu desktop app shell over the existing core. Start with device status from `scan`, an unplugged-device state, and navigation placeholders for backups, activities, courses, and maps. Verify it starts locally without a Garmin device and update this file. Do not rewrite the working device maps merely to exercise the new installer. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: make the desktop Backups page useful using the existing complete backup manifests. Show backup date, source model/volume, file count, size, and integrity state without reading personal file contents or writing devices. Verify empty, valid, and incomplete/corrupt backup states locally. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -57,6 +58,12 @@ Next: build the first read-only Kubuntu desktop app shell over the existing core
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-05 — first Kubuntu desktop screen
+
+- Added `python3 -m garmin_companion gui`, a PyQt6 desktop shell with a Devices page based on the existing read-only `scan()`. It lists current Garmin volumes and their mount state, has an explicit no-device message, supports Refresh and a 15-second timer, and shows a scan error without closing the app. The other four pages are navigation placeholders.
+- Kubuntu's system Python has PyQt6 6.10.2, while the project's FIT virtual environment does not inherit it. The README uses system `python3` for the GUI preview. The live scanner found three connected but unmounted Garmin volumes; no volume was mounted or modified.
+- Verification: offscreen Qt checks passed for unplugged, connected, scan-error, navigation, and live-scan states; screenshots were visually inspected. All 37 existing tests, bytecode compilation, and `git diff --check` passed. Files changed: `garmin_companion/gui.py`, `garmin_companion/__main__.py`, `README.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-05 — guarded resumable map installer
 

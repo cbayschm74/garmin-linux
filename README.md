@@ -8,7 +8,17 @@ For planning and viewing tracks alongside this app, see the [Linux route editor 
 
 ## Current state
 
-The command-line core can detect and back up both devices, summarize activities, and transfer courses through model-specific USB paths. There is no desktop application to install yet. See [STATUS.md](STATUS.md) for the next step and [docs/device-compatibility.md](docs/device-compatibility.md) for observed hardware details.
+The command-line core can detect and back up both devices, summarize activities, and transfer courses through model-specific USB paths. A first read-only desktop screen shows current device status; its other sections are navigation placeholders. See [STATUS.md](STATUS.md) for the next step and [docs/device-compatibility.md](docs/device-compatibility.md) for observed hardware details.
+
+## Desktop preview on Kubuntu
+
+The Kubuntu system Python has PyQt6 (`python3-pyqt6`). From this repository, open the first desktop screen with:
+
+```sh
+python3 -m garmin_companion gui
+```
+
+The Devices page refreshes every 15 seconds or when you press **Refresh**. It reads the same USB scan as the CLI and shows connected, unmounted volumes without mounting them. Backups, Activities, Courses, and Maps are placeholders for the next app steps. Use the system `python3` command here; the project's `.venv` currently contains the FIT SDK but does not inherit system PyQt6. A Kubuntu taskbar launcher and Omarchy packaging are later steps.
 
 From this repository directory, list connected Garmin USB volumes without mounting or changing them:
 
