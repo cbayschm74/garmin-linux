@@ -22,6 +22,7 @@ from .desktop import DESKTOP_ID, ICON_PATH, LAUNCHER_NAME
 from .detector import GarminVolume, scan
 from .backup_catalog import BackupSummary, list_backups
 from .backup import backup as create_backup, select_volume, _mount_id, _mounted_source
+from .mount_control import capture_volume, change_mount
 
 
 PAGES = ('Devices', 'Backups', 'Activities', 'Courses', 'Maps')
@@ -35,7 +36,7 @@ def _label(text: str, *, kind: str = '') -> QLabel:
     return label
 
 
-def _device_card(volume: GarminVolume, backup_callback=None, *, busy: bool = False) -> QFrame:
+def _device_card(volume: GarminVolume, backup_callback=None, mount_callback=None, *, busy: bool = False) -> QFrame:
     card = QFrame()
     card.setObjectName('deviceCard')
     layout = QVBoxLayout(card)
@@ -53,13 +54,19 @@ def _device_card(volume: GarminVolume, backup_callback=None, *, busy: bool = Fal
         layout.addWidget(_label(f'Software version field: {volume.software_version}'))
     if volume.warning:
         layout.addWidget(_label(f'Warning: {volume.warning}', kind='warningText'))
+    controls = QHBoxLayout()
+    if mount_callback:
+        mount_button = QPushButton('Safely unmount' if volume.mountpoint else 'Mount read-only')
+        mount_button.setEnabled(not busy)
+        mount_button.clicked.connect(lambda checked=False: mount_callback(volume))
+        controls.addWidget(mount_button)
     if backup_callback:
         button = QPushButton('Back up data')
         button.setEnabled(bool(volume.mountpoint) and not busy)
         button.clicked.connect(lambda checked=False: backup_callback(volume))
-        layout.addWidget(button, alignment=Qt.AlignmentFlag.AlignLeft)
-        if not volume.mountpoint:
-            layout.addWidget(_label('Mount this volume in the file manager, then Refresh to enable backup.', kind='pageIntro'))
+        controls.addWidget(button)
+    controls.addStretch(1)
+    layout.addLayout(controls)
     return card
 
 
@@ -208,6 +215,23 @@ class DeviceBackupWorker(QThread):
         self.results.emit({'path': str(destination), 'files': len(listing.files), 'bytes': listing.total_bytes})
 
 
+class MountWorker(QThread):
+    results = pyqtSignal(str)
+    failed = pyqtSignal(str)
+
+    def __init__(self, volume: GarminVolume, action: str, evidence: dict, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.volume, self.action, self.evidence = volume, action, evidence
+
+    def run(self) -> None:
+        try:
+            message = change_mount(self.volume, self.action, self.evidence)
+        except Exception as exc:
+            self.failed.emit(str(exc))
+            return
+        self.results.emit(message)
+
+
 class CompanionWindow(QMainWindow):
     def __init__(self, scanner=scan, *, auto_refresh: bool = True,
                  backup_root: Path | None = None, activity_cache_path: Path | None = None) -> None:
@@ -223,6 +247,7 @@ class CompanionWindow(QMainWindow):
         self._courses_loaded = False
         self._map_worker: MapInspectWorker | None = None
         self._device_backup_worker: DeviceBackupWorker | None = None
+        self._mount_worker: MountWorker | None = None
         self.setWindowTitle('Garmin Linux Companion')
         self.resize(900, 620)
         self.setMinimumSize(650, 420)
@@ -315,7 +340,7 @@ class CompanionWindow(QMainWindow):
         return page
 
     def start_device_backup(self, volume: GarminVolume) -> None:
-        if self._device_backup_worker is not None:
+        if self._device_backup_worker is not None or self._mount_worker is not None:
             return
         try:
             mount_id = _mount_id(_mounted_source(volume))
@@ -335,6 +360,30 @@ class CompanionWindow(QMainWindow):
         worker.finished.connect(worker.deleteLater)
         self.refresh_devices()
         worker.start()
+
+    def start_mount_action(self, volume: GarminVolume) -> None:
+        if self._device_backup_worker is not None or self._mount_worker is not None:
+            return
+        try:
+            evidence = capture_volume(volume)
+        except (OSError, ValueError, subprocess.SubprocessError) as exc:
+            self.backup_job_status.setText(f'Cannot change mount: {exc}')
+            self.refresh_devices()
+            return
+        action = 'unmount' if volume.mountpoint else 'mount'
+        worker = MountWorker(volume, action, evidence, self)
+        self._mount_worker = worker
+        self.backup_job_status.setText('Safely unmounting volume…' if volume.mountpoint else 'Mounting volume read-only…')
+        worker.results.connect(self.backup_job_status.setText)
+        worker.failed.connect(lambda message: self.backup_job_status.setText(f'Mount operation failed: {message}'))
+        worker.finished.connect(self._mount_finished)
+        worker.finished.connect(worker.deleteLater)
+        self.refresh_devices()
+        worker.start()
+
+    def _mount_finished(self) -> None:
+        self._mount_worker = None
+        self.refresh_devices()
 
     def _cancel_device_backup(self) -> None:
         if self._device_backup_worker is not None:
@@ -676,6 +725,7 @@ class CompanionWindow(QMainWindow):
         while layout.count():
             item = layout.takeAt(0)
             if item.widget():
+                item.widget().hide()
                 item.widget().deleteLater()
 
     def _clear_devices(self) -> None:
@@ -720,6 +770,8 @@ class CompanionWindow(QMainWindow):
         self.backup_refresh_button.setEnabled(True)
 
     def closeEvent(self, event) -> None:
+        if self._mount_worker is not None:
+            self._mount_worker.wait()
         if self._device_backup_worker is not None:
             self._device_backup_worker.requestInterruption()
             self._device_backup_worker.wait()
@@ -760,8 +812,8 @@ class CompanionWindow(QMainWindow):
             count = len(volumes)
             self.summary.setText(f'{count} Garmin volume{"s" if count != 1 else ""} detected')
             for volume in volumes:
-                self.list_layout.addWidget(_device_card(volume, self.start_device_backup,
-                                                        busy=self._device_backup_worker is not None))
+                self.list_layout.addWidget(_device_card(volume, self.start_device_backup, self.start_mount_action,
+                    busy=self._device_backup_worker is not None or self._mount_worker is not None))
         self.list_layout.addStretch(1)
 
 

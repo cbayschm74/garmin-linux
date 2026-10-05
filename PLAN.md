@@ -98,6 +98,7 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 - [x] Add a read-only Courses page with names, types, formats, point counts, source devices, and selected backup paths. Live, empty, and malformed-course checks passed.
 - [x] Add local IMG/archive inspection to the Maps page with a file chooser, background checksums, progress, and cancellation. Valid/invalid samples and the OpenMTBMap EXE passed GUI checks.
 - [x] Add device-data backup buttons for explicit mounted volumes, fresh identity/mount checks, background progress, cancellation, and verified destination reporting. Synthetic GUI checks passed; live GUI backup validation remains pending.
+- [x] Add read-only mount and safe-unmount controls with fresh USB UUID/mount-instance checks and backup-busy guards. Synthetic checks and a live Edge GUI mount/unmount cycle passed.
 - [x] Add a read-only local archive/IMG inspector with file size, checksum, tile counts, and ready-IMG detection. Verified against the user's China downloads and corrected fēnix build.
 - [x] Add map-specific backup of explicitly selected IMG files, with a private verified manifest and incomplete-copy detection. Synthetic checks and a local IMG dry run passed; live device validation remains separate.
 - [x] Add a read-only map replacement planner that checks current maps, their complete backup, new IMG sources, filenames, and staging space before any device write. Synthetic failures and a local real-IMG dry run passed.

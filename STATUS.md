@@ -38,10 +38,11 @@ Last updated: 2026-10-05
 - The Maps page now inspects local IMG/EXE/7z/ZIP files with a file chooser, background checksum progress, cancellation, and header/archive details. It lists archives without extraction or execution.
 - The Kubuntu application-menu launcher is installed under `~/.local`, using this checkout's Qt/FIT environment and an SVG icon. Desktop-entry launch, syntax, and matching KDE desktop identity/taskbar class were verified. The user can open Garmin Linux Companion from the menu and pin its taskbar icon.
 - The Devices page now offers **Back up data** for each mounted volume, saving verified activity/course/metadata backups under `~/GarminBackups`. It reselects the current volume, checks its identity and mount instance, runs in the background with progress/cancellation, and displays the verified destination. Synthetic checks passed; no real device was backed up through the GUI yet.
+- The Devices page now offers **Mount read-only** and **Safely unmount**, using UDisks after fresh Garmin detection, USB UUID, and mount-instance checks. Controls are disabled during backup or another mount action. Live read-only Edge mount/unmount and synthetic error cases passed.
 
 ## Next
 
-Next: add explicit mount-read-only and safe-unmount controls to the Devices page using UDisks for a freshly detected Garmin volume, so the backup flow can run without a terminal or file-manager detour. Disable mount/unmount while a device backup runs, report failures clearly, and verify synthetic command/disconnect cases first. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: verify the complete GUI mount → data backup → safe-unmount flow on the physical Edge 1000 and fēnix 5X, one volume at a time. Re-detect paths, mount read-only through the app, run the new backup action, independently check the saved hashes, and safely unmount afterward. Record any device-specific failures. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -65,6 +66,11 @@ Next: add explicit mount-read-only and safe-unmount controls to the Devices page
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-05 — GUI mount and safe-unmount controls
+
+- Added explicit Mount read-only and Safely unmount buttons per Garmin volume. The backend freshly checks detection, model/label/size/filesystem/mountpoint/device name, USB UUID, and mount instance before calling UDisks without interactive privilege prompts. Mounts request `ro` and verify the resulting mount flags; unmount verifies the mount is gone. Failures and timeouts are shown with a refreshed volume list. Mount and backup actions cannot overlap.
+- Verification: four synthetic backend tests cover read-only command/result, safe-unmount/remount refusal, replacement/disconnect refusal, UDisks failures, and unexpected writable mounts. Synthetic GUI checks covered success, failure, and disabled controls during backup. All 53 tests passed. A live Edge internal mount was verified read-only; its first unmount reported transient DeviceBusy, a normal retry succeeded, and a second complete GUI mount/unmount cycle passed. All three Garmin volumes were left unmounted; no device file was written. The rendered controls were inspected. Files changed: `garmin_companion/mount_control.py`, `garmin_companion/gui.py`, `tests/test_mount_control.py`, `README.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-05 — GUI device-data backup action
 
