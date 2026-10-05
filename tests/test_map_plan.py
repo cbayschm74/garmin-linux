@@ -32,6 +32,7 @@ class MapPlanTests(unittest.TestCase):
                                    1024, str(self.device), 'candidate', None, None, ['synthetic'])
         with patch.object(map_backup, '_mounted_source', return_value=self.device), \
              patch.object(map_backup, '_mount_id', return_value='mount-1'), \
+             patch.object(map_backup, '_volume_uuid', return_value='TEST-UUID'), \
              patch.object(map_backup, 'scan', return_value=[self.volume]):
             self.backup, _ = map_backup.backup_maps(self.volume, ['old.img'], self.root / 'backups')
         for name, value in [('_mounted_source', self.device), ('_mount_id', 'mount-1'),

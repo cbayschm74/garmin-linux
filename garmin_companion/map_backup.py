@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import subprocess
 import tempfile
 from dataclasses import asdict
 from datetime import datetime, timezone
@@ -11,6 +12,15 @@ from pathlib import Path
 
 from .backup import FileEntry, _copy_verified, _mount_id, _mounted_source, _slug
 from .detector import GarminVolume, scan
+
+
+def _volume_uuid(volume: GarminVolume) -> str:
+    result = subprocess.run(['lsblk', '-dnro', 'UUID', volume.path],
+                            check=True, capture_output=True, text=True)
+    uuid = result.stdout.strip()
+    if not uuid or '\n' in uuid:
+        raise ValueError('Garmin volume has no single filesystem UUID')
+    return uuid
 
 
 def validate_img_name(name: str) -> str:
@@ -40,6 +50,7 @@ def backup_maps(volume: GarminVolume, names: list[str], destination_root: Path) 
         raise ValueError('Name one or more distinct IMG files')
     entries = [_map_entry(source, name) for name in names]
     mount_id = _mount_id(source)
+    volume_uuid = _volume_uuid(volume)
 
     def ensure_same_mount() -> None:
         _mounted_source(volume)
@@ -69,6 +80,7 @@ def backup_maps(volume: GarminVolume, names: list[str], destination_root: Path) 
         ensure_same_mount()
         manifest = {'purpose': 'Garmin map backup', 'created_utc': datetime.now(timezone.utc).isoformat(),
                     'model': volume.model, 'device_name': volume.device_name, 'label': volume.label,
+                    'volume_uuid': volume_uuid, 'volume_size_bytes': volume.size_bytes,
                     'file_count': len(files), 'total_bytes': total_bytes, 'files': files}
         (stage / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
         (stage / 'COMPLETE').write_text('All selected IMG files were copied and SHA-256 verified.\n')

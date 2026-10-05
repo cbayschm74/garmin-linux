@@ -120,7 +120,7 @@ python3 -m garmin_companion backup-maps --volume /dev/sdX --file example_map.img
 udisksctl unmount -b /dev/sdX
 ```
 
-Replace `/dev/sdX` and `example_map.img` with the current values. The Edge SD card may appear as a candidate in `scan` because it has no device XML; the command still requires that it be a currently detected Garmin USB volume. It stores exact filenames, sizes, timestamps, and SHA-256 hashes in a private `manifest.json` and publishes `COMPLETE` only after every copy verifies on the same mount. An interrupted copy remains in a private `.incomplete-*` directory. This command backs up selected maps only; it does not install or restore them.
+Replace `/dev/sdX` and `example_map.img` with the current values. The Edge SD card may appear as a candidate in `scan` because it has no device XML; the command still requires that it be a currently detected Garmin USB volume. It stores exact filenames, sizes, timestamps, SHA-256 hashes, and the volume UUID/size in a private `manifest.json`, then publishes `COMPLETE` only after every copy verifies on the same mount. Keep that private manifest outside Git. An interrupted copy remains in a private `.incomplete-*` directory. This command backs up selected maps only; it does not install or restore them.
 
 Before a future map replacement, `plan-map-install` checks the selected device maps against that complete backup, validates each new local IMG, checks target and staging filename collisions, and estimates the space needed to stage the first image before removing the old set. Give `--new` values in the intended transfer order. It prints a plan and does not change device files:
 
@@ -131,7 +131,7 @@ python3 -m garmin_companion plan-map-install --volume /dev/sdX \
   --backup "$HOME/GarminBackups/maps_EXAMPLE" --json
 ```
 
-The backup must have been created by `backup-maps` for exactly the old filenames on that volume. Checking large IMGs over a device USB interface may be slow. A card moved to a generic USB reader is not currently identified by the Garmin USB detector; reader-based planning needs an explicit identity check in a later step. A successful plan is a preflight result, not authorization for an automatic transfer.
+The backup must have been created by `backup-maps` for exactly the old filenames on that volume. Checking large IMGs over a device USB interface may be slow. If the Edge SD card is later moved to a generic USB reader, `plan-map-install` can accept its current `/dev/sdX1` path when the USB FAT card's UUID, size, and label match that complete private backup; it then hashes the card's selected old maps against the backup. Older backups without the UUID/size fields cannot establish this reader identity. The command only prints a plan; it never writes map files.
 
 ## Privacy and device safety
 

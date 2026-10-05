@@ -21,7 +21,7 @@ class MapBackupTests(unittest.TestCase):
         (self.maps / 'China.img').write_bytes(b'garmin map data')
         self.volume = GarminVolume('/dev/synthetic', 'GARMIN Card', 'vfat', 'GARMIN SD',
                                    1024, str(self.source), 'candidate', None, None, ['synthetic'])
-        for name, value in [('_mounted_source', self.source), ('_mount_id', 'mount-1'),
+        for name, value in [('_mounted_source', self.source), ('_mount_id', 'mount-1'), ('_volume_uuid', 'TEST-UUID'),
                             ('scan', [self.volume])]:
             mock = patch.object(map_backup, name, return_value=value)
             mock.start()
@@ -35,6 +35,8 @@ class MapBackupTests(unittest.TestCase):
         self.assertEqual(destination.stat().st_mode & 0o777, 0o700)
         manifest = json.loads((destination / 'manifest.json').read_text())
         self.assertEqual(manifest['purpose'], 'Garmin map backup')
+        self.assertEqual(manifest['volume_uuid'], 'TEST-UUID')
+        self.assertEqual(manifest['volume_size_bytes'], self.volume.size_bytes)
         self.assertEqual(manifest['file_count'], 1)
         self.assertEqual(len(manifest['files'][0]['sha256']), 64)
 

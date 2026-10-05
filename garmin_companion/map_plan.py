@@ -42,7 +42,7 @@ def _verified_backup(path: Path, volume: GarminVolume, old_names: list[str]) -> 
     except (OSError, ValueError, TypeError) as exc:
         raise ValueError('Map backup manifest is unreadable') from exc
     if (manifest.get('purpose') != 'Garmin map backup' or manifest.get('model') != volume.model
-            or manifest.get('label') != volume.label):
+            or manifest.get('label') != volume.label or manifest.get('volume_size_bytes') != volume.size_bytes):
         raise ValueError('Map backup does not match this Garmin volume')
     rows = manifest.get('files')
     if not isinstance(rows, list) or len(rows) != len(old_names) or manifest.get('file_count') != len(rows):
@@ -88,7 +88,7 @@ def plan_map_replacement(volume: GarminVolume, old_names: list[str], specificati
 
     old_entries = [_map_entry(source, name) for name in old_names]
     new_specs = _parse_new(specifications)
-    mounted_paths = [Path(item.mountpoint).resolve() for item in scan() if item.mountpoint]
+    mounted_paths = [source.resolve()] + [Path(item.mountpoint).resolve() for item in scan() if item.mountpoint]
     backup_path = backup.expanduser().resolve(strict=True)
     if any(backup_path.is_relative_to(mount) for mount in mounted_paths):
         raise ValueError('Map backup cannot be on a Garmin device')

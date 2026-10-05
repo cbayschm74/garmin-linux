@@ -101,8 +101,9 @@ def main() -> int:
             print(f'Verified map backup: {destination}')
             print(f'Files: {len(entries)}; bytes: {sum(entry.size_bytes for entry in entries)}')
         elif args.command == 'plan-map-install':
+            from .map_identity import select_map_volume
             from .map_plan import plan_map_replacement
-            plan = plan_map_replacement(select_volume(args.volume), args.old_maps, args.new_maps, args.backup)
+            plan = plan_map_replacement(select_map_volume(args.volume, args.backup), args.old_maps, args.new_maps, args.backup)
             if args.json:
                 print(json.dumps(plan, indent=2))
             else:
