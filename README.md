@@ -111,6 +111,17 @@ python3 -m garmin_companion inspect-map --file /path/to/gmapsupp.img
 
 Archive previews count IMG entries, numbered map tiles, and ready `gmapsupp.img` candidates. IMG previews show the header label, byte size, SHA-256, and whether the file is below FAT32's single-file limit. The checksum identifies the local file; compare it with a trusted publisher checksum if one is available. A recognized header or archive entry does not establish map coverage, contour quality, device compatibility, or a right to install it. The verified China build and on-device results are in [docs/openmtbmap-china-build.md](docs/openmtbmap-china-build.md).
 
+To back up specific maps before any replacement, use the current path from `scan`, mount that volume read-only, and name each IMG in its top-level `Garmin/` folder. Repeat `--file` for multiple images; the command never selects maps by a wildcard or writes to the device. For example:
+
+```sh
+python3 -m garmin_companion scan
+udisksctl mount -b /dev/sdX -o ro
+python3 -m garmin_companion backup-maps --volume /dev/sdX --file example_map.img --dest "$HOME/GarminBackups"
+udisksctl unmount -b /dev/sdX
+```
+
+Replace `/dev/sdX` and `example_map.img` with the current values. The Edge SD card may appear as a candidate in `scan` because it has no device XML; the command still requires that it be a currently detected Garmin USB volume. It stores exact filenames, sizes, timestamps, and SHA-256 hashes in a private `manifest.json` and publishes `COMPLETE` only after every copy verifies on the same mount. An interrupted copy remains in a private `.incomplete-*` directory. This command backs up selected maps only; it does not install or restore them.
+
 ## Privacy and device safety
 
 - Do not commit real activities, routes, device XML, serial numbers, credentials, maps, or firmware.

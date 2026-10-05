@@ -23,6 +23,12 @@ def main() -> int:
     backup_command = commands.add_parser("backup", help="copy and verify selected files")
     backup_command.add_argument("--volume", required=True, help="current device path from scan")
     backup_command.add_argument("--dest", required=True, type=Path, help="backup root outside Garmin volumes")
+    map_backup_command = commands.add_parser('backup-maps', help='copy and verify explicitly named Garmin IMG files')
+    map_backup_command.add_argument('--volume', required=True, help='current Garmin USB volume path from scan')
+    map_backup_command.add_argument('--file', action='append', required=True, dest='files',
+                                    help='exact IMG filename in Garmin/; repeat for multiple maps')
+    map_backup_command.add_argument('--dest', type=Path, default=Path.home() / 'GarminBackups',
+                                    help='private backup root outside Garmin volumes')
     activities_command = commands.add_parser("activities", help="summarize activities from complete backups")
     activities_command.add_argument("--backups", type=Path, default=Path.home() / "GarminBackups")
     activities_command.add_argument("--json", action="store_true", help="print full summaries and backup paths")
@@ -81,6 +87,11 @@ def main() -> int:
                 print(f"{summary['volume']}: {summary['file_count']} files, {summary['total_bytes']} bytes")
                 for folder, count in summary["counts_by_folder"].items():
                     print(f"  {folder}: {count}")
+        elif args.command == 'backup-maps':
+            from .map_backup import backup_maps
+            destination, entries = backup_maps(select_volume(args.volume), args.files, args.dest)
+            print(f'Verified map backup: {destination}')
+            print(f'Files: {len(entries)}; bytes: {sum(entry.size_bytes for entry in entries)}')
         elif args.command == "activities":
             from .activities import activity_library
             if args.limit < 1:

@@ -26,10 +26,11 @@ Last updated: 2026-10-05
 - Read-only map inventory found 28 IMG files across Edge 1000 internal/SD and fēnix 5X internal storage. Embedded IMG names and versions are recorded in `docs/map-inventory.md`. `docs/map-feasibility.md` records Garmin and OpenMTBMap delivery paths. The user has an OpenMTBMap account and reports one purchased Edge Chile topo map; actual account-specific update offers remain unverified.
 - Corrected local OpenMTBMap China builds were installed: a 675 MB fēnix IMG covering Guangdong/Hong Kong/Macao (18 map and 40 contour tiles) and a three-part, 9.34 GB full-China Edge set (all 119 map and 814 contour tiles). The user confirmed both maps load and the fēnix map renders. The first trial reused old tile IDs that had shifted geographic meaning in the new edition; its outputs were renamed `SUPERSEDED_wrong_region.img`. Builds and verified old-map backups remain in `~/Downloads/GarminMapBuild-China/`. See `docs/openmtbmap-china-build.md`.
 - `inspect-map --file` now previews local Garmin IMG headers or lists `.exe`, `.7z`, and `.zip` archives read-only with 7-Zip. It reports SHA-256, sizes, tile counts, and whether a ready `gmapsupp.img` candidate is present; no archive is executed or extracted. Verified against the user's China downloads and corrected fēnix and Edge images.
+- `backup-maps --volume ... --file ...` now copies only named top-level `Garmin/*.img` files from a currently detected USB volume into a private, verified backup. It does not write to the device. Synthetic failure checks and a local IMG dry run passed; no new live device map backup was needed this session.
 
 ## Next
 
-Next: implement a reusable map-specific backup command for explicitly selected Garmin IMG files on a confirmed volume. It should save a private manifest with size/SHA-256, reject backup destinations on Garmin volumes, and leave the device untouched. Verify with synthetic files and a local dry run before designing guarded map installation and disconnect recovery. Both map acceptance checks and the read-only archive/IMG inspector are complete. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: implement a read-only map replacement planner before any installer. Given a current Garmin volume, exact old IMG filenames, local new IMG files, and a complete map backup, it should validate device identity, source IMG headers and sizes, backup hashes, filename collisions, and staging space, then print a concrete transfer/recovery plan without modifying the device. Verify with synthetic disconnect, bad-backup, and insufficient-space cases. Only after that should a guarded installer and resume path be built. Both map acceptance checks, the archive/IMG inspector, and the map-specific backup command are complete. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -53,6 +54,12 @@ Next: implement a reusable map-specific backup command for explicitly selected G
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-05 — map-specific backup command
+
+- Added `backup-maps --volume CURRENT_PATH --file EXACT_NAME.img [--file ...] --dest PRIVATE_ROOT`. It requires a currently detected Garmin USB volume (the Edge SD can be a detector candidate), accepts only explicit top-level `Garmin/*.img` names, rejects symlinks, duplicates, and destinations on Garmin mounts, checks free space, and copies each file to a private staging directory with source size/mtime and mount-instance checks. Each copy is read back with SHA-256. It writes `manifest.json` and `COMPLETE` only after all selected files verify; incomplete attempts retain no COMPLETE marker. The device is never written.
+- Four synthetic map-backup tests passed: successful private publication, invalid paths/device destination, symlink/duplicate rejection, and disconnect/copy failure without COMPLETE. A local dry run copied a real 10,752-byte `osmmap.img` from the corrected fēnix build through a synthetic volume and independently matched its backup SHA-256. The current Edge and fēnix volumes were detected but unmounted; no live Garmin volume was mounted or changed.
+- Files changed: `garmin_companion/map_backup.py`, `garmin_companion/__main__.py`, `tests/test_map_backup.py`, `README.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-05 — both map checks complete; read-only inspector
 
