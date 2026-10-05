@@ -92,6 +92,7 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 
 - [ ] Build a small GUI over the tested core: device status, backup, activities, courses, and update guidance.
 - [x] Add the first read-only PyQt6 desktop shell on Kubuntu with live device status, an unplugged state, refresh, and navigation placeholders. Offscreen GUI smoke checks and a live read-only scan passed.
+- [x] Show complete local device and map backups with date, model, volume label, file count, size, and verified/incomplete/problem states. SHA-256 verification runs in a worker thread; synthetic and live backup checks passed.
 - [x] Add a read-only local archive/IMG inspector with file size, checksum, tile counts, and ready-IMG detection. Verified against the user's China downloads and corrected fēnix build.
 - [x] Add map-specific backup of explicitly selected IMG files, with a private verified manifest and incomplete-copy detection. Synthetic checks and a local IMG dry run passed; live device validation remains separate.
 - [x] Add a read-only map replacement planner that checks current maps, their complete backup, new IMG sources, filenames, and staging space before any device write. Synthetic failures and a local real-IMG dry run passed.

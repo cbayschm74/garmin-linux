@@ -31,10 +31,11 @@ Last updated: 2026-10-05
 - New map backups record the volume UUID and size privately. `plan-map-install` accepts an Edge SD card in a generic USB reader only when that USB FAT volume's UUID, size, and label match the complete backup; it then checks the old map file hashes. Synthetic reader checks passed. Older manual backups without identity fields cannot establish this reader path.
 - `install-maps` and `resume-map-install` now use the planner and reader identity checks to replace explicitly backed-up IMGs. A private durable state record allows resuming interrupted partial copies, incomplete old-map removal, and failed unmounts. The installer was verified on synthetic volumes only; the working maps on the real devices were not rewritten.
 - A first PyQt6 desktop screen now opens on Kubuntu with the current Garmin USB volume list, a clear unplugged state, manual and 15-second refresh, and navigation placeholders for Backups, Activities, Courses, and Maps. It uses the existing read-only scanner.
+- The Backups page now lists generated device and map backups under `~/GarminBackups`, showing date, model, volume label, count, size, and verified/incomplete/problem state. Its background worker rechecks every listed file's size and SHA-256; the nine current device backups verified successfully.
 
 ## Next
 
-Next: make the desktop Backups page useful using the existing complete backup manifests. Show backup date, source model/volume, file count, size, and integrity state without reading personal file contents or writing devices. Verify empty, valid, and incomplete/corrupt backup states locally. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: add a read-only Activities page using the existing activity library over complete backups. Resolve the Kubuntu GUI runtime so PyQt6 and the Garmin FIT SDK are available together, then show a small, sortable activity list with date, sport, duration, distance, and device. Verify empty, valid, and damaged-backup states offscreen. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -58,6 +59,12 @@ Next: make the desktop Backups page useful using the existing complete backup ma
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-05 — verified Backups page
+
+- Added a read-only backup catalog for the `backup` and `backup-maps` manifest formats. It inspects immediate backup directories under `~/GarminBackups`, checks the COMPLETE marker, manifest shape and totals, safe relative paths, each file's size and SHA-256, and classifies verified, incomplete, or problem states. Other folders such as ForUpload and map-install state are ignored.
+- The PyQt6 Backups page shows date in local time, source model and volume label, file count and size, path, and integrity status. Checks run in a cancellable worker thread; Refresh reruns them. Older manual map backups elsewhere under Downloads are not listed by this page.
+- Verification: five synthetic catalog tests and offscreen GUI checks covered empty, verified, damaged, and incomplete directories. All nine existing device backups in `~/GarminBackups` passed full SHA-256 verification. The full test suite passed (42 tests), compilation and `git diff --check` passed, and the rendered page was visually inspected. No device volume or backup file was changed. Files changed: `garmin_companion/backup_catalog.py`, `garmin_companion/gui.py`, `tests/test_backup_catalog.py`, `README.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-05 — first Kubuntu desktop screen
 

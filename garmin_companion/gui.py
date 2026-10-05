@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import sys
 import subprocess
+from datetime import datetime
+from pathlib import Path
 
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
 from PyQt6.QtWidgets import (
     QApplication, QFrame, QHBoxLayout, QLabel, QListWidget, QMainWindow,
     QPushButton, QScrollArea, QStackedWidget, QVBoxLayout, QWidget,
 )
 
 from .detector import GarminVolume, scan
+from .backup_catalog import BackupSummary, list_backups
 
 
 PAGES = ('Devices', 'Backups', 'Activities', 'Courses', 'Maps')
@@ -46,10 +49,52 @@ def _device_card(volume: GarminVolume) -> QFrame:
     return card
 
 
+def _backup_card(backup: BackupSummary) -> QFrame:
+    card = QFrame()
+    card.setObjectName('deviceCard')
+    layout = QVBoxLayout(card)
+    layout.setSpacing(7)
+    name = backup.model or backup.path.name
+    layout.addWidget(_label(f'{backup.kind} · {name}', kind='cardTitle'))
+    state = {'verified': 'Verified', 'incomplete': 'Incomplete', 'problem': 'Needs attention'}[backup.status]
+    layout.addWidget(_label(f'{state} — {backup.detail}',
+                            kind='statusText' if backup.status == 'verified' else 'warningText'))
+    if backup.created_utc:
+        date = datetime.fromisoformat(backup.created_utc.replace('Z', '+00:00')).astimezone().strftime('%Y-%m-%d %H:%M')
+        layout.addWidget(_label(f'Local time: {date}  ·  Volume: {backup.label or "unlabeled"}'))
+    if backup.file_count is not None and backup.total_bytes is not None:
+        layout.addWidget(_label(f'{backup.file_count} files  ·  {backup.total_bytes / (1024 * 1024):,.1f} MiB'))
+    layout.addWidget(_label(str(backup.path), kind='pageIntro'))
+    return card
+
+
+class BackupScanWorker(QThread):
+    results = pyqtSignal(object)
+    failed = pyqtSignal(str)
+
+    def __init__(self, root: Path, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.root = root
+
+    def run(self) -> None:
+        try:
+            rows = list_backups(self.root, check_cancel=self.isInterruptionRequested)
+        except InterruptedError:
+            return
+        except (OSError, ValueError) as exc:
+            self.failed.emit(str(exc))
+            return
+        self.results.emit(rows)
+
+
 class CompanionWindow(QMainWindow):
-    def __init__(self, scanner=scan, *, auto_refresh: bool = True) -> None:
+    def __init__(self, scanner=scan, *, auto_refresh: bool = True,
+                 backup_root: Path | None = None) -> None:
         super().__init__()
         self._scanner = scanner
+        self._backup_root = backup_root or Path.home() / 'GarminBackups'
+        self._backup_worker: BackupScanWorker | None = None
+        self._backups_loaded = False
         self.setWindowTitle('Garmin Linux Companion')
         self.resize(900, 620)
         self.setMinimumSize(650, 420)
@@ -69,14 +114,15 @@ class CompanionWindow(QMainWindow):
         self.pages = QStackedWidget()
         row.addWidget(self.pages, 1)
         self.pages.addWidget(self._devices_page())
+        self.pages.addWidget(self._backups_page())
         for name, description in (
-            ('Backups', 'Verified device and map backups will appear here.'),
             ('Activities', 'Browse activities saved in complete backups.'),
             ('Courses', 'Preview and prepare courses for your devices.'),
             ('Maps', 'Inspect local maps and review guarded install plans.'),
         ):
             self.pages.addWidget(self._placeholder_page(name, description))
         self.navigation.currentRowChanged.connect(self.pages.setCurrentIndex)
+        self.navigation.currentRowChanged.connect(self._page_changed)
         self.navigation.setCurrentRow(0)
 
         self.setStyleSheet('''
@@ -140,11 +186,90 @@ class CompanionWindow(QMainWindow):
         layout.addStretch(1)
         return page
 
-    def _clear_devices(self) -> None:
-        while self.list_layout.count():
-            item = self.list_layout.takeAt(0)
+    def _backups_page(self) -> QWidget:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(30, 28, 30, 25)
+        layout.setSpacing(16)
+        heading = QHBoxLayout()
+        titles = QVBoxLayout()
+        titles.addWidget(_label('Backups', kind='pageTitle'))
+        titles.addWidget(_label('Local device and map backups, checked against their SHA-256 manifests', kind='pageIntro'))
+        heading.addLayout(titles, 1)
+        self.backup_refresh_button = QPushButton('Refresh')
+        self.backup_refresh_button.clicked.connect(self.refresh_backups)
+        heading.addWidget(self.backup_refresh_button, alignment=Qt.AlignmentFlag.AlignTop)
+        layout.addLayout(heading)
+        self.backup_summary = _label('Open this page to check backups.', kind='pageIntro')
+        layout.addWidget(self.backup_summary)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        content = QWidget()
+        self.backup_list_layout = QVBoxLayout(content)
+        self.backup_list_layout.setContentsMargins(0, 0, 0, 0)
+        self.backup_list_layout.setSpacing(12)
+        scroll.setWidget(content)
+        layout.addWidget(scroll, 1)
+        return page
+
+    def _page_changed(self, index: int) -> None:
+        if index == 1 and not self._backups_loaded:
+            self.refresh_backups()
+
+    @staticmethod
+    def _clear_layout(layout: QVBoxLayout) -> None:
+        while layout.count():
+            item = layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+
+    def _clear_devices(self) -> None:
+        self._clear_layout(self.list_layout)
+
+    def refresh_backups(self) -> None:
+        if self._backup_worker is not None:
+            return
+        self._backups_loaded = True
+        self.backup_summary.setText('Checking backup manifests and file hashes…')
+        self.backup_refresh_button.setEnabled(False)
+        worker = BackupScanWorker(self._backup_root, self)
+        self._backup_worker = worker
+        worker.results.connect(self._show_backups)
+        worker.failed.connect(self._backup_error)
+        worker.finished.connect(self._backup_finished)
+        worker.finished.connect(worker.deleteLater)
+        worker.start()
+
+    def _show_backups(self, backups: list[BackupSummary]) -> None:
+        self._clear_layout(self.backup_list_layout)
+        if not backups:
+            self.backup_summary.setText('No local backups found')
+            self.backup_list_layout.addWidget(_label(f'Backups will appear under {self._backup_root} after a verified copy.'))
+        else:
+            verified = sum(item.status == 'verified' for item in backups)
+            issues = len(backups) - verified
+            noun = 'backup' if len(backups) == 1 else 'backups'
+            self.backup_summary.setText(f'{len(backups)} {noun} · {verified} verified · {issues} need attention')
+            for backup in backups:
+                self.backup_list_layout.addWidget(_backup_card(backup))
+        self.backup_list_layout.addStretch(1)
+
+    def _backup_error(self, message: str) -> None:
+        self._clear_layout(self.backup_list_layout)
+        self.backup_summary.setText('Could not check backups')
+        self.backup_list_layout.addWidget(_label(message, kind='warningText'))
+        self.backup_list_layout.addStretch(1)
+
+    def _backup_finished(self) -> None:
+        self._backup_worker = None
+        self.backup_refresh_button.setEnabled(True)
+
+    def closeEvent(self, event) -> None:
+        if self._backup_worker is not None:
+            self._backup_worker.requestInterruption()
+            self._backup_worker.wait()
+        super().closeEvent(event)
 
     def refresh_devices(self) -> None:
         try:
