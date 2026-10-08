@@ -49,7 +49,8 @@ class EdgeImportTests(unittest.TestCase):
         self.assertEqual(result.backup_path, self.backup_path)
         self.assertEqual(result.copied_path.read_bytes(), self.gpx.read_bytes())
         import_course.subprocess.run.assert_called_once_with(
-            ['udisksctl', 'unmount', '-b', self.volume.path], check=True, capture_output=True, text=True)
+            ['udisksctl', 'unmount', '-b', self.volume.path, '--no-user-interaction'],
+            check=True, capture_output=True, text=True, timeout=30)
 
     def test_refuses_existing_target_without_backup(self):
         preview = import_course.inspect_course(self.gpx)

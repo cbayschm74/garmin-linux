@@ -42,10 +42,11 @@ Last updated: 2026-10-08
 - The Activities page now offers **Prepare for Garmin Connect** for a single selected activity. It verifies the backup again, writes or reuses a matching FIT under `~/GarminBackups/ForUpload`, and shows its path and manual browser-import guidance. Synthetic success and damaged-backup cases passed.
 - **Courses → Local file** now previews a selected GPX/FIT in the background, showing name, type, point counts, size, SHA-256, and path, plus available FIT distance. Waypoint-only GPX is distinct from routes/tracks. Invalid files clear the previous preview and show an error; the backed-up course list remains in its own tab.
 - **Prepare FIT for fēnix** now converts an eligible previewed GPX route/track in the background, saves a verified course under `~/GarminBackups/ForDevice`, and displays the FIT preview. The button is disabled for waypoint-only, ambiguous, multi-segment, and out-of-count inputs; the converter validates coordinates and rejects a source changed since preview.
+- **Review fēnix transfer…** now reviews the selected FIT and a confirmed mounted watch before sending. The background transfer rechecks USB/source/mount identity, handles read-only → writable mounting, creates a fresh verified backup, copies and verifies the FIT, and safely unmounts. Synthetic core/GUI checks passed; no physical GUI course transfer has run yet.
 
 ## Next
 
-Next: add guarded FIT course transfer to the fēnix from the local Courses preview, using the existing importer. Require explicit review of the selected FIT and current confirmed watch volume before sending, handle the required writable mount as part of that action, make a fresh verified backup before copying, and safely unmount on success. Verify identity/source-change/disconnect failure cases with synthetic devices before any live course write. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: validate the reviewed GUI FIT transfer on the physical fēnix 5X with a course explicitly chosen by the user. Mount the connected watch read-only, preview/prepare that course, review and send it, independently check the fresh backup and recorded copy result, then have the user disconnect and confirm the course under START → Navigate → Courses. Course choice and permission to submit it must be established before a live write. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -69,6 +70,12 @@ Next: add guarded FIT course transfer to the fēnix from the local Courses previ
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-08 — reviewed fēnix FIT transfer in the GUI
+
+- Added Review fēnix transfer with course details, a current confirmed-watch selector, Send course, and Cancel. Review captures USB UUID/mount evidence and rereads the FIT against the preview SHA-256. The background transfer rechecks that evidence, performs a guarded writable-mount transition when needed, and calls the existing importer with expected course hash and watch/mount identity. Device mount/backup actions and source selection are locked while sending, and automatic device scanning pauses until completion.
+- The importer now rechecks the source after fresh backup before creating a device file, handles escaped mount paths, and uses a bounded noninteractive safe-unmount call. If a verified copy's initial unmount fails, the transfer attempts normal identity-checked cleanup; it reports success only after confirming the same watch is unmounted. Other failures never force an unmount and report cleanup problems explicitly.
+- Verification: all 65 tests passed. New synthetic checks cover actual verified FIT copying and a real local backup on mocked watch storage, mount transitions, replaced/remounted devices, source changes before/during backup, disconnect after backup, writable-mount restrictions, and busy-unmount recovery. Offscreen GUI checks proved review cancellation performs no actions and accepted review completes the synthetic transfer; review/result screens were visually inspected. No real Garmin was written. Files changed: `garmin_companion/course_transfer.py`, `garmin_companion/gui.py`, `garmin_companion/import_course.py`, `garmin_companion/mount_control.py`, `tests/test_course_transfer.py`, `tests/test_import_course.py`, `tests/test_mount_control.py`, `README.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-08 — prepare FIT for fēnix in the GUI
 

@@ -32,9 +32,11 @@ def capture_volume(volume: GarminVolume) -> dict:
             'mount_id': _mount_id(_mounted_source(volume)) if volume.mountpoint else None}
 
 
-def change_mount(volume: GarminVolume, action: str, evidence: dict) -> str:
+def change_mount(volume: GarminVolume, action: str, evidence: dict, *, writable_for_course: bool = False) -> str:
     if action not in {'mount', 'unmount'}:
         raise ValueError('Unknown mount action')
+    if writable_for_course and (action != 'mount' or volume.model != 'fenix5x Flash' or volume.filesystem != 'vfat'):
+        raise ValueError('Writable course mounting requires the reviewed fēnix internal volume')
     current = select_volume(volume.path)
     fields = ('model', 'label', 'size_bytes', 'filesystem', 'mountpoint', 'device_name')
     if any(getattr(current, field) != getattr(volume, field) for field in fields):
@@ -47,7 +49,7 @@ def change_mount(volume: GarminVolume, action: str, evidence: dict) -> str:
         raise ValueError('Volume is already unmounted')
     command = ['udisksctl', action, '-b', evidence['path'], '--no-user-interaction']
     if action == 'mount':
-        command += ['-o', 'ro']
+        command += ['-o', 'rw' if writable_for_course else 'ro']
     try:
         subprocess.run(command, check=True, capture_output=True, text=True, timeout=30)
     except subprocess.CalledProcessError as exc:
@@ -59,8 +61,11 @@ def change_mount(volume: GarminVolume, action: str, evidence: dict) -> str:
         raise ValueError('USB volume changed after the operation; Refresh to check its state')
     mounts = [item for item in record.get('mountpoints') or [] if item]
     if action == 'mount':
-        if len(mounts) != 1 or not _read_only(Path(mounts[0])):
-            raise ValueError('Could not verify a read-only mount; Refresh to check its state')
+        if len(mounts) != 1 or _read_only(Path(mounts[0])) == writable_for_course:
+            mode = 'writable' if writable_for_course else 'read-only'
+            raise ValueError(f'Could not verify a {mode} mount; Refresh to check its state')
+        if writable_for_course:
+            return f'Volume mounted for the reviewed course transfer at {mounts[0]}.'
         return f'Volume mounted read-only at {mounts[0]}. You can now back up its data.'
     if mounts:
         raise ValueError('Volume is still mounted; Refresh to check its state')

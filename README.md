@@ -8,7 +8,7 @@ For planning and viewing tracks alongside this app, see the [Linux route editor 
 
 ## Current state
 
-The command-line core can detect and back up both devices, summarize activities, and transfer courses through model-specific USB paths. The desktop app shows devices, verified backups, activities, courses, and local map inspection, and can create device-data backups. Course and map transfers remain CLI commands. See [STATUS.md](STATUS.md) for the next step and [docs/device-compatibility.md](docs/device-compatibility.md) for observed hardware details.
+The command-line core can detect and back up both devices, summarize activities, and transfer courses through model-specific USB paths. The desktop app shows devices, verified backups, activities, courses, and local map inspection, creates device-data backups, and offers reviewed FIT transfer to the fēnix 5X. Edge course and map transfers remain CLI commands. See [STATUS.md](STATUS.md) for the next step and [docs/device-compatibility.md](docs/device-compatibility.md) for observed hardware details.
 
 ## Desktop preview on Kubuntu
 
@@ -98,6 +98,8 @@ Garmin SDK reference: https://github.com/garmin/fit-python-sdk . Its license app
 In the desktop app, open **Courses → Local file → Choose GPX/FIT file…**. The preview shows name, format, type, point counts, size, checksum, and path, plus distance when a FIT course includes it. GPX routes/tracks and waypoint-only files are distinguished. Reading runs in the background and does not transfer anything to a device. **Backed-up courses** remains available in the other tab.
 
 For a GPX with exactly one route or one single-segment track and 2–10,000 points, click **Prepare FIT for fēnix**. The app uses the verified converter below, saves a private FIT under `~/GarminBackups/ForDevice`, and previews the generated course. The GPX checksum must still match its preview. Waypoint-only, ambiguous, segmented, and invalid-coordinate inputs are refused; no device transfer occurs during preparation.
+
+To send a FIT course to the watch, mount the fēnix **read-only** on Devices, then select or prepare the FIT under **Courses → Local file** and click **Review fēnix transfer…**. Review the course and target watch, then click **Send course**. The app rechecks the file and USB identity, changes the watch mount to writable for this transfer, makes a fresh verified backup, copies and hashes the course, and safely unmounts the watch. Mount/backup controls and course selection are disabled while sending. Disconnect afterward and check **START → Navigate → Courses**. This GUI transfer path has passed synthetic checks; physical-device GUI validation is pending. The CLI importer was previously verified on the watch.
 
 ```sh
 .venv/bin/python -m garmin_companion courses
