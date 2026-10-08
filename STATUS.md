@@ -1,6 +1,6 @@
 # Garmin Linux companion: session status
 
-Last updated: 2026-10-05
+Last updated: 2026-10-08
 
 ## Current state
 
@@ -41,10 +41,11 @@ Last updated: 2026-10-05
 - The Devices page now offers **Mount read-only** and **Safely unmount**, using UDisks after fresh Garmin detection, USB UUID, and mount-instance checks. Controls are disabled during backup or another mount action. Live read-only Edge mount/unmount and synthetic error cases passed.
 - The Activities page now offers **Prepare for Garmin Connect** for a single selected activity. It verifies the backup again, writes or reuses a matching FIT under `~/GarminBackups/ForUpload`, and shows its path and manual browser-import guidance. Synthetic success and damaged-backup cases passed.
 - **Courses → Local file** now previews a selected GPX/FIT in the background, showing name, type, point counts, size, SHA-256, and path, plus available FIT distance. Waypoint-only GPX is distinct from routes/tracks. Invalid files clear the previous preview and show an error; the backed-up course list remains in its own tab.
+- **Prepare FIT for fēnix** now converts an eligible previewed GPX route/track in the background, saves a verified course under `~/GarminBackups/ForDevice`, and displays the FIT preview. The button is disabled for waypoint-only, ambiguous, multi-segment, and out-of-count inputs; the converter validates coordinates and rejects a source changed since preview.
 
 ## Next
 
-Next: add a Prepare FIT for fēnix action to the local Courses preview for eligible GPX routes/tracks, using the existing verified GPX-to-FIT converter in a background worker. Save privately under `~/GarminBackups/ForDevice`, preview the generated result, and test successful conversion plus waypoint-only/ambiguous GPX refusal. No device transfer in this step. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: add guarded FIT course transfer to the fēnix from the local Courses preview, using the existing importer. Require explicit review of the selected FIT and current confirmed watch volume before sending, handle the required writable mount as part of that action, make a fresh verified backup before copying, and safely unmount on success. Verify identity/source-change/disconnect failure cases with synthetic devices before any live course write. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -68,6 +69,12 @@ Next: add a Prepare FIT for fēnix action to the local Courses preview for eligi
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-08 — prepare FIT for fēnix in the GUI
+
+- Added Prepare FIT for fēnix beside the local file chooser. It enables for one GPX route or one single-segment track with 2–10,000 points. A background worker calls the existing converter, writes privately under ForDevice, verifies and displays the saved FIT, and locks file selection during conversion. GPX previews now count track segments so the GUI can refuse ambiguous layouts before conversion.
+- Added optional expected-source-SHA-256 enforcement to the converter. The bytes used to generate FIT must match the selected preview, preventing a changed source from being silently converted. Existing CLI callers retain their default behavior.
+- Verification: all 58 tests passed, including a new changed-source refusal test. Offscreen GUI checks covered a verified three-point conversion and destination/hash/point checks, waypoint-only GPX, multiple routes, multiple track segments, and a source changed after preview. The generated FIT preview was visually inspected. No device data was written and only temporary synthetic outputs were created. Files changed: `garmin_companion/courses.py`, `garmin_companion/convert_course.py`, `garmin_companion/gui.py`, `tests/test_convert_course.py`, `README.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-05 — course tab contrast fix
 

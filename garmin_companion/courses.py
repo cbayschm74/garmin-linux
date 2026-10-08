@@ -23,7 +23,7 @@ def _gpx_preview(data: bytes) -> dict:
         raise ValueError(f'Invalid GPX XML: {exc}') from exc
     if _local_name(root.tag) != 'gpx':
         raise ValueError('XML root is not GPX')
-    routes = tracks = route_points = track_points = waypoints = 0
+    routes = tracks = route_points = track_points = waypoints = track_segments = 0
     name = None
     for child in root:
         kind = _local_name(child.tag)
@@ -38,6 +38,7 @@ def _gpx_preview(data: bytes) -> dict:
                 point_kind = _local_name(element.tag)
                 route_points += point_kind == 'rtept'
                 track_points += point_kind == 'trkpt'
+                track_segments += point_kind == 'trkseg'
     if routes and route_points or tracks and track_points:
         kind = 'course_candidate'
     elif waypoints:
@@ -46,7 +47,7 @@ def _gpx_preview(data: bytes) -> dict:
         kind = 'empty_or_unsupported'
     return {'format': 'GPX', 'kind': kind, 'name': name, 'routes': routes,
             'tracks': tracks, 'route_points': route_points, 'track_points': track_points,
-            'waypoints': waypoints}
+            'waypoints': waypoints, 'track_segments': track_segments}
 
 
 def _fit_preview(data: bytes) -> dict:

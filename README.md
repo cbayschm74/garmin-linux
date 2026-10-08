@@ -97,6 +97,8 @@ Garmin SDK reference: https://github.com/garmin/fit-python-sdk . Its license app
 
 In the desktop app, open **Courses → Local file → Choose GPX/FIT file…**. The preview shows name, format, type, point counts, size, checksum, and path, plus distance when a FIT course includes it. GPX routes/tracks and waypoint-only files are distinguished. Reading runs in the background and does not transfer anything to a device. **Backed-up courses** remains available in the other tab.
 
+For a GPX with exactly one route or one single-segment track and 2–10,000 points, click **Prepare FIT for fēnix**. The app uses the verified converter below, saves a private FIT under `~/GarminBackups/ForDevice`, and previews the generated course. The GPX checksum must still match its preview. Waypoint-only, ambiguous, segmented, and invalid-coordinate inputs are refused; no device transfer occurs during preparation.
+
 ```sh
 .venv/bin/python -m garmin_companion courses
 .venv/bin/python -m garmin_companion courses --json

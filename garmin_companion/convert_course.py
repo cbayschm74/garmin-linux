@@ -119,7 +119,7 @@ def _encode_course(name: str, points: list[tuple[float, float]], source_digest: 
     return bytes(encoder.close()), distances[-1]
 
 
-def convert_gpx_to_fit(source: Path, destination: Path) -> ConversionResult:
+def convert_gpx_to_fit(source: Path, destination: Path, *, expected_source_sha256: str | None = None) -> ConversionResult:
     source = source.expanduser().resolve()
     if source.suffix.lower() != '.gpx':
         raise ValueError('Source must be a GPX file')
@@ -129,6 +129,8 @@ def convert_gpx_to_fit(source: Path, destination: Path) -> ConversionResult:
     if len(data) > MAX_COURSE_BYTES:
         raise ValueError('GPX file exceeds the 50 MB preview limit')
     digest = hashlib.sha256(data).hexdigest()
+    if expected_source_sha256 is not None and digest != expected_source_sha256:
+        raise ValueError('GPX changed since the preview; choose the file again before converting')
     name, points = _gpx_points(data, source.stem)
     fit_data, distance = _encode_course(name, points, digest)
     target_preview = inspect_course(Path('generated.fit'), data=fit_data)

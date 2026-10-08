@@ -24,6 +24,7 @@ from .backup_catalog import BackupSummary, list_backups
 from .backup import backup as create_backup, select_volume, _mount_id, _mounted_source
 from .mount_control import capture_volume, change_mount
 from .export import prepare_activity
+from .convert_course import convert_gpx_to_fit, MAX_POINTS
 
 
 PAGES = ('Devices', 'Backups', 'Activities', 'Courses', 'Maps')
@@ -275,6 +276,27 @@ class CoursePreviewWorker(QThread):
             self.results.emit(preview)
 
 
+class CourseConversionWorker(QThread):
+    results = pyqtSignal(object)
+    failed = pyqtSignal(str)
+
+    def __init__(self, preview: dict, destination: Path, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.preview, self.destination = preview.copy(), destination
+
+    def run(self) -> None:
+        try:
+            result = convert_gpx_to_fit(Path(self.preview['path']), self.destination,
+                                        expected_source_sha256=self.preview['sha256'])
+            preview = inspect_course(result.path)
+            if preview['sha256'] != result.fit_sha256:
+                raise ValueError('Prepared FIT changed before its preview could be displayed')
+        except Exception as exc:
+            self.failed.emit(str(exc))
+            return
+        self.results.emit(preview)
+
+
 class CompanionWindow(QMainWindow):
     def __init__(self, scanner=scan, *, auto_refresh: bool = True,
                  backup_root: Path | None = None, activity_cache_path: Path | None = None) -> None:
@@ -294,6 +316,7 @@ class CompanionWindow(QMainWindow):
         self._export_worker: ActivityExportWorker | None = None
         self._course_preview_worker: CoursePreviewWorker | None = None
         self._local_course_preview: dict | None = None
+        self._course_conversion_worker: CourseConversionWorker | None = None
         self.setWindowTitle('Garmin Linux Companion')
         self.resize(900, 620)
         self.setMinimumSize(650, 420)
@@ -641,9 +664,20 @@ class CompanionWindow(QMainWindow):
         layout.setSpacing(16)
         self.course_choose_button = QPushButton('Choose GPX/FIT file…')
         self.course_choose_button.clicked.connect(self._choose_course_file)
-        layout.addWidget(self.course_choose_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        buttons = QHBoxLayout()
+        buttons.addWidget(self.course_choose_button)
+        self.course_prepare_button = QPushButton('Prepare FIT for fēnix')
+        self.course_prepare_button.setEnabled(False)
+        self.course_prepare_button.clicked.connect(self.prepare_fenix_course)
+        buttons.addWidget(self.course_prepare_button)
+        buttons.addStretch(1)
+        layout.addLayout(buttons)
         self.local_course_summary = _label('Choose a file to see its course details.', kind='pageIntro')
         layout.addWidget(self.local_course_summary)
+        self.course_conversion_status = _label('Choose a GPX route or track to prepare a FIT course.', kind='pageIntro')
+        self.course_conversion_status.setTextFormat(Qt.TextFormat.PlainText)
+        self.course_conversion_status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(self.course_conversion_status)
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
@@ -662,10 +696,12 @@ class CompanionWindow(QMainWindow):
             self.preview_course_file(Path(filename))
 
     def preview_course_file(self, path: Path) -> None:
-        if self._course_preview_worker is not None:
+        if self._course_preview_worker is not None or self._course_conversion_worker is not None:
             return
         self.course_tabs.setCurrentIndex(1)
         self._local_course_preview = None
+        self.course_prepare_button.setEnabled(False)
+        self.course_conversion_status.setText('')
         self._clear_layout(self.local_course_layout)
         self.local_course_summary.setText(f'Reading {path.name}…')
         self.course_choose_button.setEnabled(False)
@@ -678,7 +714,10 @@ class CompanionWindow(QMainWindow):
         worker.start()
 
     def _show_local_course(self, preview: dict) -> None:
+        self._clear_layout(self.local_course_layout)
         self._local_course_preview = preview
+        _, reason = self._course_conversion_eligibility()
+        self.course_conversion_status.setText(reason)
         kinds = {'course': 'FIT course', 'course_candidate': 'GPX route/track',
                  'waypoints': 'Waypoint-only GPX', 'empty_or_unsupported': 'Empty or unsupported GPX content'}
         self.local_course_summary.setText('Preview complete')
@@ -712,6 +751,47 @@ class CompanionWindow(QMainWindow):
     def _course_preview_finished(self) -> None:
         self._course_preview_worker = None
         self.course_choose_button.setEnabled(True)
+        self.course_prepare_button.setEnabled(self._course_conversion_eligibility()[0])
+
+    def _course_conversion_eligibility(self) -> tuple[bool, str]:
+        preview = self._local_course_preview
+        if not preview:
+            return False, 'Choose a GPX route or track to prepare a FIT course.'
+        if preview['format'] == 'FIT':
+            return False, 'This file is already a FIT course.'
+        if preview['kind'] != 'course_candidate':
+            return False, 'Conversion requires a GPX route or track with navigation points.'
+        if (preview['routes'] + preview['tracks'] != 1
+                or preview['tracks'] and preview.get('track_segments', 0) != 1):
+            return False, 'Conversion requires exactly one route or one single-segment track.'
+        points = preview['route_points'] + preview['track_points']
+        if not 2 <= points <= MAX_POINTS:
+            return False, f'Conversion requires 2 to {MAX_POINTS:,} points.'
+        return True, 'Prepare a verified FIT course saved locally for later transfer to the fēnix.'
+
+    def prepare_fenix_course(self) -> None:
+        if (self._course_conversion_worker is not None or self._course_preview_worker is not None
+                or not self._course_conversion_eligibility()[0]):
+            return
+        worker = CourseConversionWorker(self._local_course_preview, self._backup_root / 'ForDevice', self)
+        self._course_conversion_worker = worker
+        self.course_choose_button.setEnabled(False)
+        self.course_prepare_button.setEnabled(False)
+        self.course_conversion_status.setText('Converting and verifying the FIT course…')
+        worker.results.connect(self._course_conversion_complete)
+        worker.failed.connect(lambda message: self.course_conversion_status.setText(f'Conversion failed: {message}'))
+        worker.finished.connect(self._course_conversion_finished)
+        worker.finished.connect(worker.deleteLater)
+        worker.start()
+
+    def _course_conversion_complete(self, preview: dict) -> None:
+        self._show_local_course(preview)
+        self.course_conversion_status.setText(f'FIT course prepared and verified:\n{preview["path"]}')
+
+    def _course_conversion_finished(self) -> None:
+        self._course_conversion_worker = None
+        self.course_choose_button.setEnabled(True)
+        self.course_prepare_button.setEnabled(self._course_conversion_eligibility()[0])
 
     def refresh_courses(self) -> None:
         if self._course_worker is not None:
@@ -964,6 +1044,8 @@ class CompanionWindow(QMainWindow):
         self.backup_refresh_button.setEnabled(True)
 
     def closeEvent(self, event) -> None:
+        if self._course_conversion_worker is not None:
+            self._course_conversion_worker.wait()
         if self._course_preview_worker is not None:
             self._course_preview_worker.requestInterruption()
             self._course_preview_worker.wait()

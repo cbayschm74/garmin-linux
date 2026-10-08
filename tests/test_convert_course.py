@@ -50,6 +50,15 @@ class ConversionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'out-of-range coordinate'):
             convert_course.convert_gpx_to_fit(self.gpx, self.destination)
 
+    def test_refuses_source_changed_since_preview(self):
+        self.gpx.write_text('<gpx><rte><rtept lat="1" lon="2"/><rtept lat="1.001" lon="2.001"/></rte></gpx>')
+        preview = convert_course.inspect_course(self.gpx)
+        self.gpx.write_text(self.gpx.read_text() + '\n')
+        with self.assertRaisesRegex(ValueError, 'changed since the preview'):
+            convert_course.convert_gpx_to_fit(self.gpx, self.destination,
+                                             expected_source_sha256=preview['sha256'])
+        self.assertFalse(self.destination.exists())
+
 
 if __name__ == '__main__':
     unittest.main()

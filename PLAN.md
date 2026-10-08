@@ -1,6 +1,6 @@
 # Garmin Linux companion: project plan
 
-Last updated: 2026-10-05
+Last updated: 2026-10-08
 
 ## Goal
 
@@ -101,6 +101,7 @@ To resume in a new Codex session, say: **“Continue the Garmin Linux project fr
 - [x] Add read-only mount and safe-unmount controls with fresh USB UUID/mount-instance checks and backup-busy guards. Synthetic checks and a live Edge GUI mount/unmount cycle passed.
 - [x] Add selected-activity export for manual Garmin Connect import, using the verified export core in a background worker. Synthetic GUI selection, successful copy, and damaged-backup checks passed.
 - [x] Add local GPX/FIT course selection and background preview, distinguishing routes/tracks and waypoint-only GPX, and showing available FIT distance. Synthetic valid/invalid GUI checks passed.
+- [x] Add Prepare FIT for fēnix for eligible local GPX files, with preview-checksum enforcement, background conversion, private output, and generated FIT preview. Synthetic conversion/refusal checks passed.
 - [x] Add a read-only local archive/IMG inspector with file size, checksum, tile counts, and ready-IMG detection. Verified against the user's China downloads and corrected fēnix build.
 - [x] Add map-specific backup of explicitly selected IMG files, with a private verified manifest and incomplete-copy detection. Synthetic checks and a local IMG dry run passed; live device validation remains separate.
 - [x] Add a read-only map replacement planner that checks current maps, their complete backup, new IMG sources, filenames, and staging space before any device write. Synthetic failures and a local real-IMG dry run passed.
