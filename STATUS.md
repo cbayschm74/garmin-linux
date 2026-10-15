@@ -45,9 +45,11 @@ Last updated: 2026-10-15
 - **Review fēnix transfer…** now reviews the selected FIT and a confirmed mounted watch before sending. The background transfer rechecks USB/source/mount identity, handles read-only → writable mounting, creates a fresh verified backup, copies and verifies the FIT, and safely unmounts. The physical GUI action/worker flow copied **Edge Oct 11**, prepared from an October Edge ride, after independently verified fresh backups. The user confirmed the course appears, loads correctly, and renders on the watch map.
 - **Activities → Make course** now prepares a selected verified single-session GPS recording as private GPX/FIT files under ForDevice and opens the FIT in the local Courses preview. It preserves point order, removes consecutive duplicates, and refuses internal GPS gaps, invalid coordinates, and more than 10,000 retained points. The real October Edge recording produced Ride Oct11 1637 with all 3,279 positions matching the source. The user also tested the action and confirmed the prepared file loads correctly in the app; this confirmation does not cover another device transfer.
 
+- **Review Edge transfer…** is now available for eligible local GPX routes/tracks. The shared reviewed transfer flow preserves the fēnix FIT path and refuses Edge SD storage as a course destination. Edge success feedback explicitly reminds the user to unmount its SD card before disconnecting. Physical GUI transfer validation is pending.
+
 ## Next
 
-Next: extend reviewed GUI course transfer to the Edge 1000 using a local GPX route/track and the existing guarded Edge importer. Require source/target review, fresh USB/mount/hash checks, a controlled writable mount, backup before copying, verified copy, and safe unmount. Test synthetic identity/format/disconnect failures first; maintain the fēnix FIT path. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: validate the reviewed Edge GPX GUI transfer on the physical Edge 1000 using a user-selected local GPX (or the GPX alongside a prepared activity course under ForDevice). Mount internal GARMIN Flash read-only, review the selected course/target, send, confirm the verified backup and safe internal unmount, then safely unmount its SD card if mounted. Ask the user to disconnect/power on and confirm the course appears and loads. Synthetic/backend and offscreen GUI tests already pass. Keep the working maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -71,6 +73,13 @@ Next: extend reviewed GUI course transfer to the Edge 1000 using a local GPX rou
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-15 — reviewed Edge GPX desktop transfer
+
+- Added format-specific review: GPX → Edge 1000 internal GARMIN Flash, FIT → fēnix 5X. Both use the shared background transfer with fresh source/USB/mount review, controlled writable mounting, verified backup before copying, hash verification, and safe unmount.
+- Edge review validates one route or single-segment track, 2–10,000 valid coordinates, and excludes the SD card. Cancel performs no transfer. Completion explains SD unmount before disconnecting; existing watch navigation guidance is retained.
+- Verification: 84 tests passed, including both model transfer paths, changed source/USB/mount, disconnect during backup, failed unmount cleanup, invalid GPX/format/SD refusal, and offscreen GUI cancel/accept/routing. Python compilation and diff checks passed. Visually checked the review dialog and corrected clipped summary sizing; explicit readable dialog colors retained.
+- No live Garmin files or mounts were changed for this step. Physical Edge GUI validation is next; earlier CLI transfers remain the on-device GPX evidence.
 
 ### 2026-10-15 — clearer FIT readiness, watch mount feedback, and dialog contrast
 

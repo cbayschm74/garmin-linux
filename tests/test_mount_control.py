@@ -86,15 +86,18 @@ class MountControlTests(unittest.TestCase):
 
     def test_course_writable_mount_is_restricted_and_verified(self):
         evidence = control.capture_volume(self.volume)
-        with self.assertRaisesRegex(ValueError, 'reviewed fēnix'):
-            control.change_mount(self.volume, 'mount', evidence, writable_for_course=True)
-        watch = replace(self.volume, model='fenix5x Flash')
-        with patch.object(control, 'select_volume', return_value=watch), \
-             patch.object(control, '_block_record', side_effect=[self.record, {**self.record, 'mountpoints': ['/media/test']}]), \
-             patch.object(control, '_read_only', return_value=False), \
-             patch.object(control.subprocess, 'run') as run:
-            self.assertIn('reviewed course', control.change_mount(watch, 'mount', evidence, writable_for_course=True))
-            self.assertEqual(run.call_args.args[0][-2:], ['-o', 'rw'])
+        card = replace(self.volume, model='GARMIN Card')
+        with patch.object(control, 'select_volume', return_value=card):
+            with self.assertRaisesRegex(ValueError, 'reviewed internal'):
+                control.change_mount(card, 'mount', evidence, writable_for_course=True)
+        for model in ('fenix5x Flash', 'GARMIN Flash'):
+            internal = replace(self.volume, model=model)
+            with patch.object(control, 'select_volume', return_value=internal), \
+                 patch.object(control, '_block_record', side_effect=[self.record, {**self.record, 'mountpoints': ['/media/test']}]), \
+                 patch.object(control, '_read_only', return_value=False), \
+                 patch.object(control.subprocess, 'run') as run:
+                self.assertIn('reviewed course', control.change_mount(internal, 'mount', evidence, writable_for_course=True))
+                self.assertEqual(run.call_args.args[0][-2:], ['-o', 'rw'])
         with patch.object(control, '_block_record', side_effect=[self.record, {**self.record, 'mountpoints': ['/media/test']}]), \
              patch.object(control, '_read_only', return_value=False), \
              patch.object(control.subprocess, 'run'):

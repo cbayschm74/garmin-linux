@@ -36,8 +36,8 @@ def capture_volume(volume: GarminVolume) -> dict:
 def change_mount(volume: GarminVolume, action: str, evidence: dict, *, writable_for_course: bool = False) -> str:
     if action not in {'mount', 'unmount'}:
         raise ValueError('Unknown mount action')
-    if writable_for_course and (action != 'mount' or volume.model != 'fenix5x Flash' or volume.filesystem != 'vfat'):
-        raise ValueError('Writable course mounting requires the reviewed fēnix internal volume')
+    if writable_for_course and (action != 'mount' or volume.model not in {'fenix5x Flash', 'GARMIN Flash'} or volume.filesystem != 'vfat'):
+        raise ValueError('Writable course mounting requires a reviewed internal course volume')
     current = select_volume(volume.path)
     fields = ('model', 'label', 'size_bytes', 'filesystem', 'mountpoint', 'device_name')
     if any(getattr(current, field) != getattr(volume, field) for field in fields):

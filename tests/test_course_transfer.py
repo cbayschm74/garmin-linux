@@ -16,6 +16,9 @@ core = importlib.import_module('garmin_companion.backup')
 
 
 class CourseTransferTests(unittest.TestCase):
+    target = "fenix"
+    model = "fenix5x Flash"
+    device_name = "fenix 5x"
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
@@ -27,11 +30,12 @@ class CourseTransferTests(unittest.TestCase):
         gpx.write_text('<gpx><rte><name>Sample</name><rtept lat="1" lon="2"/><rtept lat="1.01" lon="2.01"/></rte></gpx>')
         with patch.object(convert_course, 'scan', return_value=[]):
             self.fit = convert_course.convert_gpx_to_fit(gpx, self.root / 'local').path
-        self.preview = inspect_course(self.fit)
+        self.source = gpx if self.target == 'edge' else self.fit
+        self.preview = inspect_course(self.source)
         self.mode, self.uuid, self.mount_id, self.disconnected = 'ro', 'TEST', 1, False
         self.actions = []
-        self.volume = GarminVolume('/dev/test', 'fenix5x Flash', 'vfat', 'GARMIN', 10000,
-            str(self.device), 'confirmed', 'fenix 5x', '2500', ['synthetic'])
+        self.volume = GarminVolume('/dev/test', self.model, 'vfat', 'GARMIN', 10000,
+            str(self.device), 'confirmed', self.device_name, '2500', ['synthetic'])
         self.backups = self.root / 'backups'
 
         def mounted(volume):
@@ -86,25 +90,26 @@ class CourseTransferTests(unittest.TestCase):
         if self.disconnected:
             raise ValueError('Watch disconnected')
         return replace(self.volume, mountpoint=str(self.device) if self.mode else None,
-                       status='confirmed' if self.mode else 'candidate', device_name='fenix 5x' if self.mode else None)
+                       status='confirmed' if self.mode else 'candidate', device_name=self.device_name if self.mode else None)
 
     def review(self):
-        return transfer.review_fenix_transfer(self.preview, self.current())
+        reviewer = transfer.review_edge_transfer if self.target == 'edge' else transfer.review_fenix_transfer
+        return reviewer(self.preview, self.current())
 
     def test_verified_transfer_transitions_and_backs_up_before_copy(self):
         review = self.review()
         self.assertEqual(self.actions, [])
-        result = transfer.send_fenix_course(review, self.backups)
+        result = transfer.send_course(review, self.backups)
         self.assertEqual(self.actions, [('unmount', False), ('mount', True), ('backup', False)])
-        self.assertEqual(result.copied_path.read_bytes(), self.fit.read_bytes())
+        self.assertEqual(result.copied_path.read_bytes(), self.source.read_bytes())
         self.assertTrue((result.backup_path / 'COMPLETE').is_file())
         self.assertIsNone(self.mode)
 
     def test_source_changed_after_review_never_mounts_or_copies(self):
         review = self.review()
-        self.fit.write_bytes(self.fit.read_bytes() + b'\x00')
+        self.source.write_bytes(self.source.read_bytes() + b'\x00')
         with self.assertRaises(ValueError):
-            transfer.send_fenix_course(review, self.backups)
+            transfer.send_course(review, self.backups)
         self.assertEqual(self.actions, [])
         self.assertFalse(self.backups.exists())
 
@@ -112,11 +117,11 @@ class CourseTransferTests(unittest.TestCase):
         review = self.review()
         self.uuid = 'OTHER'
         with self.assertRaisesRegex(ValueError, 'USB identity'):
-            transfer.send_fenix_course(review, self.backups)
+            transfer.send_course(review, self.backups)
         self.uuid = 'TEST'
         self.mount_id += 1
         with self.assertRaisesRegex(ValueError, 'mount instance'):
-            transfer.send_fenix_course(review, self.backups)
+            transfer.send_course(review, self.backups)
         self.assertEqual(self.actions, [])
 
     def test_disconnected_after_backup_never_copies(self):
@@ -127,7 +132,7 @@ class CourseTransferTests(unittest.TestCase):
             return result
         with patch.object(import_course, 'backup', side_effect=disconnect):
             with self.assertRaisesRegex(ValueError, 'disconnected'):
-                transfer.send_fenix_course(review, self.backups)
+                transfer.send_course(review, self.backups)
         self.assertFalse(list((self.device / 'Garmin/NewFiles').iterdir()))
         self.assertTrue(list(self.backups.glob('*/COMPLETE')))
 
@@ -135,18 +140,43 @@ class CourseTransferTests(unittest.TestCase):
         review = self.review()
         def changed(volume, root):
             result = core.backup(volume, root)
-            self.fit.write_bytes(b'changed')
+            self.source.write_bytes(b'changed')
             return result
         with patch.object(import_course, 'backup', side_effect=changed):
             with self.assertRaisesRegex(ValueError, 'source changed during backup'):
-                transfer.send_fenix_course(review, self.backups)
+                transfer.send_course(review, self.backups)
         self.assertFalse(list((self.device / 'Garmin/NewFiles').iterdir()))
         self.assertIsNone(self.mode)
 
     def test_verified_copy_with_busy_unmount_can_finish_after_safe_cleanup(self):
         review = self.review()
         with patch.object(import_course.subprocess, 'run', side_effect=subprocess.CalledProcessError(1, 'udisksctl')):
-            result = transfer.send_fenix_course(review, self.backups)
-        self.assertEqual(result.copied_path.read_bytes(), self.fit.read_bytes())
+            result = transfer.send_course(review, self.backups)
+        self.assertEqual(result.copied_path.read_bytes(), self.source.read_bytes())
         self.assertIsNone(self.mode)
         self.assertEqual(self.actions[-1], ('unmount', False))
+
+
+class EdgeTransferTests(CourseTransferTests):
+    target = 'edge'
+    model = 'GARMIN Flash'
+    device_name = 'Edge 1000'
+
+    def test_wrong_format_and_sd_card_refused(self):
+        with self.assertRaisesRegex(ValueError, 'GPX course'):
+            transfer.review_edge_transfer(inspect_course(self.fit), self.current())
+        with self.assertRaisesRegex(ValueError, 'internal volume'):
+            transfer.review_edge_transfer(self.preview, replace(self.current(), model='GARMIN Card'))
+        with self.assertRaisesRegex(ValueError, 'not for the fēnix'):
+            transfer.send_fenix_course(self.review(), self.backups)
+        self.assertEqual(self.actions, [])
+
+    def test_ambiguous_and_invalid_gpx_refused_before_mount(self):
+        for body in ('<rte><rtept lat="91" lon="2"/><rtept lat="1" lon="2"/></rte>',
+                     '<rte><rtept lat="1" lon="2"/></rte><rte><rtept lat="1" lon="2"/></rte>',
+                     '<wpt lat="1" lon="2"/>'):
+            self.source.write_text('<gpx>' + body + '</gpx>')
+            self.preview = inspect_course(self.source)
+            with self.assertRaises(ValueError):
+                self.review()
+        self.assertEqual(self.actions, [])

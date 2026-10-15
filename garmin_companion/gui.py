@@ -11,7 +11,7 @@ from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractItemView, QApplication, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFrame, QHeaderView, QHBoxLayout, QLabel,
-    QListWidget, QMainWindow, QMessageBox, QPushButton, QScrollArea, QStackedWidget,
+    QListWidget, QMainWindow, QMessageBox, QPushButton, QScrollArea, QStackedWidget, QSizePolicy,
     QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget,
 )
 
@@ -25,7 +25,7 @@ from .backup import backup as create_backup, select_volume, _mount_id, _mounted_
 from .mount_control import capture_volume, change_mount
 from .export import prepare_activity
 from .convert_course import convert_gpx_to_fit, MAX_POINTS
-from .course_transfer import FenixTransferReview, review_fenix_transfer, send_fenix_course
+from .course_transfer import CourseTransferReview, review_fenix_transfer, review_edge_transfer, send_course
 from .activity_course import prepare_activity_course
 
 
@@ -299,17 +299,17 @@ class CourseConversionWorker(QThread):
         self.results.emit(preview)
 
 
-class FenixTransferWorker(QThread):
+class CourseTransferWorker(QThread):
     results = pyqtSignal(object)
     failed = pyqtSignal(str)
 
-    def __init__(self, review: FenixTransferReview, root: Path, parent: QWidget) -> None:
+    def __init__(self, review: CourseTransferReview, root: Path, parent: QWidget) -> None:
         super().__init__(parent)
         self.review, self.root = review, root
 
     def run(self) -> None:
         try:
-            result = send_fenix_course(self.review, self.root)
+            result = send_course(self.review, self.root)
         except Exception as exc:
             self.failed.emit(str(exc))
             return
@@ -357,7 +357,7 @@ class CompanionWindow(QMainWindow):
         self._course_preview_worker: CoursePreviewWorker | None = None
         self._local_course_preview: dict | None = None
         self._course_conversion_worker: CourseConversionWorker | None = None
-        self._transfer_worker: FenixTransferWorker | None = None
+        self._transfer_worker: CourseTransferWorker | None = None
         self._activity_course_worker: ActivityCourseWorker | None = None
         self.setWindowTitle('Garmin Linux Companion')
         self.resize(900, 620)
@@ -390,8 +390,8 @@ class CompanionWindow(QMainWindow):
             QMainWindow, QStackedWidget, QScrollArea, QScrollArea > QWidget > QWidget { background: #f5f7f8; }
             QWidget { color: #182b34; font-size: 13px; }
             QDialog, QMessageBox { background: #f5f7f8; }
-            #fenixTransferReview { background: #f5f7f8; }
-            #fenixTransferReview QLabel { background: transparent; color: #182b34; }
+            #courseTransferReview { background: #f5f7f8; }
+            #courseTransferReview QLabel { background: transparent; color: #182b34; }
             QComboBox { background: white; color: #182b34; border: 1px solid #b6cccd; padding: 6px; }
             QComboBox QAbstractItemView { background: white; color: #182b34;
                                          selection-background-color: #246b70; selection-color: white; }
@@ -839,7 +839,10 @@ class CompanionWindow(QMainWindow):
 
     def _update_course_send(self) -> None:
         preview = self._local_course_preview
-        ready = bool(preview and preview['format'] == 'FIT' and preview['kind'] == 'course')
+        edge = bool(preview and preview['format'] == 'GPX')
+        ready = self._course_conversion_eligibility()[0] if edge else bool(
+            preview and preview['format'] == 'FIT' and preview['kind'] == 'course')
+        self.course_send_button.setText('Review Edge transfer…' if edge else 'Review fēnix transfer…')
         busy = any(worker is not None for worker in (self._transfer_worker, self._course_preview_worker,
                     self._course_conversion_worker, self._device_backup_worker, self._mount_worker,
                     self._activity_course_worker))
@@ -848,34 +851,40 @@ class CompanionWindow(QMainWindow):
     def review_course_transfer(self) -> None:
         self._update_course_send()
         if not self.course_send_button.isEnabled():
-            self._course_notice('Transfer unavailable', 'Select a prepared FIT course and wait for the current operation to finish.')
+            self._course_notice('Transfer unavailable', 'Select a GPX route/track or prepared FIT course and wait for the current operation to finish.')
             return
+        edge = self._local_course_preview['format'] == 'GPX'
+        target_name, model = ('Edge 1000', 'GARMIN Flash') if edge else ('fēnix 5X', 'fenix5x Flash')
+        xml_name = 'Edge 1000' if edge else 'fenix 5x'
         try:
             connected = self._scanner()
             volumes = [v for v in connected if v.status == 'confirmed'
-                       and (v.device_name or '').casefold() == 'fenix 5x' and v.model == 'fenix5x Flash']
+                       and (v.device_name or '').casefold() == xml_name.casefold() and v.model == model]
             if not volumes:
-                watch_connected = any(v.model == 'fenix5x Flash' for v in connected)
-                message = ('The fēnix 5X is connected but its volume is not mounted and confirmed.\n\n'
-                           'On Devices, use Mount read-only on the fēnix 5X, then return to this course. '
-                           'Mounting the Edge does not mount the watch.' if watch_connected else
-                           'Connect the fēnix 5X in USB Mass Storage mode, then mount it read-only on Devices.')
-                self._course_notice('Fēnix mount required', message, show_devices=True)
+                message = (f'Connect the {target_name} in USB Mass Storage mode, then mount its internal '
+                           'volume read-only on Devices. Return to this course afterward.')
+                message += (' Select GARMIN Flash, not the SD card.' if edge else
+                            ' Mounting the Edge does not mount the watch.')
+                self._course_notice(f'{target_name} mount required', message, show_devices=True)
                 return
-            reviews = [review_fenix_transfer(self._local_course_preview, volume) for volume in volumes]
+            reviewer = review_edge_transfer if edge else review_fenix_transfer
+            reviews = [reviewer(self._local_course_preview, volume) for volume in volumes]
         except Exception as exc:
             self._course_notice('Cannot review transfer', str(exc))
             return
         dialog = QDialog(self)
-        dialog.setObjectName('fenixTransferReview')
-        dialog.setWindowTitle('Review fēnix course transfer')
+        dialog.setObjectName('courseTransferReview')
+        dialog.setWindowTitle(f'Review {target_name} course transfer')
         layout = QVBoxLayout(dialog)
         preview = reviews[0].preview
+        points = preview['route_points'] + preview['track_points'] if edge else preview['record_points']
         summary = _label(f'Course: {preview["name"] or Path(preview["path"]).name}\n'
-                         f'FIT points: {preview["record_points"]}\nFile: {preview["path"]}\n\n'
-                         'Send copies this FIT course to the selected watch. A fresh verified backup is made '
-                         'before copying. The watch is safely unmounted after verification.')
+                         f'{preview["format"]} points: {points}\nFile: {preview["path"]}\n\n'
+                         f'Send copies this course to the selected {target_name} internal volume. '
+                         'A fresh verified backup is made before copying. '
+                         'The selected volume is safely unmounted after verification.')
         summary.setTextFormat(Qt.TextFormat.PlainText)
+        summary.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
         layout.addWidget(summary)
         choices = QComboBox()
         for review in reviews:
@@ -887,35 +896,47 @@ class CompanionWindow(QMainWindow):
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)
         layout.addWidget(buttons)
+        dialog.ensurePolished()
+        dialog.setMinimumWidth(560)
+        summary.setMinimumHeight(summary.heightForWidth(538))
+        dialog.adjustSize()
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            self.start_fenix_transfer(choices.currentData())
+            self.start_course_transfer(choices.currentData())
 
-    def start_fenix_transfer(self, review: FenixTransferReview) -> None:
+    def start_course_transfer(self, review: CourseTransferReview) -> None:
         if (self._transfer_worker is not None or self._device_backup_worker is not None
                 or self._mount_worker is not None or self._activity_course_worker is not None):
             return
         self._transfer_timer_was_active = self._refresh_timer.isActive()
         self._refresh_timer.stop()
         self.refresh_button.setEnabled(False)
-        worker = FenixTransferWorker(review, self._backup_root, self)
+        self._active_transfer_target = review.target
+        worker = CourseTransferWorker(review, self._backup_root, self)
         self._transfer_worker = worker
         self.course_choose_button.setEnabled(False)
         self.course_prepare_button.setEnabled(False)
         self.course_send_button.setEnabled(False)
-        self.course_transfer_status.setText('Backing up, sending, and verifying the reviewed FIT course…')
-        worker.results.connect(self._fenix_transfer_complete)
+        self.course_transfer_status.setText(f'Backing up, sending, and verifying the reviewed {review.preview["format"]} course…')
+        worker.results.connect(self._course_transfer_complete)
         worker.failed.connect(lambda message: self._course_notice('Transfer failed', message, show_devices=True))
-        worker.finished.connect(self._fenix_transfer_finished)
+        worker.finished.connect(self._course_transfer_finished)
         worker.finished.connect(worker.deleteLater)
         self.refresh_devices()
         worker.start()
 
-    def _fenix_transfer_complete(self, result) -> None:
-        self.course_transfer_status.setText(f'Course verified and watch safely unmounted.\nBackup: {result.backup_path}\n'
-            f'Disconnect the watch, then check START → Navigate → Courses for {result.course_name or "the course"}.')
+    def _course_transfer_complete(self, result) -> None:
+        if self._active_transfer_target == 'edge':
+            message = ('Course verified and Edge internal volume safely unmounted.\n'
+                       f'Backup: {result.backup_path}\n'
+                       'Safely unmount the Edge SD card on Devices if mounted before disconnecting. '
+                       f'Turn on the Edge and check Courses for {result.course_name or "the course"}.')
+        else:
+            message = (f'Course verified and watch safely unmounted.\nBackup: {result.backup_path}\n'
+                       f'Disconnect the watch, then check START → Navigate → Courses for {result.course_name or "the course"}.')
+        self.course_transfer_status.setText(message)
         self._backups_loaded = self._courses_loaded = self._activities_loaded = False
 
-    def _fenix_transfer_finished(self) -> None:
+    def _course_transfer_finished(self) -> None:
         self._transfer_worker = None
         self.refresh_button.setEnabled(True)
         self.course_choose_button.setEnabled(True)

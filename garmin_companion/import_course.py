@@ -64,9 +64,9 @@ def _import_course(volume_path: str, course_path: Path, backup_root: Path,
     if expected_volume is not None:
         fields = ('model', 'label', 'size_bytes', 'filesystem', 'mountpoint', 'device_name')
         if any(getattr(volume, field) != getattr(expected_volume, field) for field in fields):
-            raise ValueError('Reviewed watch volume changed before import')
+            raise ValueError('Reviewed device volume changed before import')
     if expected_mount_id is not None and mount_id != expected_mount_id:
-        raise ValueError('Reviewed watch was remounted before import')
+        raise ValueError('Reviewed device was remounted before import')
     course_path = course_path.expanduser().resolve()
     for other in scan():
         if other.mountpoint and course_path.is_relative_to(Path(other.mountpoint).resolve()):
@@ -85,7 +85,7 @@ def _import_course(volume_path: str, course_path: Path, backup_root: Path,
         raise ValueError('FIT file must be a valid course')
     digest = preview['sha256']
     if expected_source_sha256 is not None and digest != expected_source_sha256:
-        raise ValueError('FIT changed since the reviewed preview')
+        raise ValueError('Course changed since the reviewed preview')
     inbox = source / 'Garmin' / 'NewFiles'
     target = inbox / f'GL-{digest[:16]}{suffix}'
     if target.exists() or target.is_symlink():
@@ -136,9 +136,14 @@ def _import_course(volume_path: str, course_path: Path, backup_root: Path,
     return result
 
 
-def import_edge_gpx(volume_path: str, course_path: Path, backup_root: Path) -> ImportResult:
+def import_edge_gpx(volume_path: str, course_path: Path, backup_root: Path, *,
+                    expected_source_sha256: str | None = None,
+                    expected_volume: GarminVolume | None = None,
+                    expected_mount_id: str | None = None) -> ImportResult:
     return _import_course(volume_path, course_path, backup_root,
-                          device_name='Edge 1000', model='GARMIN Flash', format_name='GPX')
+                          device_name='Edge 1000', model='GARMIN Flash', format_name='GPX',
+                          expected_source_sha256=expected_source_sha256,
+                          expected_volume=expected_volume, expected_mount_id=expected_mount_id)
 
 
 def import_fenix_fit(volume_path: str, course_path: Path, backup_root: Path, *,
