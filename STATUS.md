@@ -43,7 +43,7 @@ Last updated: 2026-10-15
 - **Courses → Local file** now previews a selected GPX/FIT in the background, showing name, type, point counts, size, SHA-256, and path, plus available FIT distance. Waypoint-only GPX is distinct from routes/tracks. Invalid files clear the previous preview and show an error; the backed-up course list remains in its own tab.
 - **Prepare FIT for fēnix** now converts an eligible previewed GPX route/track in the background, saves a verified course under `~/GarminBackups/ForDevice`, and displays the FIT preview. The button is disabled for waypoint-only, ambiguous, multi-segment, and out-of-count inputs; the converter validates coordinates and rejects a source changed since preview.
 - **Review fēnix transfer…** now reviews the selected FIT and a confirmed mounted watch before sending. The background transfer rechecks USB/source/mount identity, handles read-only → writable mounting, creates a fresh verified backup, copies and verifies the FIT, and safely unmounts. The physical GUI action/worker flow copied **Edge Oct 11**, prepared from an October Edge ride, after independently verified fresh backups. The user confirmed the course appears, loads correctly, and renders on the watch map.
-- **Activities → Make course** now prepares a selected verified single-session GPS recording as private GPX/FIT files under ForDevice and opens the FIT in the local Courses preview. It preserves point order, removes consecutive duplicates, and refuses internal GPS gaps, invalid coordinates, and more than 10,000 retained points. The real October Edge recording produced Ride Oct11 1637 with all 3,279 positions matching the source; no additional watch transfer was started.
+- **Activities → Make course** now prepares a selected verified single-session GPS recording as private GPX/FIT files under ForDevice and opens the FIT in the local Courses preview. It preserves point order, removes consecutive duplicates, and refuses internal GPS gaps, invalid coordinates, and more than 10,000 retained points. The real October Edge recording produced Ride Oct11 1637 with all 3,279 positions matching the source. The user also tested the action and confirmed the prepared file loads correctly in the app; this confirmation does not cover another device transfer.
 
 ## Next
 
@@ -71,6 +71,10 @@ Next: extend reviewed GUI course transfer to the Edge 1000 using a local GPX rou
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-15 — Make course app check confirmed
+
+- The user tested Make course and confirmed the prepared file loaded correctly in the program. Recorded this as app-preview acceptance; no further device transfer was reported. The next step remains reviewed GPX transfer to the Edge 1000. Only `STATUS.md` changed; no tests or device access were needed.
 
 ### 2026-10-15 — Make course from a selected activity
 
