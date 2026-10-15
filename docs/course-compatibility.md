@@ -1,6 +1,6 @@
 # Course transfer evidence
 
-Last checked: 2026-10-02. This note separates Garmin's published instructions from tests on these two devices.
+Last checked: 2026-10-15. This note separates Garmin's published instructions from tests on these two devices.
 
 ## Edge 1000
 
@@ -19,5 +19,7 @@ Last checked: 2026-10-02. This note separates Garmin's published instructions fr
 - The project's GPX converter produced a 556-point FIT course named `GLinux Replay` from a private GPX of an existing Edge route. The guarded fēnix command made a fresh backup, copied and hash-checked the generated FIT, and safely unmounted. The user confirmed `GLinux Replay` appears under **Courses** on the watch. This verifies generated FIT acceptance for this route and watch; GPX timestamps, elevation, waypoints, and turn cues were not preserved by the converter.
 
 ## Transfer rule for the app
+
+On 2026-10-15, a recorded October Edge ride was prepared privately as GPX and converted through the GUI to a 3,279-point FIT course named Edge Oct 11. Source positions and generated FIT were independently compared, then the reviewed GUI workflow made a fresh verified watch backup, copied and hash-verified the course, and safely unmounted. The user confirmed it appears, loads correctly, and renders on the fēnix map. Active navigation along the route has not been tested.
 
 Before writing a course, detect the current model and volume, make a fresh complete backup, check the GPX/FIT preview, ensure the destination filename is absent, copy only into a documented or validated inbox, compare the copied hash, and safely unmount. Do not claim success until the course appears in the device menu.

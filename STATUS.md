@@ -42,11 +42,11 @@ Last updated: 2026-10-15
 - The Activities page now offers **Prepare for Garmin Connect** for a single selected activity. It verifies the backup again, writes or reuses a matching FIT under `~/GarminBackups/ForUpload`, and shows its path and manual browser-import guidance. Synthetic success and damaged-backup cases passed.
 - **Courses → Local file** now previews a selected GPX/FIT in the background, showing name, type, point counts, size, SHA-256, and path, plus available FIT distance. Waypoint-only GPX is distinct from routes/tracks. Invalid files clear the previous preview and show an error; the backed-up course list remains in its own tab.
 - **Prepare FIT for fēnix** now converts an eligible previewed GPX route/track in the background, saves a verified course under `~/GarminBackups/ForDevice`, and displays the FIT preview. The button is disabled for waypoint-only, ambiguous, multi-segment, and out-of-count inputs; the converter validates coordinates and rejects a source changed since preview.
-- **Review fēnix transfer…** now reviews the selected FIT and a confirmed mounted watch before sending. The background transfer rechecks USB/source/mount identity, handles read-only → writable mounting, creates a fresh verified backup, copies and verifies the FIT, and safely unmounts. The physical GUI action/worker flow copied **Edge Oct 11**, prepared from an October Edge ride, after independently verified fresh backups. On-watch course-list confirmation is pending.
+- **Review fēnix transfer…** now reviews the selected FIT and a confirmed mounted watch before sending. The background transfer rechecks USB/source/mount identity, handles read-only → writable mounting, creates a fresh verified backup, copies and verifies the FIT, and safely unmounts. The physical GUI action/worker flow copied **Edge Oct 11**, prepared from an October Edge ride, after independently verified fresh backups. The user confirmed the course appears, loads correctly, and renders on the watch map.
 
 ## Next
 
-Next: finish the on-watch check for **Edge Oct 11**. The verified FIT has been copied to the fēnix and it is safely unmounted; the user was asked to disconnect and check START → Navigate → Courses. If it appears, record acceptance and move to a reusable Activities-page ride-to-course preparation action. If missing, reconnect and inspect the inbox/course folders read-only before any retry. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: add a reusable Activities-page action to prepare a selected recorded ride as a local FIT course. Recheck the source backup hash, extract and validate its recorded GPS positions, preserve point order, and reuse the verified GPX-to-FIT converter. Show the prepared course in the local Courses preview and save it privately under ForDevice. Verify valid GPS tracks and missing/invalid/too-many-point cases with synthetic data; device transfer remains the separate reviewed action. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -70,6 +70,11 @@ Next: finish the on-watch check for **Edge Oct 11**. The verified FIT has been c
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-15 — fēnix course acceptance confirmed
+
+- The user confirmed Edge Oct 11 appears in the fēnix course list, loads correctly, and renders on its map. This completes the physical validation of the Edge ride → local GPX → verified FIT → reviewed GUI transfer workflow. Active navigation along the route was not tested.
+- Updated the private session report, course compatibility evidence, plan, README, and current status. No device access or implementation changes were needed. Next is a reusable selected-activity course preparation action in the GUI. Files changed: `STATUS.md`, `PLAN.md`, `README.md`, `docs/course-compatibility.md`.
 
 ### 2026-10-15 — October Edge ride prepared and sent to the fēnix
 
