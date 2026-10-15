@@ -103,6 +103,8 @@ In the desktop app, open **Courses → Local file → Choose GPX/FIT file…**. 
 
 For a GPX with exactly one route or one single-segment track and 2–10,000 points, click **Prepare FIT for fēnix**. The app uses the verified converter below, saves a private FIT under `~/GarminBackups/ForDevice`, and previews the generated course. The GPX checksum must still match its preview. Waypoint-only, ambiguous, segmented, and invalid-coordinate inputs are refused; no device transfer occurs during preparation.
 
+When the preview is already FIT, the conversion button reads **FIT already prepared** and is disabled. Use **Review fēnix transfer…** to send it. The fēnix volume itself must be mounted; mounting the Edge does not mount the watch. If the watch needs mounting, the app shows a dialog with **Go to Devices**.
+
 To send a FIT course to the watch, mount the fēnix **read-only** on Devices, then select or prepare the FIT under **Courses → Local file** and click **Review fēnix transfer…**. Review the course and target watch, then click **Send course**. The app rechecks the file and USB identity, changes the watch mount to writable for this transfer, makes a fresh verified backup, copies and hashes the course, and safely unmounts the watch. Mount/backup controls and course selection are disabled while sending. Disconnect afterward and check **START → Navigate → Courses**. The GUI worker/review flow has passed a physical fēnix copy/backup/unmount check, and the user confirmed the transferred course appears, loads correctly, and renders on the watch map. The CLI importer was previously verified on the watch.
 
 ```sh

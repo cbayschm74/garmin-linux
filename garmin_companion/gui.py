@@ -11,7 +11,7 @@ from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractItemView, QApplication, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFrame, QHeaderView, QHBoxLayout, QLabel,
-    QListWidget, QMainWindow, QPushButton, QScrollArea, QStackedWidget,
+    QListWidget, QMainWindow, QMessageBox, QPushButton, QScrollArea, QStackedWidget,
     QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget,
 )
 
@@ -45,7 +45,7 @@ def _device_card(volume: GarminVolume, backup_callback=None, mount_callback=None
     card.setObjectName('deviceCard')
     layout = QVBoxLayout(card)
     layout.setSpacing(7)
-    title = volume.device_name or volume.model or 'Garmin storage'
+    title = volume.device_name or ('fēnix 5X' if volume.model == 'fenix5x Flash' else volume.model) or 'Garmin storage'
     layout.addWidget(_label(title, kind='cardTitle'))
     state = 'Mounted' if volume.mountpoint else 'Connected · not mounted'
     if volume.mountpoint and volume.status == 'candidate':
@@ -389,6 +389,12 @@ class CompanionWindow(QMainWindow):
         self.setStyleSheet('''
             QMainWindow, QStackedWidget, QScrollArea, QScrollArea > QWidget > QWidget { background: #f5f7f8; }
             QWidget { color: #182b34; font-size: 13px; }
+            QDialog, QMessageBox { background: #f5f7f8; }
+            #fenixTransferReview { background: #f5f7f8; }
+            #fenixTransferReview QLabel { background: transparent; color: #182b34; }
+            QComboBox { background: white; color: #182b34; border: 1px solid #b6cccd; padding: 6px; }
+            QComboBox QAbstractItemView { background: white; color: #182b34;
+                                         selection-background-color: #246b70; selection-color: white; }
             #navigation { background: #153a42; color: #eef6f4; border: 0; padding: 24px 8px; }
             #navigation::item { padding: 13px 14px; border-radius: 7px; }
             #navigation::item:selected { background: #256a70; color: white; }
@@ -751,7 +757,7 @@ class CompanionWindow(QMainWindow):
             return
         self.course_tabs.setCurrentIndex(1)
         self._local_course_preview = None
-        self.course_prepare_button.setEnabled(False)
+        self._update_course_prepare()
         self.course_send_button.setEnabled(False)
         self.course_transfer_status.setText('')
         self.course_conversion_status.setText('')
@@ -769,6 +775,7 @@ class CompanionWindow(QMainWindow):
     def _show_local_course(self, preview: dict) -> None:
         self._clear_layout(self.local_course_layout)
         self._local_course_preview = preview
+        self._update_course_prepare()
         _, reason = self._course_conversion_eligibility()
         self.course_conversion_status.setText(reason)
         kinds = {'course': 'FIT course', 'course_candidate': 'GPX route/track',
@@ -804,8 +811,31 @@ class CompanionWindow(QMainWindow):
     def _course_preview_finished(self) -> None:
         self._course_preview_worker = None
         self.course_choose_button.setEnabled(True)
-        self.course_prepare_button.setEnabled(self._course_conversion_eligibility()[0])
+        self._update_course_prepare()
         self._update_course_send()
+
+    def _update_course_prepare(self) -> None:
+        eligible, reason = self._course_conversion_eligibility()
+        already_fit = bool(self._local_course_preview and self._local_course_preview['format'] == 'FIT')
+        self.course_prepare_button.setText('FIT already prepared' if already_fit else 'Prepare FIT for fēnix')
+        self.course_prepare_button.setToolTip(reason)
+        busy = any(worker is not None for worker in (self._course_preview_worker, self._course_conversion_worker,
+                    self._transfer_worker, self._activity_course_worker))
+        self.course_prepare_button.setEnabled(eligible and not busy)
+
+    def _course_notice(self, title: str, message: str, *, show_devices: bool = False) -> None:
+        self.course_transfer_status.setText(message)
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle(title)
+        dialog.setIcon(QMessageBox.Icon.Information)
+        dialog.setTextFormat(Qt.TextFormat.PlainText)
+        dialog.setText(message)
+        dialog.setStandardButtons(QMessageBox.StandardButton.Close)
+        go_to_devices = dialog.addButton('Go to Devices', QMessageBox.ButtonRole.ActionRole) if show_devices else None
+        dialog.exec()
+        if go_to_devices is not None and dialog.clickedButton() == go_to_devices:
+            self.navigation.setCurrentRow(0)
+            self.refresh_devices()
 
     def _update_course_send(self) -> None:
         preview = self._local_course_preview
@@ -818,17 +848,26 @@ class CompanionWindow(QMainWindow):
     def review_course_transfer(self) -> None:
         self._update_course_send()
         if not self.course_send_button.isEnabled():
+            self._course_notice('Transfer unavailable', 'Select a prepared FIT course and wait for the current operation to finish.')
             return
         try:
-            volumes = [v for v in self._scanner() if v.status == 'confirmed'
+            connected = self._scanner()
+            volumes = [v for v in connected if v.status == 'confirmed'
                        and (v.device_name or '').casefold() == 'fenix 5x' and v.model == 'fenix5x Flash']
             if not volumes:
-                raise ValueError('Mount the fēnix 5X read-only on Devices, then review the transfer again')
+                watch_connected = any(v.model == 'fenix5x Flash' for v in connected)
+                message = ('The fēnix 5X is connected but its volume is not mounted and confirmed.\n\n'
+                           'On Devices, use Mount read-only on the fēnix 5X, then return to this course. '
+                           'Mounting the Edge does not mount the watch.' if watch_connected else
+                           'Connect the fēnix 5X in USB Mass Storage mode, then mount it read-only on Devices.')
+                self._course_notice('Fēnix mount required', message, show_devices=True)
+                return
             reviews = [review_fenix_transfer(self._local_course_preview, volume) for volume in volumes]
         except Exception as exc:
-            self.course_transfer_status.setText(f'Cannot review transfer: {exc}')
+            self._course_notice('Cannot review transfer', str(exc))
             return
         dialog = QDialog(self)
+        dialog.setObjectName('fenixTransferReview')
         dialog.setWindowTitle('Review fēnix course transfer')
         layout = QVBoxLayout(dialog)
         preview = reviews[0].preview
@@ -865,7 +904,7 @@ class CompanionWindow(QMainWindow):
         self.course_send_button.setEnabled(False)
         self.course_transfer_status.setText('Backing up, sending, and verifying the reviewed FIT course…')
         worker.results.connect(self._fenix_transfer_complete)
-        worker.failed.connect(lambda message: self.course_transfer_status.setText(f'Transfer failed: {message}'))
+        worker.failed.connect(lambda message: self._course_notice('Transfer failed', message, show_devices=True))
         worker.finished.connect(self._fenix_transfer_finished)
         worker.finished.connect(worker.deleteLater)
         self.refresh_devices()
@@ -880,7 +919,7 @@ class CompanionWindow(QMainWindow):
         self._transfer_worker = None
         self.refresh_button.setEnabled(True)
         self.course_choose_button.setEnabled(True)
-        self.course_prepare_button.setEnabled(self._course_conversion_eligibility()[0])
+        self._update_course_prepare()
         self._update_course_send()
         if self._transfer_timer_was_active:
             self._refresh_timer.start()
@@ -891,7 +930,7 @@ class CompanionWindow(QMainWindow):
         if not preview:
             return False, 'Choose a GPX route or track to prepare a FIT course.'
         if preview['format'] == 'FIT':
-            return False, 'This file is already a FIT course.'
+            return False, 'This file is already a FIT course. Use Review fēnix transfer… to send it.'
         if preview['kind'] != 'course_candidate':
             return False, 'Conversion requires a GPX route or track with navigation points.'
         if (preview['routes'] + preview['tracks'] != 1
@@ -926,7 +965,7 @@ class CompanionWindow(QMainWindow):
     def _course_conversion_finished(self) -> None:
         self._course_conversion_worker = None
         self.course_choose_button.setEnabled(True)
-        self.course_prepare_button.setEnabled(self._course_conversion_eligibility()[0])
+        self._update_course_prepare()
         self._update_course_send()
 
     def refresh_courses(self) -> None:
@@ -1080,7 +1119,7 @@ class CompanionWindow(QMainWindow):
         self.activity_refresh_button.setEnabled(True)
         self.activity_table.setEnabled(True)
         self.course_choose_button.setEnabled(True)
-        self.course_prepare_button.setEnabled(self._course_conversion_eligibility()[0])
+        self._update_course_prepare()
         self._update_course_send()
         self._activity_selected()
 

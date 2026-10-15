@@ -72,6 +72,12 @@ Next: extend reviewed GUI course transfer to the Edge 1000 using a local GPX rou
 
 ## Session log
 
+### 2026-10-15 — clearer FIT readiness, watch mount feedback, and dialog contrast
+
+- User mistook the disabled FIT conversion control for an unfinished feature and initially mounted the Edge instead of the watch. FIT previews now label the disabled action FIT already prepared, with guidance to use transfer review. Review failures and blocked actions display visible dialogs; the missing-watch-mount dialog explicitly identifies the fēnix and offers Go to Devices. Unmounted watch cards now use the human-readable fēnix 5X name.
+- After mounting the correct device, the user reported that the transfer dialog was unreadable dark gray. Added explicit dialog backgrounds, transfer-review label colors, and watch-selector/popup colors. The previous tab contrast fix remains in place.
+- Verification: the 73-test suite passed. Synthetic GUI checks covered FIT-ready labeling/tooltips, Edge-mounted/watch-unmounted feedback, Go to Devices, and review with a mounted watch. The transfer dialog was also rendered and visually checked under a deliberately dark palette; review was cancelled without device actions. Compilation and `git diff --check` passed. Files changed: `garmin_companion/gui.py`, `README.md`, `STATUS.md`. The Edge GUI transfer step remains Next.
+
 ### 2026-10-15 — Make course app check confirmed
 
 - The user tested Make course and confirmed the prepared file loaded correctly in the program. Recorded this as app-preview acceptance; no further device transfer was reported. The next step remains reviewed GPX transfer to the Edge 1000. Only `STATUS.md` changed; no tests or device access were needed.
