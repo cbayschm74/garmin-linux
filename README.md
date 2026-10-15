@@ -69,6 +69,10 @@ Run this separately for each Garmin volume, including an SD card. The backup inc
 
 ## Activity summaries
 
+In the desktop app, select one **Activities** row and click **Make course**. The app rechecks the source backup, extracts its recorded GPS positions, prepares private GPX/FIT files under `~/GarminBackups/ForDevice`, and opens the verified FIT in **Courses → Local file**. The name uses the activity type and local start date/time within Garmin's 15-character course-name limit. Sending remains the separate **Review fēnix transfer…** action.
+
+Preparation supports a single-session GPS activity with 2–10,000 retained points. It preserves point order, removes only exact consecutive duplicates, and trims records without GPS only before or after the track. It refuses internal missing-GPS gaps, invalid coordinates, and larger tracks requiring simplification. The existing converter's elevation/waypoint/cue limits below also apply.
+
 Install Garmin's official FIT decoder in a local environment:
 
 ```sh

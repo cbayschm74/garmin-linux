@@ -26,6 +26,7 @@ from .mount_control import capture_volume, change_mount
 from .export import prepare_activity
 from .convert_course import convert_gpx_to_fit, MAX_POINTS
 from .course_transfer import FenixTransferReview, review_fenix_transfer, send_fenix_course
+from .activity_course import prepare_activity_course
 
 
 PAGES = ('Devices', 'Backups', 'Activities', 'Courses', 'Maps')
@@ -315,6 +316,27 @@ class FenixTransferWorker(QThread):
         self.results.emit(result)
 
 
+class ActivityCourseWorker(QThread):
+    results = pyqtSignal(object)
+    failed = pyqtSignal(str)
+
+    def __init__(self, root: Path, activity_id: str, cache: Path, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.root, self.activity_id, self.cache = root, activity_id, cache
+
+    def run(self) -> None:
+        try:
+            result = prepare_activity_course(self.root, self.activity_id, self.root / 'ForDevice',
+                                             cache_path=self.cache, check_cancel=self.isInterruptionRequested)
+            preview = inspect_course(result.course.path)
+            if preview['sha256'] != result.course.fit_sha256:
+                raise ValueError('Prepared course changed before its preview could be displayed')
+        except Exception as exc:
+            self.failed.emit(str(exc))
+            return
+        self.results.emit(preview)
+
+
 class CompanionWindow(QMainWindow):
     def __init__(self, scanner=scan, *, auto_refresh: bool = True,
                  backup_root: Path | None = None, activity_cache_path: Path | None = None) -> None:
@@ -336,6 +358,7 @@ class CompanionWindow(QMainWindow):
         self._local_course_preview: dict | None = None
         self._course_conversion_worker: CourseConversionWorker | None = None
         self._transfer_worker: FenixTransferWorker | None = None
+        self._activity_course_worker: ActivityCourseWorker | None = None
         self.setWindowTitle('Garmin Linux Companion')
         self.resize(900, 620)
         self.setMinimumSize(650, 420)
@@ -723,7 +746,8 @@ class CompanionWindow(QMainWindow):
             self.preview_course_file(Path(filename))
 
     def preview_course_file(self, path: Path) -> None:
-        if self._course_preview_worker is not None or self._course_conversion_worker is not None or self._transfer_worker is not None:
+        if (self._course_preview_worker is not None or self._course_conversion_worker is not None
+                or self._transfer_worker is not None or self._activity_course_worker is not None):
             return
         self.course_tabs.setCurrentIndex(1)
         self._local_course_preview = None
@@ -787,7 +811,8 @@ class CompanionWindow(QMainWindow):
         preview = self._local_course_preview
         ready = bool(preview and preview['format'] == 'FIT' and preview['kind'] == 'course')
         busy = any(worker is not None for worker in (self._transfer_worker, self._course_preview_worker,
-                    self._course_conversion_worker, self._device_backup_worker, self._mount_worker))
+                    self._course_conversion_worker, self._device_backup_worker, self._mount_worker,
+                    self._activity_course_worker))
         self.course_send_button.setEnabled(ready and not busy)
 
     def review_course_transfer(self) -> None:
@@ -827,7 +852,8 @@ class CompanionWindow(QMainWindow):
             self.start_fenix_transfer(choices.currentData())
 
     def start_fenix_transfer(self, review: FenixTransferReview) -> None:
-        if self._transfer_worker is not None or self._device_backup_worker is not None or self._mount_worker is not None:
+        if (self._transfer_worker is not None or self._device_backup_worker is not None
+                or self._mount_worker is not None or self._activity_course_worker is not None):
             return
         self._transfer_timer_was_active = self._refresh_timer.isActive()
         self._refresh_timer.stop()
@@ -878,7 +904,7 @@ class CompanionWindow(QMainWindow):
 
     def prepare_fenix_course(self) -> None:
         if (self._course_conversion_worker is not None or self._course_preview_worker is not None
-                or self._transfer_worker is not None
+                or self._transfer_worker is not None or self._activity_course_worker is not None
                 or not self._course_conversion_eligibility()[0]):
             return
         worker = CourseConversionWorker(self._local_course_preview, self._backup_root / 'ForDevice', self)
@@ -996,27 +1022,78 @@ class CompanionWindow(QMainWindow):
         self.activity_export_button = QPushButton('Prepare for Garmin Connect')
         self.activity_export_button.setEnabled(False)
         self.activity_export_button.clicked.connect(self.export_selected_activity)
-        layout.addWidget(self.activity_export_button, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.activity_export_status = _label('Select an activity to prepare a verified FIT copy.', kind='pageIntro')
+        buttons = QHBoxLayout()
+        buttons.addWidget(self.activity_export_button)
+        self.activity_course_button = QPushButton('Make course')
+        self.activity_course_button.setEnabled(False)
+        self.activity_course_button.clicked.connect(self.make_activity_course)
+        buttons.addWidget(self.activity_course_button)
+        buttons.addStretch(1)
+        layout.addLayout(buttons)
+        self.activity_export_status = _label('Select an activity to export it or make a course.', kind='pageIntro')
         self.activity_export_status.setTextFormat(Qt.TextFormat.PlainText)
         self.activity_export_status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         layout.addWidget(self.activity_export_status)
         return page
 
     def _activity_selected(self) -> None:
-        if not hasattr(self, 'activity_export_button'):
+        if not hasattr(self, 'activity_course_button'):
             return
         selected = self.activity_table.selectionModel().selectedRows()
-        self.activity_export_button.setEnabled(bool(selected) and self._export_worker is None and self._activity_worker is None)
+        ready = bool(selected) and self._export_worker is None and self._activity_worker is None and self._activity_course_worker is None
+        self.activity_export_button.setEnabled(ready)
+        busy = any(worker is not None for worker in (self._course_preview_worker, self._course_conversion_worker, self._transfer_worker))
+        self.activity_course_button.setEnabled(ready and not busy)
+
+    def make_activity_course(self) -> None:
+        self._activity_selected()
+        if not self.activity_course_button.isEnabled():
+            return
+        selected = self.activity_table.selectionModel().selectedRows()
+        activity_id = self.activity_table.item(selected[0].row(), 0).data(Qt.ItemDataRole.UserRole)
+        worker = ActivityCourseWorker(self._backup_root, activity_id, self._activity_cache_path, self)
+        self._activity_course_worker = worker
+        self.activity_course_button.setEnabled(False)
+        self.activity_export_button.setEnabled(False)
+        self.activity_refresh_button.setEnabled(False)
+        self.activity_table.setEnabled(False)
+        self.course_choose_button.setEnabled(False)
+        self.course_prepare_button.setEnabled(False)
+        self.course_send_button.setEnabled(False)
+        self.activity_export_status.setText('Verifying the recording and preparing its GPS track as a FIT course…')
+        worker.results.connect(self._activity_course_complete)
+        worker.failed.connect(lambda message: self.activity_export_status.setText(f'Course preparation failed: {message}'))
+        worker.finished.connect(self._activity_course_finished)
+        worker.finished.connect(worker.deleteLater)
+        worker.start()
+
+    def _activity_course_complete(self, preview: dict) -> None:
+        self.activity_export_status.setText(f'Course prepared and verified: {preview["path"]}')
+        self.navigation.setCurrentRow(3)
+        self.course_tabs.setCurrentIndex(1)
+        self._show_local_course(preview)
+        self.course_transfer_status.setText('')
+        self.course_conversion_status.setText(f'Prepared from the selected activity:\n{preview["path"]}')
+
+    def _activity_course_finished(self) -> None:
+        self._activity_course_worker = None
+        self.activity_refresh_button.setEnabled(True)
+        self.activity_table.setEnabled(True)
+        self.course_choose_button.setEnabled(True)
+        self.course_prepare_button.setEnabled(self._course_conversion_eligibility()[0])
+        self._update_course_send()
+        self._activity_selected()
 
     def export_selected_activity(self) -> None:
         selected = self.activity_table.selectionModel().selectedRows()
-        if not selected or self._export_worker is not None or self._activity_worker is not None:
+        if (not selected or self._export_worker is not None or self._activity_worker is not None
+                or self._activity_course_worker is not None):
             return
         activity_id = self.activity_table.item(selected[0].row(), 0).data(Qt.ItemDataRole.UserRole)
         worker = ActivityExportWorker(self._backup_root, activity_id, self._activity_cache_path, self)
         self._export_worker = worker
         self.activity_export_button.setEnabled(False)
+        self.activity_course_button.setEnabled(False)
         self.activity_refresh_button.setEnabled(False)
         self.activity_table.setEnabled(False)
         self.activity_export_status.setText('Checking the selected backup and preparing its FIT copy…')
@@ -1038,14 +1115,15 @@ class CompanionWindow(QMainWindow):
         self._activity_selected()
 
     def refresh_activities(self) -> None:
-        if self._activity_worker is not None or self._export_worker is not None:
+        if self._activity_worker is not None or self._export_worker is not None or self._activity_course_worker is not None:
             return
         self._activities_loaded = True
         self.activity_summary.setText('Reading verified FIT activities…')
         self.activity_refresh_button.setEnabled(False)
         self.activity_table.clearSelection()
         self.activity_export_button.setEnabled(False)
-        self.activity_export_status.setText('Select an activity to prepare a verified FIT copy.')
+        self.activity_course_button.setEnabled(False)
+        self.activity_export_status.setText('Select an activity to export it or make a course.')
         worker = ActivityScanWorker(self._backup_root, self._activity_cache_path, self)
         self._activity_worker = worker
         worker.results.connect(self._show_activities)
@@ -1154,6 +1232,9 @@ class CompanionWindow(QMainWindow):
         self.backup_refresh_button.setEnabled(True)
 
     def closeEvent(self, event) -> None:
+        if self._activity_course_worker is not None:
+            self._activity_course_worker.requestInterruption()
+            self._activity_course_worker.wait()
         if self._transfer_worker is not None:
             self._transfer_worker.wait()
         if self._course_conversion_worker is not None:

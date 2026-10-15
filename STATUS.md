@@ -43,10 +43,11 @@ Last updated: 2026-10-15
 - **Courses → Local file** now previews a selected GPX/FIT in the background, showing name, type, point counts, size, SHA-256, and path, plus available FIT distance. Waypoint-only GPX is distinct from routes/tracks. Invalid files clear the previous preview and show an error; the backed-up course list remains in its own tab.
 - **Prepare FIT for fēnix** now converts an eligible previewed GPX route/track in the background, saves a verified course under `~/GarminBackups/ForDevice`, and displays the FIT preview. The button is disabled for waypoint-only, ambiguous, multi-segment, and out-of-count inputs; the converter validates coordinates and rejects a source changed since preview.
 - **Review fēnix transfer…** now reviews the selected FIT and a confirmed mounted watch before sending. The background transfer rechecks USB/source/mount identity, handles read-only → writable mounting, creates a fresh verified backup, copies and verifies the FIT, and safely unmounts. The physical GUI action/worker flow copied **Edge Oct 11**, prepared from an October Edge ride, after independently verified fresh backups. The user confirmed the course appears, loads correctly, and renders on the watch map.
+- **Activities → Make course** now prepares a selected verified single-session GPS recording as private GPX/FIT files under ForDevice and opens the FIT in the local Courses preview. It preserves point order, removes consecutive duplicates, and refuses internal GPS gaps, invalid coordinates, and more than 10,000 retained points. The real October Edge recording produced Ride Oct11 1637 with all 3,279 positions matching the source; no additional watch transfer was started.
 
 ## Next
 
-Next: add a reusable Activities-page action to prepare a selected recorded ride as a local FIT course. Recheck the source backup hash, extract and validate its recorded GPS positions, preserve point order, and reuse the verified GPX-to-FIT converter. Show the prepared course in the local Courses preview and save it privately under ForDevice. Verify valid GPS tracks and missing/invalid/too-many-point cases with synthetic data; device transfer remains the separate reviewed action. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: extend reviewed GUI course transfer to the Edge 1000 using a local GPX route/track and the existing guarded Edge importer. Require source/target review, fresh USB/mount/hash checks, a controlled writable mount, backup before copying, verified copy, and safe unmount. Test synthetic identity/format/disconnect failures first; maintain the fēnix FIT path. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -70,6 +71,12 @@ Next: add a reusable Activities-page action to prepare a selected recorded ride 
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-15 — Make course from a selected activity
+
+- Added a reusable source-integrity-checked activity-to-course preparer and an Activities-page Make course action. A background worker identifies one verified recording by its full hash, decodes its GPS records, writes a private GPX, reuses the verified FIT converter, and opens the saved FIT in the local Courses preview. Source recordings remain unchanged; no automatic transfer occurs. The activity and course file actions are locked while preparation runs.
+- Preparation requires one session and 2–10,000 retained GPS points, preserves their order, and removes only exact consecutive duplicates. Missing GPS at the recording edges is trimmed; internal missing-GPS gaps, invalid coordinates, and oversized tracks are refused. Existing output is reused only when identical, and device destinations are refused before GPX publication.
+- Verification: seven new synthetic tests cover an actual FIT decode/encode position-preserving round trip, private files and reuse, damaged/raced source backups, GPS absence/gaps/range/point limits, multisession recordings, cancellation, conflicting output, and device destinations. All 73 tests passed. Offscreen GUI checks covered selection gating, FIT preview handoff, no automatic transfer, and damaged-backup errors; screens were inspected. The real backed-up October ride also prepared successfully as Ride Oct11 1637 with every generated position matching the 3,279 source points. No device access or new transfer was performed for that live-data check. Files changed: `garmin_companion/activity_course.py`, `garmin_companion/gui.py`, `tests/test_activity_course.py`, `README.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-15 — fēnix course acceptance confirmed
 
