@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+import time
 from pathlib import Path
 
 from .backup import _mount_id, _mounted_source, select_volume
@@ -50,12 +51,23 @@ def change_mount(volume: GarminVolume, action: str, evidence: dict, *, writable_
     command = ['udisksctl', action, '-b', evidence['path'], '--no-user-interaction']
     if action == 'mount':
         command += ['-o', 'rw' if writable_for_course else 'ro']
-    try:
-        subprocess.run(command, check=True, capture_output=True, text=True, timeout=30)
-    except subprocess.CalledProcessError as exc:
-        raise ValueError((exc.stderr or exc.stdout or 'UDisks operation failed').strip()) from exc
-    except subprocess.TimeoutExpired as exc:
-        raise ValueError('UDisks operation timed out; Refresh to check the current mount state') from exc
+    for attempt in range(3):
+        try:
+            subprocess.run(command, check=True, capture_output=True, text=True, timeout=30)
+            break
+        except subprocess.CalledProcessError as exc:
+            message = (exc.stderr or exc.stdout or 'UDisks operation failed').strip()
+            if action != 'unmount' or 'org.freedesktop.UDisks2.Error.DeviceBusy' not in message or attempt == 2:
+                raise ValueError(message) from exc
+            # A newly mounted volume may still be settling. Retry normal unmount
+            # only, and authenticate the original selection again after waiting.
+            time.sleep(0.25 * (attempt + 1))
+            retry_volume = select_volume(volume.path)
+            if (any(getattr(retry_volume, field) != getattr(volume, field) for field in fields)
+                    or capture_volume(retry_volume) != evidence):
+                raise ValueError('USB identity or mount instance changed before unmount retry') from exc
+        except subprocess.TimeoutExpired as exc:
+            raise ValueError('UDisks operation timed out; Refresh to check the current mount state') from exc
     record = _block_record(evidence['path'])
     if record.get('uuid') != evidence['uuid']:
         raise ValueError('USB volume changed after the operation; Refresh to check its state')

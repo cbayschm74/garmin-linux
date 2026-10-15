@@ -32,6 +32,25 @@ class MountControlTests(unittest.TestCase):
         self.assertIn('mounted read-only', message)
         self.assertEqual(run.call_args.args[0], ['udisksctl', 'mount', '-b', '/dev/test', '--no-user-interaction', '-o', 'ro'])
 
+    def test_busy_unmount_retries_only_same_reviewed_mount(self):
+        volume = replace(self.volume, mountpoint='/media/test')
+        mounted = {**self.record, 'mountpoints': ['/media/test']}
+        busy = subprocess.CalledProcessError(1, 'udisksctl', stderr='org.freedesktop.UDisks2.Error.DeviceBusy')
+        with patch.object(control, 'select_volume', return_value=volume), \
+             patch.object(control, '_block_record', return_value=mounted):
+            evidence = control.capture_volume(volume)
+            with patch.object(control, '_block_record', side_effect=[mounted, mounted, self.record]), \
+                 patch.object(control.subprocess, 'run', side_effect=[busy, None]) as run, \
+                 patch.object(control.time, 'sleep'):
+                self.assertIn('safely unmounted', control.change_mount(volume, 'unmount', evidence))
+                self.assertEqual(run.call_count, 2)
+            with patch.object(control, '_block_record', side_effect=[mounted, {**mounted, 'uuid': 'OTHER'}]), \
+                 patch.object(control.subprocess, 'run', side_effect=busy) as run, \
+                 patch.object(control.time, 'sleep'):
+                with self.assertRaisesRegex(ValueError, 'changed before unmount retry'):
+                    control.change_mount(volume, 'unmount', evidence)
+                self.assertEqual(run.call_count, 1)
+
     def test_unmount_and_changed_mount_instance(self):
         volume = replace(self.volume, mountpoint='/media/test')
         mounted = {**self.record, 'mountpoints': ['/media/test']}

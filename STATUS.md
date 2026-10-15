@@ -1,6 +1,6 @@
 # Garmin Linux companion: session status
 
-Last updated: 2026-10-08
+Last updated: 2026-10-15
 
 ## Current state
 
@@ -42,11 +42,11 @@ Last updated: 2026-10-08
 - The Activities page now offers **Prepare for Garmin Connect** for a single selected activity. It verifies the backup again, writes or reuses a matching FIT under `~/GarminBackups/ForUpload`, and shows its path and manual browser-import guidance. Synthetic success and damaged-backup cases passed.
 - **Courses → Local file** now previews a selected GPX/FIT in the background, showing name, type, point counts, size, SHA-256, and path, plus available FIT distance. Waypoint-only GPX is distinct from routes/tracks. Invalid files clear the previous preview and show an error; the backed-up course list remains in its own tab.
 - **Prepare FIT for fēnix** now converts an eligible previewed GPX route/track in the background, saves a verified course under `~/GarminBackups/ForDevice`, and displays the FIT preview. The button is disabled for waypoint-only, ambiguous, multi-segment, and out-of-count inputs; the converter validates coordinates and rejects a source changed since preview.
-- **Review fēnix transfer…** now reviews the selected FIT and a confirmed mounted watch before sending. The background transfer rechecks USB/source/mount identity, handles read-only → writable mounting, creates a fresh verified backup, copies and verifies the FIT, and safely unmounts. Synthetic core/GUI checks passed; no physical GUI course transfer has run yet.
+- **Review fēnix transfer…** now reviews the selected FIT and a confirmed mounted watch before sending. The background transfer rechecks USB/source/mount identity, handles read-only → writable mounting, creates a fresh verified backup, copies and verifies the FIT, and safely unmounts. The physical GUI action/worker flow copied **Edge Oct 11**, prepared from an October Edge ride, after independently verified fresh backups. On-watch course-list confirmation is pending.
 
 ## Next
 
-Next: validate the reviewed GUI FIT transfer on the physical fēnix 5X with a course explicitly chosen by the user. Mount the connected watch read-only, preview/prepare that course, review and send it, independently check the fresh backup and recorded copy result, then have the user disconnect and confirm the course under START → Navigate → Courses. Course choice and permission to submit it must be established before a live write. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
+Next: finish the on-watch check for **Edge Oct 11**. The verified FIT has been copied to the fēnix and it is safely unmounted; the user was asked to disconnect and check START → Navigate → Courses. If it appears, record acceptance and move to a reusable Activities-page ride-to-course preparation action. If missing, reconnect and inspect the inbox/course folders read-only before any retry. Keep the working device maps untouched. Separately, the Edge's post-reset Wi‑Fi menu requires Garmin Express; no manual Add Network option is offered on this device.
 
 ## Completed
 
@@ -70,6 +70,12 @@ Next: validate the reviewed GUI FIT transfer on the physical fēnix 5X with a co
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-15 — October Edge ride prepared and sent to the fēnix
+
+- User connected both devices and authorized making a course from one of the new October Edge rides and sending it to the fēnix. Fresh read-only Edge internal/SD backups were created through the GUI workers and independently hash-verified (18 and 96 files). Selected the latest suitable October ride, extracted its valid recorded GPS points, removed only exact consecutive duplicates, and created a private GPX named Edge Oct 11. All 3,279 retained points were usable with no missing GPS records; the largest consecutive step was 8.3 m. Route files, activity identifiers, and the full session report remain outside Git in `~/GarminBackups`.
+- The GUI converter produced a verified FIT course. Independent FIT decoding confirmed its name, point count, and all recorded positions against the source ride to within one Garmin coordinate unit. The course preview measured about 6.24 km. The approved GUI review/action pipeline then switched the confirmed watch to writable access, made a fresh watch backup (75 files / 2,568,228 bytes), copied and read-back-verified the course, and safely unmounted. Every saved watch-backup hash was independently rechecked. The user has been asked to check the course on the watch; response pending.
+- The first transfer attempt stopped before copying because UDisks reported DeviceBusy during the read-only unmount. No holder remained visible afterward. Added up to three normal unmount attempts for that specific response with short delays and fresh identity/mount checks before retrying. There is no force/lazy unmount. A new synthetic test proves retry success and refusal when UUID changes between attempts. All 66 tests passed; the subsequent physical transfer succeeded. No map or firmware files were changed. Files changed: `garmin_companion/mount_control.py`, `tests/test_mount_control.py`, `README.md`, `PLAN.md`, `STATUS.md`.
 
 ### 2026-10-08 — reviewed fēnix FIT transfer in the GUI
 
