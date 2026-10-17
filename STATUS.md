@@ -1,6 +1,6 @@
 # Garmin Linux companion: session status
 
-Last updated: 2026-10-15
+Last updated: 2026-10-18
 
 ## Current state
 
@@ -73,6 +73,16 @@ Next: validate the reviewed Edge GPX GUI transfer on the physical Edge 1000 usin
 - No supported Garmin firmware delivery API or verified standalone package was established for this personal Linux client; use the documented phone/Wi‑Fi/Express paths. Garmin map offers likewise require an account/device-specific Express check; Linux can support user-downloaded OpenMTBMap archives without Garmin credentials.
 
 ## Session log
+
+### 2026-10-18 — M3 and MiMo real-project worker evaluation
+
+- User changed this session's priority to testing external coding workers on the existing project. Both models received independent cache-recovery and bounded-course-read tasks in separate worktrees from commit `275e99b`, with synthetic data and withheld acceptance tests. The physical Edge validation remains **Next**.
+- MiMo 2.6 Pro passed the cache task on its first attempt (102 tests including eight new worker tests and ten independent acceptance methods), but timed out after ten minutes on the course task without a change. Its temporary test API key does not establish paid-account latency or limits.
+- MiniMax M3 left required-field/cache fixture failures after one correction. Its course reader passed all independent checks after one correction, but it did not add the requested regression file. Step limits and long project context affected its early attempts; the report records these workflow constraints.
+- Reviewed candidate: branch `eval/20261018-reviewed`, commit `948fecd`, worktree `/home/cbayschm/garmin-worker-evaluation-2026-10-18/reviewed`. Combines MiMo's cache source, M3's corrected course source, and permanent regression checks; only helper documentation/test presentation was adjusted by the reviewer. It is not merged into main or installed.
+- Verification: the combined 111-test suite passed with actual synthetic FIT encode/decode and offscreen Qt, all 39 Python source/test files compiled, and staged diff checks passed. Existing tests are unchanged. No private backups, physical Garmin mounts/files, firmware, or maps were used.
+- Evidence and exact model results: `/home/cbayschm/garmin-worker-evaluation-2026-10-18/REPORT.md`; branch copy at `docs/worker-evaluation-2026-10-18.md`. Six worker invocations reported about $0.17 in completed-step API costs, plus unknown incomplete-call usage; these are not verified bills or measured ChatGPT savings.
+- Main checkout changes for this session: this status/handoff note only. Candidate files: `garmin_companion/activities.py`, `garmin_companion/courses.py`, three new cache/course test files, `README.md`, and the evaluation report. Resume by reviewing/integrating `948fecd` if desired; the existing physical Edge GPX GUI transfer check still needs the user.
 
 ### 2026-10-15 — reviewed Edge GPX desktop transfer
 
