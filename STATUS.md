@@ -74,6 +74,13 @@ Next: validate the reviewed Edge GPX GUI transfer on the physical Edge 1000 usin
 
 ## Session log
 
+### 2026-10-18 — MiMo UltraSpeed token and cost follow-up
+
+- Tested `xiaomi/mimo-v2.6-pro-ultraspeed` on the exact original cache/course tasks from `275e99b`, in fresh worktrees with the same sixteen-step and ten-minute limits. Both initial attempts left deliberate mutation-test regressions at the step cap; each passed after one model correction. Final independent suites: 106 cache tests and 99 course tests. No evaluator code fixes or main application changes.
+- Recovered complete assistant-message usage from sanitized OpenCode session export because streamed JSON omitted final-answer usage. Filtered to recorded invocation windows to exclude later session activity, and verified model IDs and published-rate reconstruction. Full known UltraSpeed usage across four invocations: 1,677,709 cumulative tokens and about $1.17977 estimated API cost, not an invoice.
+- Successful cache comparison including correction: regular Pro 226,034 tokens / $0.03225 / 356.54 active worker seconds; UltraSpeed 783,626 / $0.54678 / 293.68 seconds. About 17x cost for 18% less active worker time in this sample. Earlier preliminary figures excluded final answers. UltraSpeed's course fix finished in 276.81 seconds for $0.63299; regular Pro's original 600-second timeout has incomplete usage, so no successful-task price ratio is claimed for that pair.
+- Evidence and full token breakdown: `/home/cbayschm/garmin-ultraspeed-evaluation-2026-10-18/REPORT.md`. UltraSpeed source/tests remain in its evaluation worktrees; the prior `eval/20261018-reviewed` candidate at `948fecd` is unchanged. The physical Edge GPX GUI validation remains **Next**; no devices or private backups were accessed. Main changes: this status note only.
+
 ### 2026-10-18 — M3 and MiMo real-project worker evaluation
 
 - User changed this session's priority to testing external coding workers on the existing project. Both models received independent cache-recovery and bounded-course-read tasks in separate worktrees from commit `275e99b`, with synthetic data and withheld acceptance tests. The physical Edge validation remains **Next**.
