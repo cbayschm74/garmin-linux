@@ -74,6 +74,14 @@ Next: validate the reviewed Edge GPX GUI transfer on the physical Edge 1000 usin
 
 ## Session log
 
+### 2026-10-18 — Regular Pro with generous completion limits
+
+- At the user's request, reran both original Garmin tasks using `xiaomi/mimo-v2.6-pro` in fresh worktrees with 64 steps and 90 minutes per invocation, retaining the original task text, source baseline, permissions, synthetic fixtures, and acceptance checks. Both finished in one invocation each, without an evaluator correction or source repair.
+- Cache: 104 tests passed, 393.97 active worker seconds, 170,323 cumulative tokens, $0.027525 estimated API cost. Courses: 101 tests passed, 993.69 seconds (16m 34s), 694,484 tokens, $0.058023. The successful course run exceeded the earlier ten-minute cutoff.
+- Complete assistant-message accounting, including final answers/reasoning/context replay: 864,807 tokens and $0.085549 total, or ¥0.590115 at published CNY rates. Compared with the previous completed UltraSpeed tasks, this is 48.5% fewer tokens and 92.7% lower estimated cost; active worker time was 23m 08s versus 9m 30s. These are rate-card estimates, not invoices or verified trial-credit deductions. Larger time and step allowances were changed together; single-run/service variation remains a limitation.
+- Source scope, saved snapshots, Python compilation, diff checks, model IDs, full usage, and rate reconstruction were independently verified. No private Garmin data or physical devices were used. Existing tests and main application source remain unchanged; the reviewed candidate at `948fecd` is untouched.
+- Evidence, exact token categories, final source patches, and reproduction notes: `/home/cbayschm/garmin-pro-relaxed-evaluation-2026-10-18/REPORT.md`. Both Pro worktrees remain separate from main. Physical Edge GPX GUI validation remains **Next**. Main change: this status/handoff note only.
+
 ### 2026-10-18 — MiMo UltraSpeed token and cost follow-up
 
 - Tested `xiaomi/mimo-v2.6-pro-ultraspeed` on the exact original cache/course tasks from `275e99b`, in fresh worktrees with the same sixteen-step and ten-minute limits. Both initial attempts left deliberate mutation-test regressions at the step cap; each passed after one model correction. Final independent suites: 106 cache tests and 99 course tests. No evaluator code fixes or main application changes.
