@@ -9,7 +9,7 @@ import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-PAYLOAD = {'state': 'connected', 'volume_count': 2, 'text': 'Garmin 2', 'tooltip': '2 Garmin USB volumes'}
+PAYLOAD = {'state': 'connected', 'volume_count': 2, 'device_count': 1, 'text': 'Garmin 1', 'tooltip': '2 Garmin USB volumes'}
 
 
 def main():
@@ -21,7 +21,7 @@ def main():
     # catches signal-order and failed-start behavior absent from manifest checks.
     cases = [
         ('connected', [sys.executable, '-c', f'print({json.dumps(PAYLOAD)!r})'], 'connected', 2, 600),
-        ('disconnected', [sys.executable, '-c', 'print(\'{"state":"disconnected","volume_count":0,"text":"Garmin","tooltip":"No Garmin USB storage"}\')'], 'disconnected', 0, 600),
+        ('disconnected', [sys.executable, '-c', 'print(\'{"state":"disconnected","device_count":0,"volume_count":0,"text":"Garmin","tooltip":"No Garmin USB storage"}\')'], 'disconnected', 0, 600),
         ('malformed', ['/usr/bin/printf', 'not-json'], 'error', 0, 600),
         ('nonzero', [sys.executable, '-c', f'print({json.dumps(PAYLOAD)!r}); raise SystemExit(1)'], 'error', 0, 600),
         ('missing-command', ['/no-such-garmin-smoke-command'], 'error', 0, 600),
@@ -42,7 +42,7 @@ import "Garmin" as Garmin
 ShellRoot {
   Garmin.BarWidget { id: widget; settings: SETTINGS }
   Timer { interval: DELAY; running: true
-    onTriggered: { console.log("G018_RESULT", JSON.stringify({state: widget.statusState, count: widget.volumeCount, tooltip: widget.statusTooltip})); Qt.quit() }
+    onTriggered: { console.log("G018_RESULT", JSON.stringify({state: widget.statusState, count: widget.volumeCount, devices: widget.deviceCount, tooltip: widget.statusTooltip})); Qt.quit() }
   }
 }
 '''.replace('SETTINGS', '(' + json.dumps(settings) + ')').replace('DELAY', str(delay)))
@@ -55,6 +55,7 @@ ShellRoot {
                 raise RuntimeError(f'{name}: QML load failed\n{output}')
             actual = json.loads(lines[0])
             assert (actual['state'], actual['count']) == (state, count), (name, actual)
+            assert actual['devices'] == (1 if state == 'connected' else 0), (name, actual)
             if name == 'watchdog':
                 assert actual['tooltip'] == 'Status command timed out', actual
             print(name, 'PASS', json.dumps(actual))

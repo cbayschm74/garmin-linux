@@ -2,13 +2,14 @@
 
 The widget runs ``python -m garmin_companion.shell_status``. This module asks
 lsblk for block-device metadata and counts filesystems on parent disks whose
-vendor is Garmin and whose transport is USB. It does not open mountpoints,
-GarminDevice.xml, or any other file. Paths, labels, models, and serials stay
+vendor is Garmin and whose transport is USB. Linux sysfs USB ancestry groups
+multiple storage disks from one physical device. It never opens mountpoints or
+GarminDevice.xml. Paths, labels, models, and serials stay
 out of the printed object.
 
 Stdout is one compact JSON object:
 
-    {"state":"disconnected|connected|error","text":"...","tooltip":"...","volume_count":0}
+    {"state":"disconnected|connected|error","text":"...","tooltip":"...","volume_count":0,"device_count":0}
 
 Failures use a fixed tooltip. They never include lsblk's own text, because
 that text can contain volume identifiers.
@@ -17,6 +18,7 @@ that text can contain volume identifiers.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -37,10 +39,10 @@ _UNEXPECTED = "lsblk returned unexpected data"
 _DISCONNECTED = "No Garmin USB storage"
 
 
-def _payload(state: str, volume_count: int, tooltip: str) -> dict[str, Any]:
-    count = int(volume_count)
-    text = f"Garmin {count}" if state == "connected" else "Garmin"
-    return {"state": state, "volume_count": count, "text": text, "tooltip": tooltip}
+def _payload(state: str, volume_count: int, tooltip: str, device_count: int = 0) -> dict[str, Any]:
+    text = f"Garmin {device_count}" if state == "connected" else "Garmin"
+    return {"state": state, "device_count": device_count, "volume_count": int(volume_count),
+            "text": text, "tooltip": tooltip}
 
 
 def _error(tooltip: str) -> dict[str, Any]:
@@ -88,6 +90,25 @@ def count_garmin_volumes(devices: list[Any]) -> int | None:
     return count
 
 
+def _usb_device_key(name: str, sysfs_root: Path = Path("/sys/class/block")) -> str:
+    """Group block disks/LUNs by their physical Garmin USB ancestor.
+
+    Read only Linux sysfs USB metadata, never a serial, mountpoint or Garmin
+    file. The internal topology key is discarded rather than printed.
+    """
+    if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", name):
+        raise ValueError("Invalid block name")
+    node = (sysfs_root / name).resolve(strict=True)
+    for parent in (node, *node.parents):
+        try:
+            vendor = (parent / "idVendor").read_text(encoding="ascii").strip().lower()
+        except FileNotFoundError:
+            continue
+        if vendor == "091e":
+            return str(parent)
+    raise ValueError("Garmin USB topology unavailable")
+
+
 def status_from_lsblk(stdout: str) -> dict[str, Any]:
     """Turn one lsblk JSON document into the widget status object."""
     try:
@@ -104,8 +125,17 @@ def status_from_lsblk(stdout: str) -> dict[str, Any]:
         return _error(_UNEXPECTED)
     if count == 0:
         return _payload("disconnected", 0, _DISCONNECTED)
-    noun = "volume" if count == 1 else "volumes"
-    return _payload("connected", count, f"{count} Garmin USB {noun}")
+    keys = {_usb_device_key(disk.get("name")) for disk in devices
+            if isinstance(disk, dict) and _is_garmin_usb(disk)
+            and count_garmin_volumes([disk])}
+    device_count = len(keys)
+    if not device_count:
+        return _error(_UNEXPECTED)
+    noun = "device" if device_count == 1 else "devices"
+    volume_noun = "volume" if count == 1 else "volumes"
+    return _payload("connected", count,
+                    f"{device_count} Garmin USB {noun} · {count} storage {volume_noun}",
+                    device_count)
 
 
 def _run_lsblk() -> subprocess.CompletedProcess[str]:
@@ -132,7 +162,7 @@ def read_status() -> dict[str, Any]:
         return _error(_FAILED)
     try:
         return status_from_lsblk(completed.stdout)
-    except (TypeError, ValueError, RecursionError):
+    except (OSError, TypeError, ValueError, RecursionError):
         return _error(_UNEXPECTED)
 
 

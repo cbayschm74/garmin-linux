@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import tempfile
 import unittest
 from io import StringIO
 from pathlib import Path
@@ -68,7 +69,7 @@ def _part(path, *, fstype="vfat", label="GARMIN Flash", mountpoint="/run/media/p
 
 class ShellStatusTests(unittest.TestCase):
     def assert_clean(self, payload):
-        self.assertEqual(set(payload), {"state", "volume_count", "text", "tooltip"})
+        self.assertEqual(set(payload), {"state", "device_count", "volume_count", "text", "tooltip"})
         self.assertIn(payload["state"], {"disconnected", "connected", "error"})
         self.assertIs(type(payload["volume_count"]), int)
         encoded = json.dumps(payload)
@@ -88,7 +89,8 @@ class ShellStatusTests(unittest.TestCase):
             stdout = json.dumps({"blockdevices": devices})
             return CompletedProcess(command, returncode, stdout=stdout, stderr=stderr)
 
-        with patch.object(shell_status.subprocess, "run", side_effect=run):
+        with patch.object(shell_status.subprocess, "run", side_effect=run), \
+             patch.object(shell_status, "_usb_device_key", side_effect=lambda name: "usb-" + name):
             payload = shell_status.read_status()
         self.assertEqual(len(calls), 1)
         command = calls[0][0][0]
@@ -134,17 +136,19 @@ class ShellStatusTests(unittest.TestCase):
         payload = self.query(devices, stderr="/dev/sdb1 GARMIN Flash permission denied")
         self.assertEqual(payload["state"], "connected")
         self.assertEqual(payload["volume_count"], 3)
-        self.assertEqual(payload["text"], "Garmin 3")
-        self.assertEqual(payload["tooltip"], "3 Garmin USB volumes")
+        self.assertEqual(payload["text"], "Garmin 2")
+        self.assertEqual(payload["device_count"], 2)
+        self.assertEqual(payload["tooltip"], "2 Garmin USB devices · 3 storage volumes")
         self.assert_clean(payload)
 
     def test_one_volume_uses_the_singular_tooltip(self):
         payload = self.query([_disk("/dev/sdb", fstype="vfat", label="GARMIN Flash")])
         self.assertEqual(payload, {
             "state": "connected",
+            "device_count": 1,
             "volume_count": 1,
             "text": "Garmin 1",
-            "tooltip": "1 Garmin USB volume",
+            "tooltip": "1 Garmin USB device · 1 storage volume",
         })
         self.assert_clean(payload)
 
@@ -211,6 +215,47 @@ class ShellStatusTests(unittest.TestCase):
         self.assertEqual(payload["state"], "error")
         self.assertNotIn("private-label", json.dumps(payload))
 
+    def test_edge_internal_and_sd_are_one_physical_device(self):
+        devices = [_disk("/dev/sdb", fstype="vfat"),
+                   _disk("/dev/sdc", children=[_part("/dev/sdc1")])]
+        completed = CompletedProcess([], 0, stdout=json.dumps({"blockdevices": devices}))
+        with patch.object(shell_status.subprocess, "run", return_value=completed), \
+             patch.object(shell_status, "_usb_device_key", return_value="same-private-usb-parent"):
+            payload = shell_status.read_status()
+        self.assertEqual((payload["device_count"], payload["volume_count"]), (1, 2))
+        self.assertEqual(payload["text"], "Garmin 1")
+        self.assertNotIn("same-private-usb-parent", json.dumps(payload))
+
+    def test_sysfs_groups_luns_and_distinguishes_separate_devices(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            blocks = root / "block"
+            blocks.mkdir()
+            for usb, disks in (("usb-a", ("sdb", "sdc")), ("usb-b", ("sdd",))):
+                device = root / usb
+                device.mkdir()
+                (device / "idVendor").write_text("091e\n")
+                for disk in disks:
+                    node = device / "interface" / disk
+                    node.mkdir(parents=True)
+                    (blocks / disk).symlink_to(node, target_is_directory=True)
+            self.assertEqual(shell_status._usb_device_key("sdb", blocks),
+                             shell_status._usb_device_key("sdc", blocks))
+            self.assertNotEqual(shell_status._usb_device_key("sdb", blocks),
+                                shell_status._usb_device_key("sdd", blocks))
+            for unsafe in ("../sdb", "/dev/sdb", ".."):
+                with self.assertRaises(ValueError):
+                    shell_status._usb_device_key(unsafe, blocks)
+
+    def test_missing_usb_topology_is_error_not_an_overcount(self):
+        completed = CompletedProcess([], 0, stdout=json.dumps({
+            "blockdevices": [_disk("/dev/sdb", fstype="vfat")]}))
+        with patch.object(shell_status.subprocess, "run", return_value=completed), \
+             patch.object(shell_status, "_usb_device_key", side_effect=FileNotFoundError):
+            payload = shell_status.read_status()
+        self.assertEqual(payload["state"], "error")
+        self.assertEqual(payload["device_count"], 0)
+
     def test_status_does_not_open_files(self):
         def blocked_open(*args, **kwargs):
             raise AssertionError(args)
@@ -234,6 +279,7 @@ class ShellStatusTests(unittest.TestCase):
         self.assertNotIn(", ", line)
         self.assertEqual(json.loads(line), {
             "state": "disconnected",
+            "device_count": 0,
             "volume_count": 0,
             "text": "Garmin",
             "tooltip": "No Garmin USB storage",

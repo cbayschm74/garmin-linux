@@ -10,7 +10,35 @@ Observed against installed Omarchy 4.0.6-1 shell docs on 2026-11-01:
 `plugins/bar/README.md`. The manifest checks match
 `omarchy plugin validate`.
 
-## What the bar shows
+## Compact icon update — G026, 2026-11-01
+
+User requested a smaller Garmin-style icon and connected-device count. The
+installed widget now uses the host's standard BarIconButton iconSlot/iconCanvas,
+with an inline vector triangle and connected-only count badge. No USB glyph or
+Garmin wordmark. Horizontal and vertical bars use the same compact mark.
+
+Physical device count groups storage disks/LUNs by their nearest Garmin USB
+ancestor in Linux sysfs; Edge internal/SD is one device and two volumes. No serial
+is read or printed, and topology keys are discarded. JSON adds device_count and
+retains volume_count. The badge uses devices; tooltips show both counts. Missing
+or vanished topology produces a sanitized error instead of silently overcounting.
+
+Synthetic sysfs tests cover shared LUNs, separate devices and failed topology.
+Native 0/1/2-device rendering was inspected alongside a stock icon; all Garmin
+slots measured 36 logical pixels in the current theme, the same standard slot as
+neighbors. Live disconnected rendering inspected. All 320 source tests and seven
+actual QML status/runtime scenarios pass. Actual attached hardware has not been
+retested under this new count contract; earlier hardware observations below
+describe the prior volume-count display.
+
+Only the owned plugin file was atomically replaced after a private backup at
+~/.local/state/garmin-linux/compact-icon-20261101-190248/. Own status command now
+pins the primary venv explicitly; launcher and bar layout preserved. This Omarchy
+build kept old QML cached after hot reload, so omarchy restart shell was needed.
+User applications were left open. Live IPC exposes both counts and reports
+disconnected/0/0. No mounts, Garmin files or personal backups opened.
+
+## Original G018 presentation (superseded by G026)
 
 | `state` | Bar text | Color | Tooltip |
 | --- | --- | --- | --- |

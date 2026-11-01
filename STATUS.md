@@ -9,7 +9,7 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 ## Current verified baseline
 
 - Primary checkout `/home/cbayschm/garmin-linux`, branch `main`. G007 source merged as `5fd876d`; use Git for current HEAD because final tests/documentation follow that merge.
-- **317 tests pass**, with Python compilation and diff checks. Fixtures use temporary storage, mocked USB/UDisks, and offscreen Qt; physical acceptance is recorded separately below.
+- **320 tests pass**, with Python compilation and diff checks. Fixtures use temporary storage, mocked USB/UDisks, and offscreen Qt; physical acceptance is recorded separately below.
 - Shared Python core/PyQt6 app supports detection, selected-data backups/catalog, activity summaries/export, activity-to-course preparation, GPX/FIT preview/conversion, and reviewed Edge GPX / fēnix FIT transfers.
 - **G007 Maps → Replace / Resume is implemented and integrated.** It supports explicit map backup/checklists, verified map-backup selection, device/reader identity matching, ordered local IMG inputs, read-only planning, source/target review, guarded writable mounting, backup/readback checks, and resumable installation. Inspect remains separate and cancellable. Other map operations have no mid-operation Cancel; the window waits for them.
 - Review cancellation precedes remount/writes. Accepted-plan checking is enforced inside the final installer re-plan. Resume pins the internally reloaded state to consent. Cleanup refuses replacement-device identities. Changed plans remain visible but require fresh selection/review. Saved complete records do not establish current mount state.
@@ -18,6 +18,18 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 - Kubuntu launcher/icon already uses this main checkout; reopen the app to load changes. G004 verified the Omarchy laptop environment (4.0.6-1), dependencies, all 288 tests, and temporary-data offscreen GUI rendering. G017 native Wayland/desktop-entry launch and G018 installed shell widget checks pass. Edge core USB/read-only backup/unmount passed G021. fēnix core USB/read-only backup/unmount also passed G022. Normal GUI launch, verified backup display, Activities and Courses are now user-accepted on Omarchy; packaging remains pending.
 
 ## Next / ownership
+
+**G026 compact bar update complete (2026-11-01).** User-requested small
+Garmin-style triangle replaces USB glyph and Garmin text. Uses the same standard
+BarIconButton slot/canvas as neighbors; connected-only badge counts physical
+Garmin USB storage devices, grouping Edge internal/SD LUNs via Linux sysfs USB
+ancestry. Diagnostic JSON retains volume_count and adds device_count. Grouping
+and failures verified synthetically; native 0/1/2 states and live disconnected
+bar inspected. 320 tests, seven QML runtime checks, compilation/diff/manifest
+checks pass. Managed plugin backed up/updated; own status command pinned to main
+venv, layout/launcher preserved. Shell restart resolved cached old QML, user apps
+left open. No device-content/mount/backup/private-data operation. New connected
+badge not yet physically retested. Packaging continues; G024/G025 await review.
 
 **Portable release validation wave active (G023–G025).** Coordinator will review
 and run a versioned source archive through fresh install/reinstall/upgrade/
