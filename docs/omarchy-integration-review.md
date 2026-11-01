@@ -3,7 +3,7 @@
 Independent read-only review for the coordinator's G017 native validation and
 G018 bar-widget installation. Performed 2026-11-01 by MiMo 2.6 Pro via T3
 Code in the isolated worktree `/home/cbayschm/.t3/worktrees/garmin-linux/t3-07de5243`,
-branch `t3/07de5243`, exact assignment base `a878612af7faccb8b534a05320d59457ee5f13c6`.
+branch `t3/omarchy-integration-review`, exact assignment base `a878612af7faccb8b534a05320d59457ee5f13c6`.
 No GUI was launched, no user configuration was edited or created, no private
 data or physical device was accessed. Installed Omarchy documentation was read
 in place; `omarchy plugin list`/`validate` and file listings were the only host
