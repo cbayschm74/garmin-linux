@@ -9,7 +9,7 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 ## Current verified baseline
 
 - Primary checkout `/home/cbayschm/garmin-linux`, branch `main`. G007 source merged as `5fd876d`; use Git for current HEAD because final tests/documentation follow that merge.
-- **360 tests pass**, with Python compilation and diff checks. Fixtures use temporary storage, mocked USB/UDisks, and offscreen Qt; physical acceptance is recorded separately below.
+- **371 tests pass**, with Python compilation and diff checks. Fixtures use temporary storage, mocked USB/UDisks, and offscreen Qt; physical acceptance is recorded separately below.
 - Shared Python core/PyQt6 app supports detection, selected-data backups/catalog, activity summaries/export, activity-to-course preparation, GPX/FIT preview/conversion, and reviewed Edge GPX / fēnix FIT transfers.
 - **G007 Maps → Replace / Resume is implemented and integrated.** It supports explicit map backup/checklists, verified map-backup selection, device/reader identity matching, ordered local IMG inputs, read-only planning, source/target review, guarded writable mounting, backup/readback checks, and resumable installation. Inspect remains separate and cancellable. Other map operations have no mid-operation Cancel; the window waits for them.
 - Review cancellation precedes remount/writes. Accepted-plan checking is enforced inside the final installer re-plan. Resume pins the internally reloaded state to consent. Cleanup refuses replacement-device identities. Changed plans remain visible but require fresh selection/review. Saved complete records do not establish current mount state.
@@ -18,6 +18,20 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 - Kubuntu launcher/icon already uses this main checkout; reopen the app to load changes. G004 verified the Omarchy laptop environment (4.0.6-1), dependencies, all 288 tests, and temporary-data offscreen GUI rendering. G017 native Wayland/desktop-entry launch and G018 installed shell widget checks pass. Edge core USB/read-only backup/unmount passed G021. fēnix core USB/read-only backup/unmount also passed G022. Normal GUI launch, verified backup display, Activities and Courses are now user-accepted on Omarchy; packaging remains pending.
 
 ## Next / ownership
+
+**G027 automatic GUI themes complete (2026-11-01).** Shared PyQt app now reads
+Omarchy's current public color tokens and updates live across atomic file/
+directory replacement and symlink changes. Other desktops use native Qt palette;
+malformed/missing theme falls back safely. All hardcoded GUI color rules are
+centralized, including map editors/progress, dialogs and semantic PASS/FAIL
+feedback. Eleven theme regressions; all 371 tests pass, compilation/diff checks
+pass. Light/dark pages/editors/dialogs/status inspected; native current-theme
+Wayland temporary-data desktop launch passes. No desktop theme/config edits,
+private Garmin/device access, or restart/closure of user's app. Reopen once to
+load new code; subsequent theme changes are live. Actual Kubuntu host theme
+retest remains separate. [Theming guide](docs/gui-theming.md).
+G023 has completed and awaits coordinator review; next integrate archive builder,
+unify version, include theme module and run real G024 lifecycle acceptance.
 
 **G024/G025 reviewed and integrated; release artifact pending G023.** Lifecycle
 validator and 38 worker tests accepted; relative artifact paths and malformed

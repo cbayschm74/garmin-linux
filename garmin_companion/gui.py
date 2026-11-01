@@ -17,6 +17,7 @@ from PyQt6.QtWidgets import (
     QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget,
 )
 
+from .gui_theme import ThemeController, stylesheet
 from .activities import activity_library
 from .courses import course_library, inspect_course
 from .map_inspect import inspect_map
@@ -535,7 +536,8 @@ def _map_plan_text(review):
 
 class CompanionWindow(QMainWindow):
     def __init__(self, scanner=scan, *, auto_refresh: bool = True,
-                 backup_root: Path | None = None, activity_cache_path: Path | None = None) -> None:
+                 backup_root: Path | None = None, activity_cache_path: Path | None = None,
+                 theme_path: Path | None = None) -> None:
         super().__init__()
         self._scanner = scanner
         self._backup_root = backup_root or Path.home() / 'GarminBackups'
@@ -590,43 +592,9 @@ class CompanionWindow(QMainWindow):
         self.navigation.currentRowChanged.connect(self._page_changed)
         self.navigation.setCurrentRow(0)
 
-        self.setStyleSheet('''
-            QMainWindow, QStackedWidget, QScrollArea, QScrollArea > QWidget > QWidget { background: #f5f7f8; }
-            QWidget { color: #182b34; font-size: 13px; }
-            QPlainTextEdit { background: white; color: #182b34; border: 1px solid #b6cccd; }
-            QListWidget { background: white; color: #182b34; }
-            QDialog, QMessageBox { background: #f5f7f8; }
-            #courseTransferReview { background: #f5f7f8; }
-            #courseTransferReview QLabel { background: transparent; color: #182b34; }
-            QComboBox { background: white; color: #182b34; border: 1px solid #b6cccd; padding: 6px; }
-            QComboBox QAbstractItemView { background: white; color: #182b34;
-                                         selection-background-color: #246b70; selection-color: white; }
-            #navigation { background: #153a42; color: #eef6f4; border: 0; padding: 24px 8px; }
-            #navigation::item { padding: 13px 14px; border-radius: 7px; }
-            #navigation::item:selected { background: #256a70; color: white; }
-            #pageTitle { font-size: 25px; font-weight: 700; }
-            #pageIntro { color: #526870; }
-            #deviceCard { background: white; border: 1px solid #dce5e7; border-radius: 9px; }
-            #cardTitle { font-size: 17px; font-weight: 650; }
-            #statusText { color: #23625b; }
-            #warningText { color: #9a4b24; }
-            #emptyCard { background: white; border: 1px dashed #b7c9cd; border-radius: 9px; }
-            QPushButton { background: #246b70; color: white; border: 0; border-radius: 6px;
-                          padding: 9px 16px; font-weight: 600; }
-            QPushButton:hover { background: #1b555a; }
-            QPushButton:disabled { background: #d5dfe0; color: #64767b; }
-            QTableWidget { background: white; alternate-background-color: #f7faf9; border: 1px solid #dce5e7; }
-            QHeaderView::section { background: #e8f0ef; color: #183b41; border: 0;
-                                   border-bottom: 1px solid #c5d6d7; padding: 8px; font-weight: 600; }
-            #courseTabs::pane, #mapTabs::pane { background: #f5f7f8; border: 1px solid #c5d6d7; }
-            #mapTabs QTabBar::tab, #courseTabs QTabBar::tab { background: #e8f0ef; color: #183b41;
-                                      border: 1px solid #b6cccd; padding: 10px 16px;
-                                      margin-right: 4px; border-top-left-radius: 6px;
-                                      border-top-right-radius: 6px; }
-            #mapTabs QTabBar::tab:!selected:hover, #courseTabs QTabBar::tab:!selected:hover { background: #d2e5e2; color: #153a42; }
-            #mapTabs QTabBar::tab:selected, #courseTabs QTabBar::tab:selected { background: #246b70; color: #ffffff;
-                                               border-color: #246b70; font-weight: 600; }
-        ''')
+        self._theme = ThemeController(self, path=theme_path)
+        self._theme.changed.connect(lambda colors: self.setStyleSheet(stylesheet(colors)))
+        self._theme.reload()
         self.refresh_devices()
         self._refresh_timer = QTimer(self)
         self._refresh_timer.setInterval(15000)
@@ -792,9 +760,6 @@ class CompanionWindow(QMainWindow):
         self.map_job_progress = QProgressBar()
         self.map_job_progress.setMinimumHeight(25)
         self.map_job_progress.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.map_job_progress.setStyleSheet(
-            'QProgressBar { background: white; color: #183b41; border: 1px solid #b6cccd; border-radius: 4px; } '
-            'QProgressBar::chunk { background: #9ed7c4; }')
         self.map_job_progress.setRange(0, 1000)
         self.map_job_progress.setVisible(False)
         layout.addWidget(self.map_job_progress)
@@ -887,14 +852,6 @@ class CompanionWindow(QMainWindow):
         layout.addWidget(self.map_target_details)
         layout.addWidget(_label('3. New local IMG files, in transfer order (edit the destination filename)'))
         self.map_new_images = QTableWidget(0, 2)
-        self.map_new_images.setStyleSheet("""
-            QTableWidget { color: #182b34; background: #ffffff;
-                           selection-background-color: #246b70; selection-color: #ffffff; }
-            QTableWidget::item:selected { color: #ffffff; background: #246b70; }
-            QTableWidget QLineEdit { color: #182b34; background: #ffffff;
-                selection-color: #ffffff; selection-background-color: #246b70;
-                border: 2px solid #246b70; padding: 3px; }
-        """)
         self.map_new_images.setHorizontalHeaderLabels(['Local IMG', 'Destination filename'])
         self.map_new_images.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.map_new_images.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
@@ -1086,9 +1043,9 @@ class CompanionWindow(QMainWindow):
 
     @staticmethod
     def _set_map_result(label, passed, message):
-        colors = ('#24633c', '#e6f4ea') if passed is True else ('#992626', '#fde9e9') if passed is False else ('#334f60', '#e8f0f5')
-        label.setStyleSheet(
-            f'color: {colors[0]}; background: {colors[1]}; font-weight: 600; padding: 8px; border-radius: 5px;')
+        label.setProperty('garminResult', 'pass' if passed is True else 'fail' if passed is False else 'info')
+        label.style().unpolish(label)
+        label.style().polish(label)
         label.setText(message)
 
     def verify_saved_map_backup(self):
@@ -2094,6 +2051,7 @@ class CompanionWindow(QMainWindow):
         if self._course_worker is not None:
             self._course_worker.requestInterruption()
             self._course_worker.wait()
+        self._theme.stop()
         super().closeEvent(event)
 
     def refresh_devices(self) -> None:

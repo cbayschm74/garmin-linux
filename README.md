@@ -28,6 +28,13 @@ The Devices page refreshes every 15 seconds or when you press **Refresh**. It re
 
 The first Activities load decodes each distinct FIT file and can take several seconds. Later loads reuse decoded metadata from a private cache at `~/.cache/garmin-linux/activity-decoded.json`; each backup FIT file is still checked against its saved size and SHA-256 before its cached summary is displayed. The cache contains activity dates and summary metrics, so keep it private. Incomplete or malformed cached summaries are ignored and decoded again from the verified FIT files. Delete that file to force a fresh decode. No backup or device file is changed by the cache.
 
+## Desktop colors
+
+On Omarchy the app follows the current theme colors and updates while open.
+On Kubuntu and other desktops it uses the normal Qt desktop palette. Reopen
+once after updating the app to load theme support. See [GUI theming](docs/gui-theming.md)
+for fallback behavior and verified light/dark checks.
+
 ## Setup, updates and recovery
 
 The portable checkout helper checks dependencies, sets up the local virtual environment and launcher, or removes the launcher while preserving data:

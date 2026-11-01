@@ -74,7 +74,9 @@ def install_hooks():
                 assert app.applicationName() == gui.LAUNCHER_NAME
                 assert app.desktopFileName() == gui.DESKTOP_ID
                 report.update(platform=app.platformName(), desktop_id=app.desktopFileName(),
-                              application_name=app.applicationName(), exposed=True, ok=True)
+                              application_name=app.applicationName(), exposed=True, ok=True,
+                              theme_source=self._theme.source,
+                              theme_background=self._theme.colors.background)
                 self.close()
                 report['closed'] = not self.isVisible()
                 (artifacts / 'result.json').write_text(json.dumps(report, indent=2))

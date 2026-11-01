@@ -31,13 +31,13 @@ Coordinator maintains this table in the primary checkout. Worker copies are snap
 
 | G022 | fēnix 5X physical USB acceptance on Omarchy | done | Codex coordinator / sole device operator | [Card](G022-fenix-omarchy-usb.md) |
 
-| G023 | Reproducible portable source release | active | Grok via T3 Code | [Card](G023-release-archive.md) |
+| G023 | Reproducible portable source release | review | Grok via T3 Code | [Card](G023-release-archive.md) |
 | G024 | Isolated release install and upgrade validator | review | MiniMax M3 via T3 Code | [Card](G024-install-lifecycle-harness.md) |
 | G025 | Release readiness and lifecycle review | done | MiMo 2.6 Pro via T3 Code | [Card](G025-release-readiness-review.md) |
 
 | G026 | Compact Garmin bar icon and device count | done | Codex coordinator | [Card](G026-compact-bar-icon.md) |
 
-| G027 | Automatic Omarchy GUI theming / Qt fallback | active | Codex coordinator | [Card](G027-adaptive-gui-theme.md) |
+| G027 | Automatic Omarchy GUI theming / Qt fallback | done | Codex coordinator | [Card](G027-adaptive-gui-theme.md) |
 
 Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G003](G003-map-gui-design.md), [G004](G004-omarchy-validation.md), [G005](G005-map-selection-helpers.md), [G006](G006-map-install-guards.md), [G007](G007-maps-gui.md), [G008](G008-map-gui-device-validation.md), [G009](G009-map-gui-review.md), [G010](G010-map-gui-tests.md), [G011](G011-map-workflow-tests.md), [G012](G012-map-backup-feedback.md), [G013](G013-map-install-feedback.md), [G014](G014-linux-setup.md), [G015](G015-desktop-lifecycle-tests.md), [G016](G016-recovery-guide.md).
 
