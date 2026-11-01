@@ -2,7 +2,7 @@
 
 ## Assignment
 
-- State: review — worker finished, awaiting coordinator integration
+- State: done — coordinator reviewed, independently verified, and integrated
 - Owner / session: G001 worker agent (omp), branch `task/G001-hardening`
 - Branch / worktree: `task/G001-hardening` in `/home/cbayschm/orca/workspaces/garmin-linux/G001-hardening`
 - Base commit: `d8e87e3` (`main` at claim time)
@@ -80,3 +80,13 @@ No physical device was attached, mounted, read, or written. No personal backup, 
 ### Next action
 
 Coordinator: review `git show 4481402` in `/home/cbayschm/orca/workspaces/garmin-linux/G001-hardening`, decide on the two unimported candidate files above, then integrate into `main` and rerun the standard checks.
+
+
+## Coordinator acceptance — 2026-11-01 (Asia/Singapore)
+
+- Reviewed source diff and the new regression assertions, confirmed source identity with the historical candidate and no modifications to existing tests.
+- Independent clean review worktree: `/home/cbayschm/garmin-review-G001-20261101`, detached at worker handoff `9a1bd18`, with its own environment. All **115 tests passed**; compileall and diff checks passed.
+- Integrated worker source/test commit `4481402` as main `051695d`; handoff `9a1bd18` as `88ad35a`. Main integration suite also passed **115 tests**, compilation, and diff checks.
+- README now documents recovery from invalid cache rows. The optional benchmark report remains on the historical candidate branch; it is not needed for runtime or acceptance.
+- No physical device or private backup access. Worker/evaluation worktrees retained. User's existing untracked `mise.toml` in the primary checkout was preserved.
+- G001 is complete. Next project work: review G003 when ready; G002 remains a separate hardware acceptance task.

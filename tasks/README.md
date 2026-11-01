@@ -4,9 +4,9 @@ Coordinator maintains this table in the primary checkout. Worker copies are snap
 
 | ID | Task | State | Owner | Dependencies |
 | --- | --- | --- | --- | --- |
-| G001 | Review existing cache/course hardening candidate | ready | unassigned | None; synthetic work |
+| G001 | Review existing cache/course hardening candidate | done | G001 worker; coordinator accepted | Integrated as `051695d`; 115 tests pass |
 | G002 | Validate Edge GPX GUI transfer on hardware | needs-device | unassigned | User/device operator and a selected GPX |
-| G003 | Design the Maps GUI installation flow | ready | unassigned | Design only; no device writes |
+| G003 | Design the Maps GUI installation flow | active | Second Orca worker (user-reported) | Design only; no device writes |
 | G004 | Validate Omarchy environment and integration prerequisites | needs-host | unassigned | Access to Omarchy laptop |
 
 Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G003](G003-map-gui-design.md), [G004](G004-omarchy-validation.md).
@@ -22,4 +22,4 @@ Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G
 3. Worker changes its card and assigned files. It reports `review`, commit, checks, and limitations to the coordinator. It does not edit other cards, this board, or project status.
 4. Coordinator reviews and integrates the task, reruns relevant checks, and updates the board, `STATUS.md`, and milestone checkboxes. Clear ownership only after verifying the previous agent has stopped.
 
-G001 and G003 can run independently with their stated scopes. G002 uses hardware and must be scheduled separately from every other device action. G004 starts only when the laptop is available. No workers are active or claimed by this initial board.
+G001 is integrated. G003 continues independently in `task/G003-map-design` from its original base; the coordinator will review its commits against that base. G002 uses hardware and must be scheduled separately from every other device action. G004 starts only when the laptop is available. G003 was reported running by the user; its completion has not yet been reviewed.

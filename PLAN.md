@@ -94,6 +94,7 @@ For coordinated work, use the task-specific resume prompt in `docs/agent-workflo
 - [x] Add the first read-only PyQt6 desktop shell on Kubuntu with live device status, an unplugged state, refresh, and navigation placeholders. Offscreen GUI smoke checks and a live read-only scan passed.
 - [x] Show complete local device and map backups with date, model, volume label, file count, size, and verified/incomplete/problem states. SHA-256 verification runs in a worker thread; synthetic and live backup checks passed.
 - [x] Add a read-only sortable Activities page from complete verified FIT backups; the Kubuntu virtual environment now exposes system PyQt6 alongside the project FIT SDK. Live and empty/damaged-backup checks passed.
+- [x] Harden activity cache recovery for incomplete/malformed rows and bound course-library reads with per-chunk cancellation. G001 integrated after independent review; 115 tests pass, including source-integrity and read-limit regressions.
 - [x] Cache decoded activity metadata outside the backups and Git while rechecking each FIT file's saved size and SHA-256 on every load. The repeat GUI load fell from about 13 seconds to under 0.1 second on Kubuntu.
 - [x] Add a read-only Courses page with names, types, formats, point counts, source devices, and selected backup paths. Live, empty, and malformed-course checks passed.
 - [x] Add local IMG/archive inspection to the Maps page with a file chooser, background checksums, progress, and cancellation. Valid/invalid samples and the OpenMTBMap EXE passed GUI checks.
