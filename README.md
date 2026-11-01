@@ -12,7 +12,7 @@ Start with [AGENTS.md](AGENTS.md), the short [current handoff](STATUS.md), and t
 
 ## Current state
 
-The command-line core can detect and back up both devices, summarize activities, and transfer courses through model-specific USB paths. The desktop app shows devices, verified backups, activities, courses, and local map inspection, creates device-data backups, and offers reviewed GPX transfer to the Edge 1000 and FIT transfer to the fēnix 5X. Map transfers remain CLI commands. See [STATUS.md](STATUS.md) for the next step and [docs/device-compatibility.md](docs/device-compatibility.md) for observed hardware details.
+The command-line core can detect and back up both devices, summarize activities, and transfer courses through model-specific USB paths. The desktop app shows devices, verified backups, activities, courses, and local map inspection, creates device-data backups, and offers reviewed GPX transfer to the Edge 1000 and FIT transfer to the fēnix 5X. The Maps page also provides reviewed replacement and interrupted-install resume; physical GUI map validation is pending. See [STATUS.md](STATUS.md) for the next step and [docs/device-compatibility.md](docs/device-compatibility.md) for observed hardware details.
 
 ## Desktop preview on Kubuntu
 
@@ -154,6 +154,10 @@ To turn a local GPX route into a FIT course for the fēnix, run:
 The verified FIT file is saved privately under `~/GarminBackups/ForDevice`. Use its printed path with `import-fenix-course` after reconnecting and mounting the watch. Conversion accepts one route or one track with one segment, containing 2 to 10,000 valid coordinates. It preserves the route shape and a name of up to 15 characters; it calculates distance and estimated pacing. GPX timestamps, elevation, waypoints, and turn cues are not carried into the FIT file. Garmin's [FIT course specification](https://developer.garmin.com/fit/file-types/course/) defines the required messages. The user confirmed one generated course, `GLinux Replay`, appears under **Courses** on the fēnix 5X after import.
 
 ## Local map inspection
+
+In the desktop app, **Maps → Inspect** previews files and archives without installing them. **Maps → Replace / Resume** lets you refresh volumes/backups, load and check exact map filenames for a verified backup, select that backup and a currently mounted target, and add local IMG files in transfer order. Check the target, create a read-only plan, then review the listed removals, new filenames, space, and backup before **Replace selected maps**. Old and new filenames must differ. Generic USB readers are accepted only for the Edge SD card matched to its backup. Archive extraction, account downloads, and firmware are outside this flow.
+
+Cancel in the review dialog returns before remount or device writes. Backup, planning, installation, and resume have no mid-operation Cancel; keep the window open while they run. Inspection retains its own Cancel button. Installation retains a private state directory under `~/GarminBackups/MapInstalls`; after interruption, select the current target and use **Resume interrupted replacement…**, preserving that directory and the source images. A completed local record does not prove the current USB mount state. After a verified installation, safely unmount sibling volumes before disconnecting, then check map visibility and rendering on the device. The app has no restore command. This GUI flow is verified with synthetic storage/offscreen Qt; physical acceptance remains G008. Existing working maps need not be rewritten to test development changes.
 
 The read-only `inspect-map` command previews a downloaded `.exe`, `.7z`, or `.zip` archive with 7-Zip, or a Garmin `.img` file by reading its header. It never executes or extracts an installer, mounts a device, or copies a map. Install the system `7z` command for archive previews.
 
