@@ -27,8 +27,8 @@ Check each named API/argument against current source and tests. Document design 
 
 - Updated: 2026-11-01 11:10 +08
 - State / owner: `review` / Grok session 01a19505-e656-7393-b2a4-2cf95a67bc03
-- Branch / HEAD commit / worktree: `task/G003-map-design` / design commit recorded below / `/home/cbayschm/orca/workspaces/garmin-linux/G003-map-design`
-- Changed files and uncommitted work: `docs/map-gui-design.md`, `tasks/G003-map-gui-design.md`. No application source.
+- Branch / HEAD commit / worktree: `task/G003-map-design` / design commit `e554bf6ece5663a6f14a80de6126014b00ab9c14`, with this handoff line in the child commit / `/home/cbayschm/orca/workspaces/garmin-linux/G003-map-design`
+- Changed files and uncommitted work: committed `docs/map-gui-design.md` and this card. No application source. Working tree clean after the handoff commit.
 - Checks run / results / checks not run: imported the current map, mount, backup, and catalog callables and compared their signatures plus `SPACE_MARGIN` (16777216) and `FAT32_MAX_FILE_BYTES` (4294967295) with the design. Every quoted core error string in the design is present in `garmin_companion`. `git diff --check` passed on this diff. Unittest discovery was not run; no application source changed. No GUI was launched and no block device was opened.
 - Decisions and known limitations: the design is `docs/map-gui-design.md`. The installer, map backup, and planner have no cancel or progress callback, so the only new Cancel control is the review dialog before a write. The existing Maps Cancel button stays inspection-only. `writable_for_course=True` cannot mount an SD card or a reader. Replace stays a later task that needs the proposed read-only helpers and a separate writable-remount helper. There is no restore API. Working maps are not a target of this card.
 - Running processes / device or mount state: none started. No device access.
