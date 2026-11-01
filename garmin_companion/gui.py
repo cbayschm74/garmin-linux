@@ -1,9 +1,10 @@
-"""First read-only desktop view for the Garmin Linux companion."""
+"""Desktop workflows for verified Garmin backups, courses, and maps."""
 
 from __future__ import annotations
 
 import sys
 import subprocess
+from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 
@@ -11,7 +12,7 @@ from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractItemView, QApplication, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFrame, QHeaderView, QHBoxLayout, QLabel,
-    QListWidget, QMainWindow, QMessageBox, QPushButton, QScrollArea, QStackedWidget, QSizePolicy,
+    QListWidget, QListWidgetItem, QPlainTextEdit, QMainWindow, QMessageBox, QPushButton, QScrollArea, QStackedWidget, QSizePolicy,
     QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget,
 )
 
@@ -22,7 +23,13 @@ from .desktop import DESKTOP_ID, ICON_PATH, LAUNCHER_NAME
 from .detector import GarminVolume, scan
 from .backup_catalog import BackupSummary, list_backups
 from .backup import backup as create_backup, select_volume, _mount_id, _mounted_source
-from .mount_control import capture_volume, change_mount
+from .mount_control import (capture_volume, change_mount, remount_writable_for_map_install,
+                            guarded_unmount, _read_only)
+from .map_backup import backup_maps, list_map_images, read_map_backup_index, validate_img_name
+from .map_identity import select_map_volume, list_usb_fat_mounts
+from .map_plan import plan_map_replacement
+from .map_install import (start_map_install, resume_map_install, load_map_install,
+                          MapInstallInterrupted, MapPlanChanged, _require_reviewed_plan)
 from .export import prepare_activity
 from .convert_course import convert_gpx_to_fit, MAX_POINTS
 from .course_transfer import CourseTransferReview, review_fenix_transfer, review_edge_transfer, send_course
@@ -337,6 +344,182 @@ class ActivityCourseWorker(QThread):
         self.results.emit(preview)
 
 
+class MapJobWorker(QThread):
+    """Non-cancellable map jobs retain structured recovery errors."""
+    results = pyqtSignal(object)
+    failed = pyqtSignal(object)
+
+    def __init__(self, action, parent):
+        super().__init__(parent)
+        self.action = action
+        self.outcome = None
+
+    def run(self):
+        try:
+            self.results.emit(self.action())
+        except Exception as exc:
+            self.failed.emit(exc)
+
+
+def _map_identity_matches(volume, reviewed, evidence):
+    fields = ('path', 'model', 'label', 'size_bytes', 'filesystem', 'mountpoint')
+    if any(getattr(volume, field) != getattr(reviewed, field) for field in fields):
+        raise ValueError('Reviewed map volume changed; review it again')
+    if capture_volume(volume) != evidence:
+        raise ValueError('Reviewed map USB identity or mount instance changed; review it again')
+
+
+def _map_specs(rows, old_names):
+    specs, targets = [], set()
+    old = {name.casefold() for name in old_names}
+    for source, target in rows:
+        validate_img_name(target)
+        if '=' in target:
+            raise ValueError('Destination IMG filenames cannot contain =; choose a different name')
+        path = Path(source).expanduser().resolve(strict=True)
+        if not path.is_file() or path.suffix.lower() != '.img':
+            raise ValueError('Choose local IMG files for replacement')
+        key = target.casefold()
+        if key in targets:
+            raise ValueError('New map target filenames must be distinct')
+        if key in old:
+            raise ValueError('Installer requires distinct old and new map filenames')
+        targets.add(key)
+        specs.append(f'{path}={target}')
+    if not specs:
+        raise ValueError('Choose at least one new local IMG')
+    return specs
+
+
+def _map_selection(path, backup):
+    index = read_map_backup_index(backup)
+    volume = select_map_volume(path, backup)
+    evidence = capture_volume(volume)
+    names = [Path(entry.relative_path).name for entry in list_map_images(volume)]
+    if capture_volume(volume) != evidence:
+        raise ValueError('Map volume changed during selection; check it again')
+    return dict(index=index, volume=volume, evidence=evidence, backup=backup,
+                missing=[name for name in index['names'] if name.casefold() not in {n.casefold() for n in names}],
+                extra=[name for name in names if name.casefold() not in {n.casefold() for n in index['names']}])
+
+
+def _prepare_map_review(selection, rows):
+    backup = selection['backup']
+    volume = select_map_volume(selection['volume'].path, backup)
+    _map_identity_matches(volume, selection['volume'], selection['evidence'])
+    index = read_map_backup_index(backup)
+    if index != selection['index']:
+        raise ValueError('Map backup index changed; check the selection again')
+    specs = _map_specs(rows, index['names'])
+    plan = plan_map_replacement(volume, index['names'], specs, backup)
+    if plan.get('status') != 'ready':
+        raise ValueError('Map replacement plan is not ready')
+    # Enforce the installer's stricter name rule even if a planner returns ready.
+    if {row['name'].casefold() for row in plan['old_maps']} & {row['target'].casefold() for row in plan['new_maps']}:
+        raise ValueError('Installer requires distinct old and new map filenames')
+    _map_identity_matches(select_map_volume(volume.path, backup), volume, selection['evidence'])
+    return dict(volume=volume, evidence=deepcopy(selection['evidence']), backup=backup,
+                plan=deepcopy(plan), names=list(index['names']), specs=specs)
+
+
+def _prepare_map_resume(state_dir, path=None):
+    state = load_map_install(state_dir)
+    review = dict(state=deepcopy(state), state_dir=state_dir, backup=Path(state['backup']))
+    if state['phase'] != 'complete':
+        if not path:
+            raise ValueError('Select the current mounted target before resuming')
+        volume = select_map_volume(path, review['backup'])
+        if (volume.model, volume.label, volume.size_bytes) != (state['model'], state['label'], state['size_bytes']):
+            raise ValueError('Current map volume differs from saved install state')
+        review.update(volume=volume, evidence=capture_volume(volume))
+    return review
+
+
+def _validate_map_review(review):
+    if 'state' in review and load_map_install(review['state_dir']) != review['state']:
+        raise ValueError('Install state changed; review resume again')
+    volume = select_map_volume(review['volume'].path, review['backup'])
+    _map_identity_matches(volume, review['volume'], review['evidence'])
+    return review
+
+
+def _execute_map_review(review, backup_root):
+    """Run a reviewed install/resume, retaining the original consent evidence."""
+    _validate_map_review(review)
+    volume = review['volume']
+    original_read_only = _read_only(Path(volume.mountpoint))
+    mounted = None
+    mounted_evidence = None
+    state_started = False
+    try:
+        mounted = remount_writable_for_map_install(volume, review['evidence'])
+        # Capture immediately after the verified transition, before slower work.
+        mounted_evidence = capture_volume(mounted)
+        if (mounted_evidence['uuid'], mounted_evidence['path']) != (review['evidence']['uuid'], review['evidence']['path']):
+            raise ValueError('USB identity changed after remount')
+        current = select_map_volume(mounted.path, review['backup'])
+        _map_identity_matches(current, mounted, mounted_evidence)
+        if 'state' in review:
+            if load_map_install(review['state_dir']) != review['state']:
+                raise ValueError('Install state changed; review resume again')
+            state_started = True
+            try:
+                return resume_map_install(current, review['state_dir'], expected_state=review['state'])
+            except Exception as exc:
+                raise MapInstallInterrupted(f'{exc}; resume with state directory: {review["state_dir"]}',
+                                            review['state_dir']) from exc
+        plan = plan_map_replacement(current, review['names'], review['specs'], review['backup'])
+        _require_reviewed_plan(plan, review['plan'])
+        _map_identity_matches(select_map_volume(current.path, review['backup']), mounted, mounted_evidence)
+        return start_map_install(current, review['names'], review['specs'], review['backup'],
+                                 backup_root / 'MapInstalls', expected_plan=review['plan'])
+    except Exception as exc:
+        if isinstance(exc, MapInstallInterrupted) or state_started:
+            raise
+        if isinstance(exc, MapPlanChanged):
+            exc.volume = mounted or volume
+        if original_read_only and mounted is not None and mounted_evidence is not None:
+            if (mounted_evidence['uuid'], mounted_evidence['path']) != (review['evidence']['uuid'], review['evidence']['path']):
+                raise ValueError(f'{exc}\nSafe-unmount cleanup skipped: USB identity changed; '
+                                 'Refresh Devices to check mount state.') from exc
+            try:
+                result = guarded_unmount(mounted, mounted_evidence)
+                cleanup = result['message']
+            except Exception as cleanup_error:
+                cleanup = f'Safe-unmount cleanup failed: {cleanup_error}. Mount state needs attention.'
+            if isinstance(exc, MapPlanChanged):
+                error = MapPlanChanged(f'{exc}\n{cleanup}', exc.plan)
+                error.volume = mounted
+                raise error from exc
+            raise ValueError(f'{exc}\n{cleanup}') from exc
+        if mounted is None or mounted_evidence is None:
+            raise ValueError(f'{exc}\nMount transition or verification did not complete. Refresh Devices to check mount state.') from exc
+        raise
+
+
+def _map_plan_text(review):
+    if 'state' in review:
+        state = review['state']
+        return (f'Phase: {state["phase"]}\nModel: {state.get("model")} · {state.get("label")}\n'
+                f'Volume size: {state.get("size_bytes")} bytes\nState: {review["state_dir"]}\n'
+                f'Backup: {state["backup"]}\nOld maps:\n' +
+                '\n'.join(row['name'] for row in state['old_maps']) + '\nNew maps:\n' +
+                '\n'.join(f'{row["source"]} → {row["target"]}' for row in state['new_maps']))
+    plan, volume = review['plan'], review['volume']
+    lines = [plan['note'], f'Target: {volume.model} · {volume.label} · {volume.path}',
+             f'Mount: {volume.mountpoint} · {volume.filesystem} · {volume.size_bytes:,} bytes',
+             f'Backup: {plan["backup"]}', 'Old maps to remove:']
+    lines += [f'{row["name"]} · {row["size_bytes"]:,} bytes\nSHA-256: {row["sha256"]}' for row in plan['old_maps']]
+    lines += ['New images (first image is staged before removal):']
+    lines += [f'{row["source"]} → {row["target"]}\n{row["size_bytes"]:,} bytes · {row["header_label"]}\n'
+              f'SHA-256: {row["sha256"]}' for row in plan['new_maps']]
+    lines += [f'Stage first: {plan["stage_first_bytes"]:,} bytes',
+              f'Free now: {plan["free_bytes_before"]:,} · Margin: {plan["margin_bytes"]:,} bytes',
+              f'Estimated free after: {plan["free_bytes_after_estimate"]:,} bytes', *plan['steps'],
+              'A recognized IMG header does not establish coverage, quality, or compatibility.']
+    return '\n'.join(lines)
+
+
 class CompanionWindow(QMainWindow):
     def __init__(self, scanner=scan, *, auto_refresh: bool = True,
                  backup_root: Path | None = None, activity_cache_path: Path | None = None) -> None:
@@ -350,6 +533,9 @@ class CompanionWindow(QMainWindow):
         self._activities_loaded = False
         self._course_worker: CourseScanWorker | None = None
         self._courses_loaded = False
+        self._map_job_worker: MapJobWorker | None = None
+        self._map_selection = None
+        self._map_review = None
         self._map_worker: MapInspectWorker | None = None
         self._device_backup_worker: DeviceBackupWorker | None = None
         self._mount_worker: MountWorker | None = None
@@ -389,6 +575,8 @@ class CompanionWindow(QMainWindow):
         self.setStyleSheet('''
             QMainWindow, QStackedWidget, QScrollArea, QScrollArea > QWidget > QWidget { background: #f5f7f8; }
             QWidget { color: #182b34; font-size: 13px; }
+            QPlainTextEdit { background: white; color: #182b34; border: 1px solid #b6cccd; }
+            QListWidget { background: white; color: #182b34; }
             QDialog, QMessageBox { background: #f5f7f8; }
             #courseTransferReview { background: #f5f7f8; }
             #courseTransferReview QLabel { background: transparent; color: #182b34; }
@@ -412,13 +600,13 @@ class CompanionWindow(QMainWindow):
             QTableWidget { background: white; alternate-background-color: #f7faf9; border: 1px solid #dce5e7; }
             QHeaderView::section { background: #e8f0ef; color: #183b41; border: 0;
                                    border-bottom: 1px solid #c5d6d7; padding: 8px; font-weight: 600; }
-            #courseTabs::pane { background: #f5f7f8; border: 1px solid #c5d6d7; }
-            #courseTabs QTabBar::tab { background: #e8f0ef; color: #183b41;
+            #courseTabs::pane, #mapTabs::pane { background: #f5f7f8; border: 1px solid #c5d6d7; }
+            #mapTabs QTabBar::tab, #courseTabs QTabBar::tab { background: #e8f0ef; color: #183b41;
                                       border: 1px solid #b6cccd; padding: 10px 16px;
                                       margin-right: 4px; border-top-left-radius: 6px;
                                       border-top-right-radius: 6px; }
-            #courseTabs QTabBar::tab:!selected:hover { background: #d2e5e2; color: #153a42; }
-            #courseTabs QTabBar::tab:selected { background: #246b70; color: #ffffff;
+            #mapTabs QTabBar::tab:!selected:hover, #courseTabs QTabBar::tab:!selected:hover { background: #d2e5e2; color: #153a42; }
+            #mapTabs QTabBar::tab:selected, #courseTabs QTabBar::tab:selected { background: #246b70; color: #ffffff;
                                                border-color: #246b70; font-weight: 600; }
         ''')
         self.refresh_devices()
@@ -465,7 +653,7 @@ class CompanionWindow(QMainWindow):
         return page
 
     def start_device_backup(self, volume: GarminVolume) -> None:
-        if self._device_backup_worker is not None or self._mount_worker is not None or self._transfer_worker is not None:
+        if self._map_operations_busy():
             return
         try:
             mount_id = _mount_id(_mounted_source(volume))
@@ -487,7 +675,7 @@ class CompanionWindow(QMainWindow):
         worker.start()
 
     def start_mount_action(self, volume: GarminVolume) -> None:
-        if self._device_backup_worker is not None or self._mount_worker is not None or self._transfer_worker is not None:
+        if self._map_operations_busy():
             return
         try:
             evidence = capture_volume(volume)
@@ -576,9 +764,24 @@ class CompanionWindow(QMainWindow):
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(30, 28, 30, 25)
-        layout.setSpacing(16)
         layout.addWidget(_label('Maps', kind='pageTitle'))
-        layout.addWidget(_label('Inspect a local Garmin image or downloaded map archive', kind='pageIntro'))
+        self.map_tabs = QTabWidget()
+        self.map_tabs.setObjectName('mapTabs')
+        self.map_tabs.addTab(self._map_inspect_page(), 'Inspect')
+        self.map_tabs.addTab(self._map_replace_page(), 'Replace / Resume')
+        layout.addWidget(self.map_tabs)
+        layout.addWidget(self.map_replace_status)
+        self.map_replace_status.setVisible(False)
+        self.map_tabs.currentChanged.connect(lambda index: self.map_replace_status.setVisible(index == 1))
+        return page
+
+    def _map_inspect_page(self) -> QWidget:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(30, 28, 30, 25)
+        layout.setSpacing(16)
+
+
         buttons = QHBoxLayout()
         self.map_choose_button = QPushButton('Choose file…')
         self.map_choose_button.clicked.connect(self._choose_map)
@@ -601,6 +804,392 @@ class CompanionWindow(QMainWindow):
         layout.addWidget(scroll, 1)
         return page
 
+    def _map_replace_page(self):
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.map_replace_panel = QWidget()
+        layout = QVBoxLayout(self.map_replace_panel)
+        layout.addWidget(_label('Back up selected images, review a replacement, or resume an interrupted install. '
+                                'Keep the window open during backup, hashing, or copying.'))
+        self.map_refresh_choices = QPushButton('Refresh volumes and verified map backups')
+        self.map_refresh_choices.clicked.connect(self.refresh_map_choices)
+        layout.addWidget(self.map_refresh_choices)
+        self.map_backup_volume = QComboBox()
+        layout.addWidget(_label('1. Back up maps from a mounted Garmin volume'))
+        layout.addWidget(self.map_backup_volume)
+        self.map_load_files = QPushButton('Load map filenames')
+        self.map_load_files.clicked.connect(self.load_map_backup_files)
+        layout.addWidget(self.map_load_files)
+        self.map_backup_names = QListWidget()
+        self.map_backup_names.setMinimumHeight(90)
+        self.map_backup_names.setMaximumHeight(130)
+        self.map_backup_names.itemChanged.connect(self._update_map_controls)
+        layout.addWidget(self.map_backup_names)
+        self.map_backup_button = QPushButton('Back up selected maps')
+        self.map_backup_button.clicked.connect(self.start_map_backup)
+        layout.addWidget(self.map_backup_button)
+        layout.addWidget(_label('2. Select a verified map backup and the current target'))
+        self.map_backup_choice = QComboBox()
+        self.map_target_choice = QComboBox()
+        self.map_backup_choice.currentIndexChanged.connect(self._invalidate_map_selection)
+        self.map_target_choice.currentIndexChanged.connect(self._invalidate_map_selection)
+        self.map_backup_volume.currentIndexChanged.connect(self._clear_map_backup_names)
+        layout.addWidget(self.map_backup_choice)
+        layout.addWidget(self.map_target_choice)
+        self.map_check_target = QPushButton('Check target and backup')
+        self.map_check_target.clicked.connect(self.check_map_target)
+        layout.addWidget(self.map_check_target)
+        self.map_target_details = _label('Refresh, select a backup and mounted target, then check their match.', kind='pageIntro')
+        self.map_target_details.setTextFormat(Qt.TextFormat.PlainText)
+        layout.addWidget(self.map_target_details)
+        layout.addWidget(_label('3. New local IMG files, in transfer order (edit the destination filename)'))
+        self.map_new_images = QTableWidget(0, 2)
+        self.map_new_images.setHorizontalHeaderLabels(['Local IMG', 'Destination filename'])
+        self.map_new_images.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.map_new_images.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        self.map_new_images.setMinimumHeight(125)
+        self.map_new_images.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.map_new_images.itemChanged.connect(self._invalidate_map_plan)
+        layout.addWidget(self.map_new_images)
+        row = QHBoxLayout()
+        for text, action in [('Add IMG…', self.choose_map_images), ('Move up', lambda: self.move_map_image(-1)),
+                             ('Move down', lambda: self.move_map_image(1)), ('Remove', self.remove_map_image)]:
+            button = QPushButton(text)
+            button.clicked.connect(action)
+            row.addWidget(button)
+        layout.addLayout(row)
+        self.map_plan_button = QPushButton('Create plan')
+        self.map_plan_button.clicked.connect(self.create_map_plan)
+        layout.addWidget(self.map_plan_button)
+        self.map_review_button = QPushButton('Review replacement…')
+        self.map_review_button.clicked.connect(self.review_map_replacement)
+        self.map_review_button.setEnabled(False)
+        layout.addWidget(self.map_review_button)
+        self.map_resume_button = QPushButton('Resume interrupted replacement…')
+        self.map_resume_button.clicked.connect(self.choose_map_resume)
+        layout.addWidget(self.map_resume_button)
+        self.map_replace_status = _label('No replacement selected.', kind='pageIntro')
+        self.map_replace_status.setTextFormat(Qt.TextFormat.PlainText)
+        self.map_replace_status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(self.map_replace_status)
+        self.map_plan_details = QPlainTextEdit()
+        self.map_plan_details.setReadOnly(True)
+        self.map_plan_details.setMinimumHeight(200)
+        layout.addWidget(self.map_plan_details)
+        scroll.setWidget(self.map_replace_panel)
+        for combo in (self.map_backup_volume, self.map_backup_choice, self.map_target_choice):
+            combo.addItem('Select…', None)
+        self._update_map_controls()
+        return scroll
+
+    def _update_map_controls(self, *args):
+        self.map_load_files.setEnabled(bool(self.map_backup_volume.currentData()))
+        checked = any(self.map_backup_names.item(i).checkState() == Qt.CheckState.Checked
+                      for i in range(self.map_backup_names.count()))
+        self.map_backup_button.setEnabled(bool(getattr(self, '_map_backup_listing', None)) and checked)
+        self.map_check_target.setEnabled(bool(self.map_target_choice.currentData() and self.map_backup_choice.currentData()))
+        self.map_plan_button.setEnabled(bool(self._map_selection and not self._map_selection['missing']
+                                             and self.map_new_images.rowCount()))
+        self.map_review_button.setEnabled(self._map_review is not None)
+
+    def _map_operations_busy(self):
+        return any(worker is not None for worker in (self._map_job_worker, self._map_worker,
+                    self._device_backup_worker, self._mount_worker, self._transfer_worker))
+
+    def _invalidate_map_plan(self, *args):
+        self._map_review = None
+        self.map_review_button.setEnabled(False)
+        self.map_plan_details.clear()
+        self._update_map_controls()
+
+    def _invalidate_map_selection(self, *args):
+        self._map_selection = None
+        self._invalidate_map_plan()
+        self.map_target_details.setText('Selection changed. Check target and backup again.')
+
+    def _clear_map_backup_names(self, *args):
+        self.map_backup_names.clear()
+        self._map_backup_listing = None
+        self._update_map_controls()
+
+    def _run_map_job(self, action, completed, message):
+        if self._map_operations_busy():
+            self.map_replace_status.setText('Wait for the current device or map operation to finish.')
+            return
+        worker = MapJobWorker(action, self)
+        worker.timer_was_active = self._refresh_timer.isActive()
+        self._refresh_timer.stop()
+        self._map_job_worker = worker
+        self.map_replace_panel.setEnabled(False)
+        self.map_choose_button.setEnabled(False)
+        self.refresh_button.setEnabled(False)
+        self.map_replace_status.setText(message)
+        worker.results.connect(lambda result: setattr(worker, 'outcome', (True, result)))
+        worker.failed.connect(lambda error: setattr(worker, 'outcome', (False, error)))
+        worker.finished.connect(lambda: self._map_job_finished(worker, completed))
+        worker.finished.connect(worker.deleteLater)
+        self._update_course_send()
+        self.refresh_devices()
+        worker.start()
+
+    def _map_job_finished(self, worker, completed):
+        self._map_job_worker = None
+        self.map_replace_panel.setEnabled(True)
+        self.map_choose_button.setEnabled(True)
+        self.refresh_button.setEnabled(True)
+        if worker.timer_was_active:
+            self._refresh_timer.start()
+        self._update_course_send()
+        self.refresh_devices()
+        if worker.outcome:
+            ok, value = worker.outcome
+            if ok:
+                try:
+                    completed(value)
+                except Exception as exc:
+                    self._map_job_failed(exc)
+            else:
+                self._map_job_failed(value)
+
+    def _map_job_failed(self, error):
+        self._invalidate_map_plan()
+        if isinstance(error, MapPlanChanged) and hasattr(error, 'volume'):
+            self.map_plan_details.setPlainText(
+                'Changed plan captured before cleanup. The target may now be unmounted. '
+                'Mount read-only and check the target again before creating a fresh review.\n\n' +
+                _map_plan_text(dict(plan=error.plan, volume=error.volume)))
+            self._map_selection = None
+            self._update_map_controls()
+        message = str(error)
+        state_dir = getattr(error, 'state_dir', None)
+        if state_dir is not None:
+            message += f'\nState: {state_dir}\nUse Resume interrupted replacement; keep the saved state and local images.'
+        self.map_replace_status.setText(message)
+        dialog = QMessageBox(self)
+        dialog.setTextFormat(Qt.TextFormat.PlainText)
+        dialog.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        dialog.setWindowTitle('Maps verified, unmount failed' if 'safe unmount failed' in message else
+                              'Map replacement failed' if state_dir is not None else 'Map operation failed')
+        dialog.setText(message)
+        dialog.exec()
+
+    def refresh_map_choices(self):
+        def read():
+            volumes = self._scanner()
+            # Reader enumeration errors must not silently substitute a target.
+            readers = list_usb_fat_mounts()
+            backups = [b for b in list_backups(self._backup_root) if b.kind == 'Maps' and b.status == 'verified']
+            return volumes, readers, backups
+        self._run_map_job(read, self._show_map_choices, 'Checking mounted volumes and verifying local map backups…')
+
+    def _show_map_choices(self, result):
+        volumes, readers, backups = result
+        for combo in (self.map_backup_volume, self.map_backup_choice, self.map_target_choice):
+            combo.clear()
+            combo.addItem('Select…', None)
+        paths = set()
+        for volume in volumes:
+            if not volume.mountpoint or volume.filesystem.lower() not in {'fat', 'vfat', 'msdos'}:
+                continue
+            label = f'{volume.device_name or volume.model} · {volume.label} · {volume.path}'
+            self.map_backup_volume.addItem(label, volume.path)
+            self.map_target_choice.addItem(label, volume.path)
+            paths.add(volume.path)
+        for reader in readers:
+            if reader['path'] not in paths:
+                self.map_target_choice.addItem(f'USB reader · {reader["label"]} · {reader["path"]} '
+                                              f'· {reader["size"] / 1024**3:.1f} GiB', reader['path'])
+        for backup in backups:
+            self.map_backup_choice.addItem(f'{backup.model} · {backup.label} · {backup.created_utc} '
+                f'· {backup.file_count} files · {backup.total_bytes / 1024**2:.1f} MiB · {backup.path}', backup.path)
+        self._invalidate_map_selection()
+        self.map_replace_status.setText('Choices refreshed. Backup creation requires a detected Garmin volume; '
+                                       'a reader target must match an existing Edge SD backup.')
+
+    def load_map_backup_files(self):
+        path = self.map_backup_volume.currentData()
+        if not path:
+            self.map_replace_status.setText('Select a mounted Garmin volume first.')
+            return
+        self._clear_map_backup_names()
+        def read():
+            volume = select_volume(path)
+            evidence = capture_volume(volume)
+            entries = list_map_images(volume)
+            if capture_volume(volume) != evidence:
+                raise ValueError('Map volume changed during listing')
+            return volume, evidence, entries
+        def show(result):
+            self._map_backup_listing = result
+            for entry in result[2]:
+                item = QListWidgetItem(f'{Path(entry.relative_path).name} · {entry.size_bytes / 1024**2:.1f} MiB')
+                item.setData(Qt.ItemDataRole.UserRole, Path(entry.relative_path).name)
+                item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+                item.setCheckState(Qt.CheckState.Unchecked)
+                self.map_backup_names.addItem(item)
+            self.map_replace_status.setText('Check only the images you intend to replace; the checklist starts empty.')
+            self._update_map_controls()
+        self._run_map_job(read, show, 'Reading map filenames without hashing image data…')
+
+    def start_map_backup(self):
+        listing = getattr(self, '_map_backup_listing', None)
+        names = [self.map_backup_names.item(i).data(Qt.ItemDataRole.UserRole)
+                 for i in range(self.map_backup_names.count())
+                 if self.map_backup_names.item(i).checkState() == Qt.CheckState.Checked]
+        if not listing or not names:
+            self.map_replace_status.setText('Load filenames and check at least one map to back up.')
+            return
+        def save():
+            volume = select_volume(listing[0].path)
+            _map_identity_matches(volume, listing[0], listing[1])
+            return backup_maps(volume, names, self._backup_root)
+        def done(result):
+            path, entries = result
+            self._backups_loaded = False
+            self.map_replace_status.setText(f'Verified map backup: {path}\n{len(entries)} files · '
+                f'{sum(e.size_bytes for e in entries):,} bytes. Device files left in place. '
+                'The app has no restore command. Refresh choices to select this backup.')
+        self._run_map_job(save, done, 'Copying and verifying selected maps; keep the window open…')
+
+    def check_map_target(self):
+        path, backup = self.map_target_choice.currentData(), self.map_backup_choice.currentData()
+        self._invalidate_map_selection()
+        if not path or not backup:
+            self.map_replace_status.setText('Select a verified map backup and current mounted target.')
+            return
+        def show(selection):
+            self._map_selection = selection
+            volume = selection['volume']
+            reader = ('\nUSB reader matched by backup UUID, size, and label.'
+                      if volume.status == 'backup-matched-reader' else '')
+            self.map_target_details.setText(f'{volume.model} · {volume.label} · {volume.path}\n'
+                f'{volume.mountpoint} · {volume.filesystem} · {volume.size_bytes:,} bytes · {volume.status}'
+                f'{reader}\nMissing maps: {", ".join(selection["missing"]) or "none"}\n'
+                f'Left untouched: {", ".join(selection["extra"]) or "none"}')
+            self._update_map_controls()
+            self.map_replace_status.setText('Target checked. Choose new local images to create a plan.')
+        self._run_map_job(lambda: _map_selection(path, Path(backup)), show, 'Matching backup and target identity…')
+
+    def choose_map_images(self):
+        paths, _ = QFileDialog.getOpenFileNames(self, 'Add local map images', str(Path.home() / 'Downloads'),
+                                               'Garmin IMG (*.img *.IMG)')
+        for path in paths:
+            self.add_map_image(path)
+
+    def add_map_image(self, path, target=None):
+        row = self.map_new_images.rowCount()
+        self.map_new_images.insertRow(row)
+        source = QTableWidgetItem(str(path))
+        source.setFlags(source.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        self.map_new_images.setItem(row, 0, source)
+        self.map_new_images.setItem(row, 1, QTableWidgetItem(target or Path(path).name))
+        self._invalidate_map_plan()
+
+    def move_map_image(self, direction):
+        row = self.map_new_images.currentRow()
+        other = row + direction
+        if row < 0 or not 0 <= other < self.map_new_images.rowCount():
+            return
+        for col in range(2):
+            first, second = self.map_new_images.takeItem(row, col), self.map_new_images.takeItem(other, col)
+            self.map_new_images.setItem(row, col, second)
+            self.map_new_images.setItem(other, col, first)
+        self.map_new_images.selectRow(other)
+        self._invalidate_map_plan()
+
+    def remove_map_image(self):
+        row = self.map_new_images.currentRow()
+        if row >= 0:
+            self.map_new_images.removeRow(row)
+            self._invalidate_map_plan()
+
+    def create_map_plan(self):
+        selection = deepcopy(self._map_selection)
+        if not selection or selection['missing']:
+            self.map_replace_status.setText('Check a target containing all backed-up old maps first.')
+            return
+        rows = [(self.map_new_images.item(i, 0).text(), self.map_new_images.item(i, 1).text())
+                for i in range(self.map_new_images.rowCount())]
+        self._invalidate_map_plan()
+        def show(review):
+            self._map_review = review
+            self.map_plan_details.setPlainText(_map_plan_text(review))
+            self.map_review_button.setEnabled(True)
+            self.map_replace_status.setText('Read-only plan ready. Review the exact files and target before replacement.')
+        self._run_map_job(lambda: _prepare_map_review(selection, rows), show,
+                          'Hashing backup, current maps, and new images; this may take a long time. Keep the window open…')
+
+    def review_map_replacement(self):
+        review = deepcopy(self._map_review)
+        if review:
+            self._run_map_job(lambda: _validate_map_review(review), self._confirm_map_review,
+                              'Checking reviewed USB identity before opening confirmation…')
+
+    def _confirm_map_review(self, review):
+        resume = 'state' in review
+        dialog = QDialog(self)
+        dialog.setObjectName('mapInstallReview')
+        dialog.setWindowTitle('Resume map replacement' if resume else 'Review map replacement')
+        dialog.resize(720, 580)
+        layout = QVBoxLayout(dialog)
+        text = QPlainTextEdit()
+        text.setReadOnly(True)
+        target = review['volume']
+        phase = review['state']['phase'] if resume else None
+        resume_note = (f'Saved phase: {phase}. Selected old maps may already have been removed. '
+                       'Recovery follows this saved state.\n\n' if resume and phase != 'planned' else '')
+        text.setPlainText(f'Target: {target.model} · {target.label} · {target.path}\n' + _map_plan_text(review) +
+            '\n\n' + resume_note + 'Only the listed old maps may be removed, after the first new image verifies. '
+            'Other images and sidecar files stay in place. The app has no restore command. '
+            'There is no mid-copy cancellation; keep the window open. '
+            'The installer safely unmounts this volume; safely unmount sibling volumes before disconnecting. '
+            'On-device map rendering must be checked afterward. Cancel closes this review before any remount or write.')
+        layout.addWidget(text)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        buttons.button(QDialogButtonBox.StandardButton.Ok).setText('Resume' if resume else 'Replace selected maps')
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self._map_review = None
+            self.map_review_button.setEnabled(False)
+            message = (f'Resuming phase {phase}; selected old maps may already have been removed. Keep the window open…'
+                       if resume and phase != 'planned' else
+                       'Resuming planned replacement; old maps must still verify before staging. Keep the window open…'
+                       if resume else
+                       'Replacing and verifying maps; old files remain until the first new image verifies. Keep the window open…')
+            self._run_map_job(lambda: _execute_map_review(review, self._backup_root), self._map_install_complete, message)
+
+    def choose_map_resume(self):
+        directory = QFileDialog.getExistingDirectory(self, 'Resume map replacement', str(self._backup_root / 'MapInstalls'))
+        if directory:
+            self.prepare_map_resume(Path(directory))
+
+    def prepare_map_resume(self, state_dir):
+        path = self.map_target_choice.currentData()
+        def show(review):
+            self.map_plan_details.setPlainText(_map_plan_text(review))
+            if review['state']['phase'] == 'complete':
+                self.map_replace_status.setText('This local record is already complete. No device was checked or remounted; '
+                                               'it does not prove the current mount state.')
+            else:
+                self._confirm_map_review(review)
+        self._run_map_job(lambda: _prepare_map_resume(state_dir, path), show, 'Reading saved install state…')
+
+    def _map_install_complete(self, result):
+        self._invalidate_map_plan()
+        self._backups_loaded = False
+        if 'maps' not in result:
+            self.map_replace_status.setText(f'Install record already complete: {result["state_dir"]}. '
+                                           'No new device verification performed.')
+            return
+        self.map_replace_status.setText(f'Maps verified and selected volume safely unmounted.\nState: {result["state_dir"]}\n'
+            f'Installed: {", ".join(result["maps"])}\nSafely unmount other volumes on the same device before disconnecting. '
+            'Then check that the maps appear and render on the device.')
+        self._map_selection = None
+        self._update_map_controls()
+
     def _choose_map(self) -> None:
         filename, _ = QFileDialog.getOpenFileName(
             self, 'Inspect map file', str(Path.home() / 'Downloads'),
@@ -609,14 +1198,19 @@ class CompanionWindow(QMainWindow):
             self.inspect_map_file(Path(filename))
 
     def inspect_map_file(self, path: Path) -> None:
-        if self._map_worker is not None:
+        if self._map_operations_busy():
             return
+        self._inspect_timer_was_active = self._refresh_timer.isActive()
+        self._refresh_timer.stop()
+        self.map_replace_panel.setEnabled(False)
         self._clear_layout(self.map_result_layout)
         self.map_summary.setText(f'Inspecting {path.name}…')
         self.map_choose_button.setEnabled(False)
         self.map_cancel_button.setEnabled(True)
         worker = MapInspectWorker(path, self)
         self._map_worker = worker
+        self._update_course_send()
+        self.refresh_devices()
         worker.results.connect(self._show_map)
         worker.failed.connect(lambda message: self.map_summary.setText(f'Could not inspect file: {message}'))
         worker.progress.connect(lambda percent: self.map_summary.setText(f'Calculating SHA-256… {percent}%'))
@@ -660,6 +1254,11 @@ class CompanionWindow(QMainWindow):
         self._map_worker = None
         self.map_choose_button.setEnabled(True)
         self.map_cancel_button.setEnabled(False)
+        self.map_replace_panel.setEnabled(True)
+        if self._inspect_timer_was_active:
+            self._refresh_timer.start()
+        self._update_course_send()
+        self.refresh_devices()
 
     def _courses_page(self) -> QWidget:
         page = QWidget()
@@ -845,7 +1444,7 @@ class CompanionWindow(QMainWindow):
         self.course_send_button.setText('Review Edge transfer…' if edge else 'Review fēnix transfer…')
         busy = any(worker is not None for worker in (self._transfer_worker, self._course_preview_worker,
                     self._course_conversion_worker, self._device_backup_worker, self._mount_worker,
-                    self._activity_course_worker))
+                    self._activity_course_worker, self._map_job_worker, self._map_worker))
         self.course_send_button.setEnabled(ready and not busy)
 
     def review_course_transfer(self) -> None:
@@ -904,8 +1503,7 @@ class CompanionWindow(QMainWindow):
             self.start_course_transfer(choices.currentData())
 
     def start_course_transfer(self, review: CourseTransferReview) -> None:
-        if (self._transfer_worker is not None or self._device_backup_worker is not None
-                or self._mount_worker is not None or self._activity_course_worker is not None):
+        if self._map_operations_busy() or self._activity_course_worker is not None:
             return
         self._transfer_timer_was_active = self._refresh_timer.isActive()
         self._refresh_timer.stop()
@@ -1292,6 +1890,8 @@ class CompanionWindow(QMainWindow):
         self.backup_refresh_button.setEnabled(True)
 
     def closeEvent(self, event) -> None:
+        if self._map_job_worker is not None:
+            self._map_job_worker.wait()
         if self._activity_course_worker is not None:
             self._activity_course_worker.requestInterruption()
             self._activity_course_worker.wait()
@@ -1348,7 +1948,7 @@ class CompanionWindow(QMainWindow):
             self.summary.setText(f'{count} Garmin volume{"s" if count != 1 else ""} detected')
             for volume in volumes:
                 self.list_layout.addWidget(_device_card(volume, self.start_device_backup, self.start_mount_action,
-                    busy=self._device_backup_worker is not None or self._mount_worker is not None or self._transfer_worker is not None))
+                    busy=self._map_operations_busy()))
         self.list_layout.addStretch(1)
 
 
