@@ -142,11 +142,12 @@ class SetupHelperTests(unittest.TestCase):
     def test_check_passes_when_only_the_optional_archive_tool_is_missing(self):
         self.make_valid_environment()
         runner = FakeRunner(self.checkout)
-        self.patched_tools({'udisksctl': '/usr/bin/udisksctl'})
+        self.patched_tools({'udisksctl': '/usr/bin/udisksctl', 'lsblk': '/usr/bin/lsblk'})
         with patch.object(linux_setup, '_run_command', runner):
             code, out, _ = self.run_main(['check'])
         self.assertEqual(code, 0)
         self.assertIn('[OPTIONAL MISSING] 7z', out)
+        self.assertNotIn('[OPTIONAL MISSING] lsblk', out)
         self.assertNotIn('[FAIL] 7z', out)
         self.assertIn('Result: PASS', out)
 
@@ -160,6 +161,8 @@ class SetupHelperTests(unittest.TestCase):
         self.assertIn(f'Interpreter: {sys.executable}', out)
         self.assertIn('[PASS] udisksctl: /usr/bin/udisksctl', out)
         self.assertIn('[PASS] PyQt6', out)
+        self.assertIn('[OPTIONAL MISSING] lsblk', out)
+        self.assertIn('Device detection and the Omarchy status widget need it', out)
         self.assertIn('Host desktop validation (Kubuntu/Omarchy) is not performed', out)
 
     def test_check_reports_the_archive_tool_only_when_the_exact_command_exists(self):
@@ -256,6 +259,7 @@ class SetupHelperTests(unittest.TestCase):
             if arguments[1:3] in (['-m', 'venv'], ['-m', 'pip']) or 'install-desktop' in arguments:
                 self.assertEqual(cwd, str(self.checkout))
         self.assertIn('Result: setup finished', out)
+        self.assertIn('does not install, enable, or configure it', out)
 
     def test_wrong_base_python_fails_before_creating_a_sticky_environment(self):
         runner = FakeRunner(self.checkout, imports=('garmin_fit_sdk',))
@@ -372,6 +376,7 @@ class SetupHelperTests(unittest.TestCase):
         self.assertEqual((cache / 'activity-decoded.json').read_text(encoding='utf-8'), '{"private": true}')
         self.assertEqual(runner.calls, [])
         self.assertIn('rerun the install command', out)
+        self.assertIn('org.garminlinux.status was not disabled or removed', out)
 
     def test_uninstall_refuses_to_remove_a_file_it_does_not_manage(self):
         foreign = self.prefix / 'bin' / 'garmin-linux-companion'

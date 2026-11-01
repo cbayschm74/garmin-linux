@@ -47,7 +47,7 @@ The portable checkout helper checks dependencies, sets up the local virtual envi
 /usr/bin/python3 tools/setup-linux.py uninstall
 ```
 
-`check` is read-only and does not scan devices. `install` creates or reuses this checkout's `.venv`, installs pinned Python requirements and registers a user-local launcher. It never installs OS packages automatically. After updating the checkout, rerun `install`; it does not update Git itself. `uninstall` leaves the checkout, virtual environment, backups and cache in place.
+`check` is read-only and does not scan devices. `install` creates or reuses this checkout's `.venv`, installs pinned Python requirements and registers a user-local launcher. It never installs OS packages automatically, and it does not install the Omarchy bar widget. After updating the checkout, rerun `install`; it does not update Git itself. `uninstall` leaves the checkout, virtual environment, backups, cache, and any Omarchy widget in place. Export a separate plugin directory with `python3 tools/export-omarchy-plugin.py --output DIR --git`; see [the widget guide](docs/omarchy-widget.md).
 
 See [Linux setup](docs/linux-setup.md), [host validation](docs/linux-validation.md), and [recovery and troubleshooting](docs/recovery-and-troubleshooting.md). Omarchy host/dependency and native temporary-data GUI checks now pass; see [Omarchy setup](docs/omarchy-setup.md) and [native validation](docs/omarchy-native-validation.md). Clean-machine graphical installation remains pending.
 

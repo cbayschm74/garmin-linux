@@ -106,10 +106,30 @@ the launcher or Omarchy widget.
 Omarchy widget settings contain absolute source/interpreter paths. After a
 checkout/release move or upgrade, regenerate settings from the new tree using
 the command-setting block in the [widget guide](omarchy-widget.md), then refresh.
-The setup helper deliberately does not edit shell configuration. Before removing
-a launcher, disable its widget with omarchy plugin disable org.garminlinux.status
-if no longer wanted. Uninstall preserves source, venv, private backups and cache;
-it does not remove the optional widget's folder.
+The setup helper deliberately does not edit shell configuration. It does not
+install, enable, or remove the optional Omarchy widget. Uninstall preserves
+source, venv, private backups and cache, and it tells you the separate commands
+when you want the widget gone:
+
+```sh
+omarchy plugin disable org.garminlinux.status
+omarchy plugin remove org.garminlinux.status
+```
+
+`remove` deletes a Git-managed plugin checkout. A hand-installed folder is moved
+aside as a hidden backup under `~/.config/omarchy/plugins/` and is not loaded.
+Neither command uninstalls the companion or deletes `~/GarminBackups`. Disable
+the widget before uninstalling a launcher that the bar is configured to open.
+
+To make a marketplace-shaped copy, with `manifest.json` at the root of its own
+directory, run:
+
+```sh
+python3 tools/export-omarchy-plugin.py --output /path/to/new-directory --git
+```
+
+That creates files only. It does not run `omarchy plugin add` or change the
+live widget. See the [widget guide](omarchy-widget.md).
 
 ## Prerequisites
 
@@ -122,6 +142,7 @@ provide the tools the application needs.
 | Virtual environment support | `python3-venv` | bundled with Python | the checkout `.venv` |
 | PyQt6 | `python3-pyqt6` | `python-pyqt6` | the desktop application |
 | Device mounting | `udisks2` | `udisks2` | mounting Garmin volumes; `udisksctl` is required |
+| Block listing | `util-linux` (`lsblk`) | `util-linux` (`lsblk`) | USB detection and the Omarchy status widget. The setup check reports it when missing and still passes |
 | FIT SDK | installed from `requirements.txt` | installed from `requirements.txt` | reading activity and course files |
 | 7-Zip (optional) | `7zip` | `7zip` | looking inside archive-based map files |
 

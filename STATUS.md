@@ -19,6 +19,18 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 
 ## Next / ownership
 
+**G030 plugin export is ready on Omarchy (2026-11-01).** The bar widget can be
+exported as its own directory with `manifest.json` at the root, a README that
+covers companion and `lsblk` dependencies, install, and removal, and the MIT
+license. `python3 tools/export-omarchy-plugin.py --output DIR --git` writes that
+directory and one local commit. It does not install or enable anything. The
+live hand-installed widget was left enabled and was not replaced. Setup install
+no longer implies that it manages the widget; uninstall names the separate
+`omarchy plugin disable` and `omarchy plugin remove` commands and does not run
+them. No public repository was created and plugins.omarchy.org was not
+contacted. A listing waits for a public GitHub root and an explicit request.
+[Export and removal notes](docs/omarchy-widget.md).
+
 **Actual Omarchy theme switching accepted by user (2026-11-01).** User tested
 several themes and confirms app colors follow them correctly. G029 provides a
 USB-ready full-main bundle plus the pinned alpha/baseline/checksums and recipient
@@ -33,8 +45,9 @@ The pack's HANDOFF.json pins exact final main and frozen alpha source commits;
 README-START-HERE.md and KUBUNTU-AGENT-PROMPT.txt guide the recipient. Only main
 is advertised; no older bundle prerequisite. Final ZIP extraction/checksums and
 main tip verification complete as part of pack assembly. No USB write performed.
-**Next owner:** Kubuntu coordinator claims G028 on the recipient host; Omarchy
-marketplace preparation remains separate. No active worker assignment here.
+**Next owner at that handoff:** Kubuntu coordinator claims G028 on the recipient
+host. Omarchy marketplace preparation continued on this laptop as G030. No
+Kubuntu worker was launched from here.
 
 
 **G023–G027 integrated and accepted (2026-11-01).** Portable source alpha
@@ -53,9 +66,10 @@ lifecycle summary/logs under validation-0.1.0a1/. No tag/publication/submission.
 [Exact release evidence and instructions](docs/portable-release.md).
 **User acceptance:** actual Omarchy theme changes now confirmed correct by user.
 Other desktops use normal Qt palette; Kubuntu host acceptance is G028.
-**Next work:** marketplace-ready plugin repository/export and dependency/setup/
-removal polish; actual Kubuntu archive/live theme and clean OS validation remain
-separate. No marketplace listing is claimed ready or submitted.
+Marketplace-ready export and setup/removal notes are G030. That does not
+include a listing or a public remote. Actual Kubuntu archive/live theme and
+clean OS validation remain separate. No marketplace listing is claimed ready
+or submitted.
 
 
 **G027 automatic GUI themes complete (2026-11-01).** Shared PyQt app now reads

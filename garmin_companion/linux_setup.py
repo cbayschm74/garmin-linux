@@ -28,13 +28,29 @@ ENVIRONMENT_DIR = '.venv'
 REQUIREMENTS_FILE = 'requirements.txt'
 DEPENDENCY_MODULES = ('PyQt6', 'garmin_fit_sdk')
 REQUIRED_TOOL_NAMES = ('udisksctl',)
-OPTIONAL_TOOL_NAMES = ('7z',)
+OPTIONAL_TOOL_NAMES = ('7z', 'lsblk')
 TOOL_GUIDANCE = {
     'udisksctl': ('udisks2 provides udisksctl, which is required to mount Garmin volumes. '
                   'Kubuntu/Ubuntu: sudo apt install udisks2. Arch/Omarchy: install the udisks2 package.'),
     '7z': ('7-Zip is optional. It is only used to look inside archive-based map files; '
            'the application works without it.'),
 }
+OPTIONAL_TOOL_GUIDANCE = {
+    'lsblk': ('lsblk comes from util-linux. Device detection and the Omarchy status '
+              'widget need it. This check still passes when it is absent.'),
+}
+WIDGET_INSTALL_NOTE = (
+    'Optional Omarchy bar widget: this helper does not install, enable, or configure it. '
+    'Export a separate plugin directory with python3 tools/export-omarchy-plugin.py '
+    '--output DIR --git, then read docs/omarchy-widget.md before omarchy plugin add. '
+    'An existing org.garminlinux.status folder has to be removed first.'
+)
+WIDGET_REMOVAL_NOTE = (
+    'Preserved Omarchy widget: org.garminlinux.status was not disabled or removed. '
+    'To remove only that plugin, run omarchy plugin disable org.garminlinux.status '
+    'and then omarchy plugin remove org.garminlinux.status. '
+    'That does not delete this checkout, ~/GarminBackups, or other plugins.'
+)
 DEPENDENCY_GUIDANCE = {
     'PyQt6': ('PyQt6 is provided by the system package and inherited by the checkout environment. '
               'Kubuntu/Ubuntu: sudo apt install python3-pyqt6. Arch/Omarchy: install the system PyQt6 package. '
@@ -224,6 +240,9 @@ def run_check(checkout: Path, prefix: Path) -> int:
             print(f'  [FAIL] {item.name}: not found (required)')
         else:
             print(f'  [OPTIONAL MISSING] {item.name}: not found (optional)')
+            note = OPTIONAL_TOOL_GUIDANCE.get(item.name)
+            if note:
+                print(f'    {note}')
     print('')
     if report.ready:
         print('Result: PASS - this checkout is ready to use.')
@@ -349,6 +368,9 @@ def run_install(checkout: Path, prefix: Path) -> int:
             print(f'  [FAIL] {item.name}: not found (required)')
         else:
             print(f'  [OPTIONAL MISSING] {item.name}: not found (optional)')
+            note = OPTIONAL_TOOL_GUIDANCE.get(item.name)
+            if note:
+                print(f'    {note}')
     missing_tools = [item for item in tools if item.required and item.path is None]
     print('')
     print(HOST_VALIDATION_NOTE)
@@ -357,8 +379,10 @@ def run_install(checkout: Path, prefix: Path) -> int:
               'ready for device work.')
         for item in missing_tools:
             print(f'  - {TOOL_GUIDANCE.get(item.name, item.name)}')
+        print(WIDGET_INSTALL_NOTE)
         return 1
     print('Result: setup finished and this checkout is ready to use.')
+    print(WIDGET_INSTALL_NOTE)
     return 0
 
 
@@ -378,6 +402,7 @@ def run_uninstall(checkout: Path, prefix: Path) -> int:
     for path in removed:
         print(f'Removed: {path}')
     print('Preserved: this checkout, its environment, ~/GarminBackups and the activity cache.')
+    print(WIDGET_REMOVAL_NOTE)
     print('To update the application, rerun the install command; it does not update Git for you.')
     print(HOST_VALIDATION_NOTE)
     return 0

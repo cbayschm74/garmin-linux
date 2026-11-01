@@ -218,6 +218,37 @@ Reproduce runtime and safe native launch-handler checks with a fresh directory:
 .venv/bin/python tools/check_omarchy_widget.py --launch-artifacts /tmp/garmin-widget-native-check
 ```
 
+## Marketplace-shaped export — G030
+
+`omarchy plugin add` clones a Git repository and requires `manifest.json` at
+that repository's root. The widget sources in this companion checkout live
+under `integrations/omarchy/org.garminlinux.status/`, so this checkout itself
+is not an installable plugin URL. Export a separate directory when you want
+that shape:
+
+```sh
+python3 tools/export-omarchy-plugin.py --output /path/to/new-directory --git
+omarchy plugin validate /path/to/new-directory
+```
+
+The export contains only `manifest.json`, `BarWidget.qml`, `README.md`, and
+`LICENSE`. `--git` makes one local commit on `main` so the directory can be
+cloned. The command refuses an existing destination and refuses to write
+anywhere under `~/.config/omarchy/plugins`. It does not enable the widget,
+edit `shell.json`, or replace the hand-installed copy already on this laptop.
+
+The export README documents the companion checkout, `lsblk`, install,
+command settings, and removal. Removal of a Git checkout deletes that clone
+only. Removal of a non-Git folder, including the current managed install,
+moves it to a hidden backup. The companion, private backups, and other plugins
+stay. This task does not run removal against the live enabled widget.
+
+No public repository has been created and nothing has been submitted to
+plugins.omarchy.org. Publishing needs a public GitHub repository root and an
+explicit owner approval before any marketplace issue is opened. A reasonable
+listing, once that exists, is category `Hardware` with tags `bar` and `system`.
+Those are suggestions, not a submission.
+
 ## Checks that do not install the widget
 
 From the worktree, with `.venv` created by `/usr/bin/python`:
