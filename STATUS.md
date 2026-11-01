@@ -20,12 +20,21 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 ## Next / ownership
 
 **Actual Omarchy theme switching accepted by user (2026-11-01).** User tested
-several themes and confirms app colors follow them correctly. G029 prepares a
+several themes and confirms app colors follow them correctly. G029 provides a
 USB-ready full-main bundle plus the pinned alpha/baseline/checksums and recipient
 instructions. G028 is ready for the Kubuntu coordinator to claim; no worker is
 launched on that machine. See docs/returning-to-kubuntu.md. Preserve divergent
 Kubuntu work and review before integration; no reset/clean/forced checkout.
-No private Garmin data, venv, user settings or agent sessions belong in the pack.
+No private Garmin data, venv, user settings or agent sessions are included.
+Full main bundle verified and tested in a fresh temporary clone: all 394 tests
+pass, compilation/diff/fsck checks pass. USB ZIP:
+~/Downloads/Garmin-Linux-Omarchy-to-Kubuntu-20261101.zip with adjacent checksum.
+The pack's HANDOFF.json pins exact final main and frozen alpha source commits;
+README-START-HERE.md and KUBUNTU-AGENT-PROMPT.txt guide the recipient. Only main
+is advertised; no older bundle prerequisite. Final ZIP extraction/checksums and
+main tip verification complete as part of pack assembly. No USB write performed.
+**Next owner:** Kubuntu coordinator claims G028 on the recipient host; Omarchy
+marketplace preparation remains separate. No active worker assignment here.
 
 
 **G023–G027 integrated and accepted (2026-11-01).** Portable source alpha
@@ -42,8 +51,8 @@ process remains. All three workers completed, worktrees retained; no active
 assignment. Local archive: ~/Downloads/GarminLinuxReleases/0.1.0a1/ with checksum,
 lifecycle summary/logs under validation-0.1.0a1/. No tag/publication/submission.
 [Exact release evidence and instructions](docs/portable-release.md).
-**User action:** reopen app once to load G027; subsequent Omarchy color changes
-update the open GUI. Other desktops use normal Qt palette.
+**User acceptance:** actual Omarchy theme changes now confirmed correct by user.
+Other desktops use normal Qt palette; Kubuntu host acceptance is G028.
 **Next work:** marketplace-ready plugin repository/export and dependency/setup/
 removal polish; actual Kubuntu archive/live theme and clean OS validation remain
 separate. No marketplace listing is claimed ready or submitted.

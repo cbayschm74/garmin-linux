@@ -1,5 +1,8 @@
 # Return the Omarchy work to Kubuntu by USB
 
+Copy/extract the pack onto the recipient disk before installing or cloning;
+launchers must not be pinned to paths on the removable USB stick.
+
 The USB pack contains a complete main-only Git bundle and pinned source release
 artifacts. It includes committed project source/docs/history, not user data,
 installed environments, user settings or agent sessions. A bundle is a snapshot,
@@ -15,13 +18,13 @@ theme-switch acceptance. The external HANDOFF.json records both exact pins.
 Unzip the pack into a new directory on the recipient disk. From that directory:
 
     sha256sum -c SHA256SUMS
-    git bundle verify garmin-linux.bundle
     git bundle list-heads garmin-linux.bundle
 
 The bundle advertises only refs/heads/main and carries its complete reachable
 history. It requires no older local bundle. Check the advertised full SHA against
-HANDOFF.json. Bundle verification can run inside any Git repository; a fresh
-clone also validates the bundle before using its contents.
+HANDOFF.json. Bundle verification needs a Git repository: run git bundle verify with the absolute
+bundle path from inside the existing recipient checkout. A fresh clone also
+validates the complete bundle before using its contents.
 
 ## Existing Kubuntu checkout
 
@@ -29,7 +32,9 @@ First check pwd, git status --short, git branch --show-current and git worktree
 list, then read its local STATUS.md/AGENTS.md/task board. Preserve uncommitted work
 and other agents' worktrees; never reset/clean/overwrite them for this transfer.
 
-Fetch the USB bundle to a new review ref, substituting its actual path:
+Verify and fetch the USB bundle to a new review ref, substituting its actual path:
+
+    git bundle verify /path/to/unpacked/garmin-linux.bundle
 
     git fetch /path/to/unpacked/garmin-linux.bundle main:refs/remotes/omarchy-usb/main
     git log --left-right --oneline HEAD...omarchy-usb/main
