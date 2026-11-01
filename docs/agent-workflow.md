@@ -98,3 +98,14 @@ If HEAD or ownership differs, reconcile with the coordinator before editing. Do 
 | GUI/CLI/desktop | `gui.py`, `__main__.py`, `desktop.py` | `test_gui_course_transfer.py`, isolated smoke checks |
 
 All modules are under `garmin_companion/`, tests under `tests/`. Candidate-branch tests may not exist on main until integrated.
+
+
+## Authorized worker pool and provider routing (2026-11-01)
+
+The user authorized Codex to arrange and supervise Garmin tasks directly among the three available agents, with separate worktrees and bounded scopes. Confirm current availability before launching, preserve existing sessions/work, and keep one editor per assigned file scope.
+
+- Grok: Orca agent `grok`, configured default model.
+- MiniMax M3: Orca agent `omp`, verified OMP model selector `minimax-code-cn/MiniMax-M3`.
+- MiMo 2.6 Pro on the user's **China Token Plan**: Orca agent `opencode`, verified model selector `xiaomi-token-plan-cn/mimo-v2.6-pro`. This is a different provider route from `xiaomi/mimo-v2.6-pro`; the latter returned insufficient balance in two pre-work launches. Do not substitute it silently.
+
+Verify selectors using `omp models find MiniMax-M3 --json`, `opencode models`, and credential-free `opencode auth list` (through mise if needed). Do not export/read authentication secrets to diagnose routing. No Orca-managed account profiles were configured during this run; account selection lives in OpenCode's saved integrations. In supervised launches, inspect both requested/effective model receipt and actual provider startup. OpenCode model overrides require an existing worktree; create it first. The coordinator handles Orca ask/reply and settlements, so the user need not ferry commits or messages.

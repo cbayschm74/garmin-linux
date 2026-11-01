@@ -15,7 +15,7 @@
 - Avoid simultaneous changes to `gui.py` or other shared modules. If scopes overlap, sequence the tasks or have the coordinator assign a shared integration task.
 - Never reset, clean, overwrite, delete, or merge another worker's changes/worktree. Existing `eval/20261018-*` branches are retained evaluation evidence, not active assignments.
 - Independently review diffs and rerun checks before integrating a worker commit. Worker completion is `review`, not `done`; the coordinator marks `done` after integration and acceptance.
-- No automatic merge, paid worker launch, or model choice is implied by these instructions. Follow the current user's assignment and provider authorization.
+- These instructions alone do not authorize new paid providers. On 2026-11-01 the user explicitly authorized the coordinator to arrange Garmin work among Grok, MiniMax M3 in OMP, and MiMo 2.6 Pro in OpenCode without relaying assignments manually. Use that authorization for bounded project tasks and independently review results. See the provider routing note in docs/agent-workflow.md; respect any later user changes.
 
 ## Device and data rules
 
