@@ -14,6 +14,7 @@ from .import_course import _mount_is_writable
 from .map_backup import validate_img_name
 from .map_plan import SPACE_MARGIN, _verified_backup, plan_map_replacement
 from .mount_control import capture_volume, guarded_unmount
+from .map_progress import file_progress, hash_file, phase_progress
 
 
 class MapInstallInterrupted(ValueError):
@@ -88,34 +89,39 @@ def load_map_install(state_dir: Path) -> dict:
     return state
 
 
-def _regular_status(path: Path, expected: dict) -> str:
+def _regular_status(path: Path, expected: dict, *, progress=None, phase='Checking device file') -> str:
     if path.is_symlink():
         raise ValueError(f'Unsafe symlink on map volume: {path.name}')
     if not path.exists():
         return 'absent'
     if not path.is_file():
         raise ValueError(f'Unexpected non-file on map volume: {path.name}')
-    if path.stat().st_size == expected['size_bytes'] and _sha256(path) == expected['sha256']:
+    if path.stat().st_size == expected['size_bytes'] and hash_file(path, _sha256, progress, phase) == expected['sha256']:
         return 'valid'
     return 'different'
 
 
-def _copy_partial(source: Path, partial: Path, expected: dict, ensure_mount) -> None:
+def _copy_partial(source: Path, partial: Path, expected: dict, ensure_mount, *, progress=None) -> None:
     ensure_mount()
     if shutil.disk_usage(partial.parent).free < expected['size_bytes'] + SPACE_MARGIN:
         raise ValueError(f'Not enough free space to stage {partial.name}')
+    report = file_progress(progress, 'Copying new map', partial, expected['size_bytes'])
+    done = 0
     with source.open('rb') as reader, partial.open('xb') as writer:
         for chunk in iter(lambda: reader.read(1024 * 1024), b''):
             ensure_mount()
             writer.write(chunk)
+            done += len(chunk)
+            report(done)
+        phase_progress(progress, 'Flushing map to device')
         writer.flush()
         os.fsync(writer.fileno())
     ensure_mount()
-    if _regular_status(partial, expected) != 'valid':
+    if _regular_status(partial, expected, progress=progress, phase='Verifying copied map') != 'valid':
         raise ValueError(f'Device copy failed read-back SHA-256: {partial.name}')
 
 
-def _preflight(volume: GarminVolume, state_dir: Path, state: dict) -> tuple[Path, str, dict]:
+def _preflight(volume: GarminVolume, state_dir: Path, state: dict, *, progress=None) -> tuple[Path, str, dict]:
     source = _mounted_source(volume)
     mount_id = _mount_id(source)
     # Capture the device identity before any write and keep it for the final
@@ -142,12 +148,12 @@ def _preflight(volume: GarminVolume, state_dir: Path, state: dict) -> tuple[Path
             raise ValueError('Map source path is invalid')
     if {row['name'].casefold() for row in old} & {row['target'].casefold() for row in new}:
         raise ValueError('Map install requires distinct old and new filenames')
-    verified = _verified_backup(Path(state['backup']), volume, [row['name'] for row in old])
+    verified = _verified_backup(Path(state['backup']), volume, [row['name'] for row in old], **({'progress': progress} if progress else {}))
     if verified != old:
         raise ValueError('Saved old maps differ from complete backup')
     for row in new:
         local = Path(row['source'])
-        if local.is_symlink() or not local.is_file() or local.stat().st_size != row['size_bytes'] or _sha256(local) != row['sha256']:
+        if local.is_symlink() or not local.is_file() or local.stat().st_size != row['size_bytes'] or hash_file(local, _sha256, progress, 'Rechecking local source') != row['sha256']:
             raise ValueError(f'New map source changed: {local}')
         if local.resolve().is_relative_to(source.resolve()):
             raise ValueError('New map source is on the device')
@@ -157,7 +163,7 @@ def _preflight(volume: GarminVolume, state_dir: Path, state: dict) -> tuple[Path
 
 
 def resume_map_install(volume: GarminVolume, state_dir: Path, *, unmount: bool = True,
-                       expected_state: dict | None = None) -> dict:
+                       expected_state: dict | None = None, progress=None) -> dict:
     """Recheck all evidence and reconcile an interrupted install from actual files."""
     state_dir = state_dir.expanduser().resolve()
     state = load_map_install(state_dir)
@@ -165,8 +171,11 @@ def resume_map_install(volume: GarminVolume, state_dir: Path, *, unmount: bool =
         raise ValueError('Saved map install state changed since review; review resume again')
     if state['phase'] == 'complete':
         return {'status': 'complete', 'state_dir': str(state_dir)}
-    source, mount_id, identity = _preflight(volume, state_dir, state)
+    source, mount_id, identity = _preflight(volume, state_dir, state, **({'progress': progress} if progress else {}))
     garmin = source / 'Garmin'
+
+    def check_status(path, row):
+        return _regular_status(path, row, **({'progress': progress} if progress else {}))
 
     def ensure_mount() -> None:
         _mounted_source(volume)
@@ -176,8 +185,8 @@ def resume_map_install(volume: GarminVolume, state_dir: Path, *, unmount: bool =
     def stage(row: dict) -> Path:
         target = garmin / row['target']
         partial = garmin / (row['target'] + '.partial')
-        final_status = _regular_status(target, row)
-        partial_status = _regular_status(partial, row)
+        final_status = check_status(target, row)
+        partial_status = check_status(partial, row)
         if final_status == 'different':
             raise ValueError(f'Installed map differs from expected SHA-256: {target.name}')
         if final_status == 'valid':
@@ -189,26 +198,26 @@ def resume_map_install(volume: GarminVolume, state_dir: Path, *, unmount: bool =
             partial.unlink()
             partial_status = 'absent'
         if partial_status == 'absent':
-            _copy_partial(Path(row['source']), partial, row, ensure_mount)
-        if _regular_status(partial, row) != 'valid':
+            _copy_partial(Path(row['source']), partial, row, ensure_mount, **({'progress': progress} if progress else {}))
+        if check_status(partial, row) != 'valid':
             raise ValueError(f'Staged map did not verify: {partial.name}')
         return partial
 
     first = state['new_maps'][0]
-    old_states = [(_regular_status(garmin / row['name'], row), row) for row in state['old_maps']]
+    old_states = [(check_status(garmin / row['name'], row), row) for row in state['old_maps']]
     if any(status == 'different' for status, _ in old_states):
         raise ValueError('An old map changed since backup; refusing replacement')
     if state['phase'] == 'planned' and any(status == 'absent' for status, _ in old_states):
         raise ValueError('Old map missing before verified first-stage state')
     for row in state['new_maps']:
-        if _regular_status(garmin / row['target'], row) == 'different':
+        if check_status(garmin / row['target'], row) == 'different':
             raise ValueError(f'Installed map differs from expected SHA-256: {row["target"]}')
-        _regular_status(garmin / (row['target'] + '.partial'), row)
+        check_status(garmin / (row['target'] + '.partial'), row)
     first_path = stage(first)
     if state['phase'] == 'planned':
         state['phase'] = 'first_verified'
         _save(state_dir, state)
-    if _regular_status(first_path, first) != 'valid':
+    if check_status(first_path, first) != 'valid':
         raise ValueError('First new IMG must verify before removing old maps')
     if state['phase'] == 'first_verified':
         state['phase'] = 'removing_old'
@@ -217,8 +226,9 @@ def resume_map_install(volume: GarminVolume, state_dir: Path, *, unmount: bool =
         if status == 'valid':
             ensure_mount()
             path = garmin / row['name']
-            if _regular_status(path, row) != 'valid':
+            if check_status(path, row) != 'valid':
                 raise ValueError(f'Old map changed before removal: {path.name}')
+            phase_progress(progress, 'Removing backed-up old map')
             path.unlink()
     state['phase'] = 'installing'
     _save(state_dir, state)
@@ -231,11 +241,12 @@ def resume_map_install(volume: GarminVolume, state_dir: Path, *, unmount: bool =
                 raise ValueError(f'Map target appeared: {target.name}')
             staged.rename(target)
         ensure_mount()
-        if _regular_status(target, row) != 'valid':
+        if check_status(target, row) != 'valid':
             raise ValueError(f'Installed map failed final SHA-256: {target.name}')
     if unmount:
         ensure_mount()
         try:
+            phase_progress(progress, 'Safely unmounting device')
             guarded_unmount(volume, identity)
         except (OSError, ValueError) as exc:
             raise ValueError('Maps verified, but safe unmount failed; retry resume before disconnecting') from exc
@@ -246,9 +257,9 @@ def resume_map_install(volume: GarminVolume, state_dir: Path, *, unmount: bool =
 
 def start_map_install(volume: GarminVolume, old_names: list[str], specifications: list[str],
                       backup: Path, state_root: Path, *, unmount: bool = True,
-                      expected_plan: dict | None = None) -> dict:
+                      expected_plan: dict | None = None, progress=None) -> dict:
     """Create durable private state before the first device write, then install."""
-    plan = plan_map_replacement(volume, old_names, specifications, backup)
+    plan = plan_map_replacement(volume, old_names, specifications, backup, **({'progress': progress} if progress else {}))
     if expected_plan is not None:
         _require_reviewed_plan(plan, expected_plan)
     source = _mounted_source(volume)
@@ -269,7 +280,7 @@ def start_map_install(volume: GarminVolume, old_names: list[str], specifications
              'old_maps': plan['old_maps'], 'new_maps': plan['new_maps']}
     _save(state_dir, state)
     try:
-        return resume_map_install(volume, state_dir, unmount=unmount, expected_state=state)
+        return resume_map_install(volume, state_dir, unmount=unmount, expected_state=state, **({'progress': progress} if progress else {}))
     except BaseException as exc:
         if isinstance(exc, (OSError, ValueError)):
             raise MapInstallInterrupted(f'{exc}; resume with state directory: {state_dir}', state_dir) from exc

@@ -11,6 +11,7 @@ from .backup import _mount_id, _mounted_source, _sha256
 from .detector import GarminVolume, scan
 from .map_backup import _map_entry, validate_img_name
 from .map_inspect import FAT32_MAX_FILE_BYTES, inspect_map
+from .map_progress import file_progress, hash_file
 
 SPACE_MARGIN = 16 * 1024 * 1024
 
@@ -33,7 +34,7 @@ def _parse_new(specifications: list[str]) -> list[tuple[Path, str]]:
     return images
 
 
-def _verified_backup(path: Path, volume: GarminVolume, old_names: list[str]) -> list[dict]:
+def _verified_backup(path: Path, volume: GarminVolume, old_names: list[str], *, progress=None) -> list[dict]:
     path = path.expanduser().resolve(strict=True)
     if not path.is_dir() or not (path / 'COMPLETE').is_file():
         raise ValueError('Map backup is missing its COMPLETE marker')
@@ -64,7 +65,7 @@ def _verified_backup(path: Path, volume: GarminVolume, old_names: list[str]) -> 
             raise ValueError('Invalid map backup size or SHA-256')
         copied = path / 'Garmin' / name
         if (not copied.resolve().is_relative_to(path) or copied.is_symlink() or not copied.is_file()
-                or copied.stat().st_size != size or _sha256(copied) != digest):
+                or copied.stat().st_size != size or hash_file(copied, _sha256, progress, 'Checking saved backup') != digest):
             raise ValueError(f'Map backup copy failed verification: {name}')
         by_name[name.casefold()] = {'name': name, 'size_bytes': size, 'sha256': digest}
     if set(by_name) != {name.casefold() for name in old_names} or manifest.get('total_bytes') != sum(row['size_bytes'] for row in by_name.values()):
@@ -72,7 +73,7 @@ def _verified_backup(path: Path, volume: GarminVolume, old_names: list[str]) -> 
     return [by_name[name.casefold()] for name in old_names]
 
 
-def plan_map_replacement(volume: GarminVolume, old_names: list[str], specifications: list[str], backup: Path) -> dict:
+def plan_map_replacement(volume: GarminVolume, old_names: list[str], specifications: list[str], backup: Path, *, progress=None) -> dict:
     """Validate a proposed replacement without writing to any volume."""
     source = _mounted_source(volume)
     if volume.filesystem.lower() not in {'vfat', 'fat', 'msdos'}:
@@ -92,11 +93,11 @@ def plan_map_replacement(volume: GarminVolume, old_names: list[str], specificati
     backup_path = backup.expanduser().resolve(strict=True)
     if any(backup_path.is_relative_to(mount) for mount in mounted_paths):
         raise ValueError('Map backup cannot be on a Garmin device')
-    backup_entries = _verified_backup(backup_path, volume, old_names)
+    backup_entries = _verified_backup(backup_path, volume, old_names, **({'progress': progress} if progress else {}))
     for entry, saved in zip(old_entries, backup_entries):
         ensure_same_mount()
         current = source / entry.relative_path
-        if current.stat().st_size != saved['size_bytes'] or _sha256(current) != saved['sha256']:
+        if current.stat().st_size != saved['size_bytes'] or hash_file(current, _sha256, progress, 'Checking current device map') != saved['sha256']:
             raise ValueError(f'Current map differs from verified backup: {saved["name"]}')
     ensure_same_mount()
 
@@ -109,7 +110,7 @@ def plan_map_replacement(volume: GarminVolume, old_names: list[str], specificati
         if target.casefold() in existing - old_keys or (target + '.partial').casefold() in existing:
             raise ValueError(f'New map target or staging filename already exists: {target}')
         before = local_path.stat()
-        preview = inspect_map(local_path)
+        preview = inspect_map(local_path, **({'progress': file_progress(progress, 'Checking new source', local_path)} if progress else {}))
         after = local_path.stat()
         if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns):
             raise ValueError(f'New map changed while being inspected: {local_path}')

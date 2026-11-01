@@ -416,7 +416,7 @@ def _map_selection(path, backup):
                 extra=[name for name in names if name.casefold() not in {n.casefold() for n in index['names']}])
 
 
-def _prepare_map_review(selection, rows):
+def _prepare_map_review(selection, rows, *, progress=None):
     backup = selection['backup']
     volume = select_map_volume(selection['volume'].path, backup)
     _map_identity_matches(volume, selection['volume'], selection['evidence'])
@@ -424,7 +424,7 @@ def _prepare_map_review(selection, rows):
     if index != selection['index']:
         raise ValueError('Map backup index changed; check the selection again')
     specs = _map_specs(rows, index['names'])
-    plan = plan_map_replacement(volume, index['names'], specs, backup)
+    plan = plan_map_replacement(volume, index['names'], specs, backup, **({'progress': progress} if progress else {}))
     if plan.get('status') != 'ready':
         raise ValueError('Map replacement plan is not ready')
     # Enforce the installer's stricter name rule even if a planner returns ready.
@@ -456,7 +456,7 @@ def _validate_map_review(review):
     return review
 
 
-def _execute_map_review(review, backup_root):
+def _execute_map_review(review, backup_root, *, progress=None):
     """Run a reviewed install/resume, retaining the original consent evidence."""
     _validate_map_review(review)
     volume = review['volume']
@@ -477,15 +477,15 @@ def _execute_map_review(review, backup_root):
                 raise ValueError('Install state changed; review resume again')
             state_started = True
             try:
-                return resume_map_install(current, review['state_dir'], expected_state=review['state'])
+                return resume_map_install(current, review['state_dir'], expected_state=review['state'], **({'progress': progress} if progress else {}))
             except Exception as exc:
                 raise MapInstallInterrupted(f'{exc}; resume with state directory: {review["state_dir"]}',
                                             review['state_dir']) from exc
-        plan = plan_map_replacement(current, review['names'], review['specs'], review['backup'])
+        plan = plan_map_replacement(current, review['names'], review['specs'], review['backup'], **({'progress': progress} if progress else {}))
         _require_reviewed_plan(plan, review['plan'])
         _map_identity_matches(select_map_volume(current.path, review['backup']), mounted, mounted_evidence)
         return start_map_install(current, review['names'], review['specs'], review['backup'],
-                                 backup_root / 'MapInstalls', expected_plan=review['plan'])
+                                 backup_root / 'MapInstalls', expected_plan=review['plan'], **({'progress': progress} if progress else {}))
     except Exception as exc:
         if isinstance(exc, MapInstallInterrupted) or state_started:
             raise
@@ -887,6 +887,14 @@ class CompanionWindow(QMainWindow):
         layout.addWidget(self.map_target_details)
         layout.addWidget(_label('3. New local IMG files, in transfer order (edit the destination filename)'))
         self.map_new_images = QTableWidget(0, 2)
+        self.map_new_images.setStyleSheet("""
+            QTableWidget { color: #182b34; background: #ffffff;
+                           selection-background-color: #246b70; selection-color: #ffffff; }
+            QTableWidget::item:selected { color: #ffffff; background: #246b70; }
+            QTableWidget QLineEdit { color: #182b34; background: #ffffff;
+                selection-color: #ffffff; selection-background-color: #246b70;
+                border: 2px solid #246b70; padding: 3px; }
+        """)
         self.map_new_images.setHorizontalHeaderLabels(['Local IMG', 'Destination filename'])
         self.map_new_images.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.map_new_images.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
@@ -1038,6 +1046,21 @@ class CompanionWindow(QMainWindow):
         event = self._map_progress_latest
         if event is None:
             self.map_replace_status.setText(f'{self._map_job_message}\nElapsed {clock}')
+            return
+        if event.get('scope') == 'file':
+            done, size = event['file_bytes_done'], event['file_bytes_total']
+            if size:
+                fraction = min(1, done / size)
+                self.map_job_progress.setRange(0, 1000)
+                self.map_job_progress.setValue(int(fraction * 1000))
+                self.map_job_progress.setFormat(f'{fraction:.1%} of current file · {event["phase"]}')
+                duration = event.get('phase_elapsed_seconds', 0) + max(0, monotonic() - self._map_progress_received)
+                detail = (f'{event["filename"]} · {done / 1024**2:,.1f} / {size / 1024**2:,.1f} MiB'
+                          f' · {done / max(.001, duration) / 1024**2:,.1f} MiB/s')
+            else:
+                self.map_job_progress.setRange(0, 0)
+                detail = 'Waiting for device operation to finish…'
+            self.map_replace_status.setText(f'{event["phase"]}\n{detail}\nElapsed {clock}')
             return
         total = event['total_work_bytes']
         fraction = min(0.999, event['completed_bytes'] / total) if total else 0
@@ -1265,8 +1288,8 @@ class CompanionWindow(QMainWindow):
             self.map_plan_details.setPlainText(_map_plan_text(review))
             self.map_review_button.setEnabled(True)
             self.map_replace_status.setText('Read-only plan ready. Review the exact files and target before replacement.')
-        self._run_map_job(lambda: _prepare_map_review(selection, rows), show,
-                          'Hashing backup, current maps, and new images; this may take a long time. Keep the window open…')
+        self._run_map_job(lambda report: _prepare_map_review(selection, rows, progress=report), show,
+                          'Hashing backup, current maps, and new images; this may take a long time. Keep the window open…', backup_progress=True)
 
     def review_map_replacement(self):
         review = deepcopy(self._map_review)
@@ -1307,7 +1330,7 @@ class CompanionWindow(QMainWindow):
                        'Resuming planned replacement; old maps must still verify before staging. Keep the window open…'
                        if resume else
                        'Replacing and verifying maps; old files remain until the first new image verifies. Keep the window open…')
-            self._run_map_job(lambda: _execute_map_review(review, self._backup_root), self._map_install_complete, message)
+            self._run_map_job(lambda report: _execute_map_review(review, self._backup_root, progress=report), self._map_install_complete, message, backup_progress=True)
 
     def choose_map_resume(self):
         directory = QFileDialog.getExistingDirectory(self, 'Resume map replacement', str(self._backup_root / 'MapInstalls'))
