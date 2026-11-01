@@ -266,8 +266,9 @@ volumes, with no paths or labels.
 The listing submission is
 https://github.com/omacom/omarchy-plugin-marketplace/issues/13553,
 category `Hardware`, tags `bar` and `system`, with no preview image. It is
-waiting for maintainer approval. Approval lists the plugin; it is not a
-security review.
+waiting for maintainer approval. Automated validation passed at that
+commit, including the marketplace security baseline. Approval lists the
+plugin; it is not a security review.
 
 ## Checks that do not install the widget
 

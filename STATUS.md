@@ -32,7 +32,8 @@ previous hand-installed folder is the backup
 `/home/cbayschm/.config/omarchy/plugins/.org.garminlinux.status.bak.20261101130813`.
 Marketplace submission:
 https://github.com/omacom/omarchy-plugin-marketplace/issues/13553.
-Listing waits for maintainer approval.
+Automated validation passed at that commit, including the marketplace
+security baseline. Listing still waits for maintainer approval.
 [Widget guide](docs/omarchy-widget.md).
 
 **G030 plugin export is ready on Omarchy (2026-11-01).** The bar widget can be

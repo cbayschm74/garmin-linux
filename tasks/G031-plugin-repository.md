@@ -51,8 +51,10 @@ must delete only that plugin.
   plugin and preview assets and that approval is for listing, not a security
   review. The issue is
   https://github.com/omacom/omarchy-plugin-marketplace/issues/13553.
-  This account cannot add the `submission` label; marketplace automation
-  labels a body that matches the form.
+  Marketplace automation applied the `submission` and `validated` labels.
+  Its comment says the repository is ready for listing review at that
+  commit, and the automated security baseline passed. That baseline is
+  not a security audit. Listing still waits for a maintainer.
 - The hand-installed copy was removed with `omarchy plugin remove
   org.garminlinux.status --yes`. Omarchy kept it as
   `/home/cbayschm/.config/omarchy/plugins/.org.garminlinux.status.bak.20261101130813`.
