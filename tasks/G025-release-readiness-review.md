@@ -22,10 +22,11 @@ T3 isolation replaces historical Orca routing. No push, PR, tag or publishing.
 
 Completed for review (MiMo 2.6 Pro via T3 Code, 2026-11-01).
 
-- Branch: `t3/324be95b`; worktree
-  `/home/cbayschm/.t3/worktrees/garmin-linux/t3-324be95b`; base
-  `19f085139e468014a129150cddf8449e8fd44c8c`; review commit recorded at
-  handoff (HEAD of this branch).
+- Branch: `t3/release-readiness-review` (T3-managed worktree `t3-324be95b`);
+  worktree `/home/cbayschm/.t3/worktrees/garmin-linux/t3-324be95b`; base
+  `19f085139e468014a129150cddf8449e8fd44c8c`; review commit
+  `b344cf326ad44d74d0fc4ff6f4221dc48e12c1ed` (report + card). The follow-up
+  commit adding these identifiers is metadata only.
 - Changed files: `docs/release-readiness-review.md` (new), this card. Nothing
   else edited.
 - Deliverable: evidence-backed readiness report with findings R1–R8 and a
