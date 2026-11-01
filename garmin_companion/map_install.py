@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import os
 import shutil
-import subprocess
 import tempfile
 from pathlib import Path
 
@@ -14,6 +13,41 @@ from .detector import GarminVolume, scan
 from .import_course import _mount_is_writable
 from .map_backup import validate_img_name
 from .map_plan import SPACE_MARGIN, _verified_backup, plan_map_replacement
+from .mount_control import capture_volume, guarded_unmount
+
+
+class MapInstallInterrupted(ValueError):
+    """A map install that failed after its durable state directory exists."""
+
+    def __init__(self, message: str, state_dir: Path) -> None:
+        super().__init__(message)
+        self.state_dir = state_dir
+
+
+def _plan_projection(plan: dict) -> tuple:
+    """The stable fields a reviewed plan must still match before any device write.
+
+    Mountpoint and free-space values legitimately change after a remount, so
+    they are not part of the comparison.
+    """
+    return (
+        plan.get('model'),
+        plan.get('volume'),
+        str(Path(plan['backup']).resolve()) if plan.get('backup') else None,
+        tuple((row.get('name'), row.get('size_bytes'), row.get('sha256'))
+              for row in plan.get('old_maps') or []),
+        tuple((str(Path(row['source']).resolve()), row.get('target'),
+               row.get('size_bytes'), row.get('sha256'))
+              for row in plan.get('new_maps') or []),
+    )
+
+
+def _require_reviewed_plan(plan: dict, expected_plan: dict) -> None:
+    """Refuse an install whose internal plan no longer matches the reviewed one."""
+    if not isinstance(expected_plan, dict):
+        raise ValueError('Reviewed map replacement plan is invalid')
+    if _plan_projection(plan) != _plan_projection(expected_plan):
+        raise ValueError('Map replacement plan changed since it was reviewed; review it again before installing')
 
 
 def _save(state_dir: Path, state: dict) -> None:
@@ -32,7 +66,7 @@ def _save(state_dir: Path, state: dict) -> None:
 
 
 def load_map_install(state_dir: Path) -> dict:
-    state_dir = state_dir.expanduser().resolve(strict=True)
+    state_dir = state_dir.expanduser().resolve()
     if not state_dir.is_dir() or (state_dir / 'state.json').is_symlink():
         raise ValueError('Map install state directory is invalid')
     try:
@@ -73,9 +107,12 @@ def _copy_partial(source: Path, partial: Path, expected: dict, ensure_mount) -> 
         raise ValueError(f'Device copy failed read-back SHA-256: {partial.name}')
 
 
-def _preflight(volume: GarminVolume, state_dir: Path, state: dict) -> tuple[Path, str]:
+def _preflight(volume: GarminVolume, state_dir: Path, state: dict) -> tuple[Path, str, dict]:
     source = _mounted_source(volume)
     mount_id = _mount_id(source)
+    # Capture the device identity before any write and keep it for the final
+    # unmount, so a replacement device is never unmounted in its place.
+    identity = capture_volume(volume)
     if volume.filesystem.lower() not in {'vfat', 'fat', 'msdos'} or not _mount_is_writable(source):
         raise ValueError('Map install requires a mounted, writable FAT volume')
     if state_dir.is_relative_to(source.resolve()) or Path(state['backup']).resolve().is_relative_to(source.resolve()):
@@ -108,16 +145,16 @@ def _preflight(volume: GarminVolume, state_dir: Path, state: dict) -> tuple[Path
             raise ValueError('New map source is on the device')
     if not (source / 'Garmin').is_dir() or (source / 'Garmin').is_symlink():
         raise ValueError('Garmin map folder is missing or unsafe')
-    return source, mount_id
+    return source, mount_id, identity
 
 
 def resume_map_install(volume: GarminVolume, state_dir: Path, *, unmount: bool = True) -> dict:
     """Recheck all evidence and reconcile an interrupted install from actual files."""
-    state_dir = state_dir.expanduser().resolve(strict=True)
+    state_dir = state_dir.expanduser().resolve()
     state = load_map_install(state_dir)
     if state['phase'] == 'complete':
         return {'status': 'complete', 'state_dir': str(state_dir)}
-    source, mount_id = _preflight(volume, state_dir, state)
+    source, mount_id, identity = _preflight(volume, state_dir, state)
     garmin = source / 'Garmin'
 
     def ensure_mount() -> None:
@@ -188,8 +225,8 @@ def resume_map_install(volume: GarminVolume, state_dir: Path, *, unmount: bool =
     if unmount:
         ensure_mount()
         try:
-            subprocess.run(['udisksctl', 'unmount', '-b', volume.path], check=True, capture_output=True, text=True)
-        except (OSError, subprocess.CalledProcessError) as exc:
+            guarded_unmount(volume, identity)
+        except (OSError, ValueError) as exc:
             raise ValueError('Maps verified, but safe unmount failed; retry resume before disconnecting') from exc
     state['phase'] = 'complete'
     _save(state_dir, state)
@@ -197,9 +234,12 @@ def resume_map_install(volume: GarminVolume, state_dir: Path, *, unmount: bool =
 
 
 def start_map_install(volume: GarminVolume, old_names: list[str], specifications: list[str],
-                      backup: Path, state_root: Path, *, unmount: bool = True) -> dict:
+                      backup: Path, state_root: Path, *, unmount: bool = True,
+                      expected_plan: dict | None = None) -> dict:
     """Create durable private state before the first device write, then install."""
     plan = plan_map_replacement(volume, old_names, specifications, backup)
+    if expected_plan is not None:
+        _require_reviewed_plan(plan, expected_plan)
     source = _mounted_source(volume)
     if not _mount_is_writable(source):
         raise ValueError('Map volume must be mounted read-write')
@@ -221,5 +261,5 @@ def start_map_install(volume: GarminVolume, old_names: list[str], specifications
         return resume_map_install(volume, state_dir, unmount=unmount)
     except BaseException as exc:
         if isinstance(exc, (OSError, ValueError)):
-            raise ValueError(f'{exc}; resume with state directory: {state_dir}') from exc
+            raise MapInstallInterrupted(f'{exc}; resume with state directory: {state_dir}', state_dir) from exc
         raise
