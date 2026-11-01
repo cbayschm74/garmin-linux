@@ -19,6 +19,15 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 
 ## Next / ownership
 
+**Portable release validation wave active (G023–G025).** Coordinator will review
+and run a versioned source archive through fresh install/reinstall/upgrade/
+rollback/uninstall in isolated artifact-local prefixes. Grok owns archive builder,
+MiniMax owns validation harness, MiMo owns independent baseline readiness review.
+No worker changes GUI/shared setup modules or live user integration. Primary
+launcher, bar widget, backups and cache remain outside validation mutations.
+No publication/tag until remaining release gates are resolved. Workers hand off
+review commits; coordinator performs real lifecycle acceptance and global docs.
+
 **Normal Omarchy GUI accepted by the user (2026-11-01).** User confirms the app
 opens correctly, Backups shows verified copies, and Activities and Courses load
 correctly. This completes normal launch/library-view acceptance alongside G017's
