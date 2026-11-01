@@ -13,7 +13,7 @@ Read AGENTS.md and relevant gui.py map additions plus accepted design. Setup a p
 - State: review
 - Branch / worktree: `G009-map-gui-review` at `/home/cbayschm/orca/workspaces/garmin-linux/G009-map-gui-review`
 - Base reviewed: `daff55a1510bf2d00d5bcf9a71378b9b8f5ee3a3`
-- Result: `docs/g007-grok-review.md`. Commit SHA is the tip of this branch after the review commit.
+- Result: `docs/g007-grok-review.md` in `330280c`. This handoff update is the following commit.
 - Changed files: `docs/g007-grok-review.md`, `tasks/G009-map-gui-review.md`
 - Checks: offscreen `unittest discover -s tests -q` — 143 passed. `compileall` and `git diff --check` passed. No `tests/test_gui_map_install.py` on this commit.
 - Device access: none. No GUI `main()`, no USB enumeration, no personal backup reads. No worker process left running.
