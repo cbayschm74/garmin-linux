@@ -464,7 +464,7 @@ def _execute_map_review(review, backup_root):
                 raise ValueError('Install state changed; review resume again')
             state_started = True
             try:
-                return resume_map_install(current, review['state_dir'])
+                return resume_map_install(current, review['state_dir'], expected_state=review['state'])
             except Exception as exc:
                 raise MapInstallInterrupted(f'{exc}; resume with state directory: {review["state_dir"]}',
                                             review['state_dir']) from exc

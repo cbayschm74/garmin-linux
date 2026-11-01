@@ -26,3 +26,8 @@ Unstarted, blocked on integrated G005/G006 APIs and tests. Next: coordinator ver
 ## Coordinator parallel test/review scope
 
 User explicitly authorized managing Grok, MiniMax M3/OMP, and MiMo 2.6 Pro/OpenCode on 2026-11-01. G009 reviews without source edits; G010 owns tests/test_gui_map_install.py; G011 owns tests/test_gui_map_workflow.py. These expand the test-file scope for G007; Codex remains the only gui.py writer and integrates reviewed commits.
+
+
+## Coordinator dependency correction during implementation
+
+Review found the resume equivalent of the final-plan race: resume_map_install reloads state after GUI consent checks, so the core must also bind that loaded state to the reviewed snapshot. Scope expanded to map_install.py and its existing tests for optional expected_state, forwarded by the GUI and initial installer. Existing CLI calls remain compatible. A regression refuses a changed state before preflight/device reads; matching reviewed resume completes. Codex is the sole editor of these files.

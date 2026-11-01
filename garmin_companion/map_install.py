@@ -148,10 +148,13 @@ def _preflight(volume: GarminVolume, state_dir: Path, state: dict) -> tuple[Path
     return source, mount_id, identity
 
 
-def resume_map_install(volume: GarminVolume, state_dir: Path, *, unmount: bool = True) -> dict:
+def resume_map_install(volume: GarminVolume, state_dir: Path, *, unmount: bool = True,
+                       expected_state: dict | None = None) -> dict:
     """Recheck all evidence and reconcile an interrupted install from actual files."""
     state_dir = state_dir.expanduser().resolve()
     state = load_map_install(state_dir)
+    if expected_state is not None and state != expected_state:
+        raise ValueError('Saved map install state changed since review; review resume again')
     if state['phase'] == 'complete':
         return {'status': 'complete', 'state_dir': str(state_dir)}
     source, mount_id, identity = _preflight(volume, state_dir, state)
@@ -258,7 +261,7 @@ def start_map_install(volume: GarminVolume, old_names: list[str], specifications
              'old_maps': plan['old_maps'], 'new_maps': plan['new_maps']}
     _save(state_dir, state)
     try:
-        return resume_map_install(volume, state_dir, unmount=unmount)
+        return resume_map_install(volume, state_dir, unmount=unmount, expected_state=state)
     except BaseException as exc:
         if isinstance(exc, (OSError, ValueError)):
             raise MapInstallInterrupted(f'{exc}; resume with state directory: {state_dir}', state_dir) from exc

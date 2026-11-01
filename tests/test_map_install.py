@@ -243,5 +243,33 @@ class MapInstallTests(unittest.TestCase):
         self.assertTrue((self.device / 'Garmin/first.img').exists())
 
 
+    def test_resume_expected_state_refuses_internal_reload_race_before_preflight(self):
+        import json
+        from copy import deepcopy
+        with patch.object(map_install, '_copy_partial', side_effect=OSError('interrupted')):
+            with self.assertRaises(map_install.MapInstallInterrupted):
+                self.start()
+        accepted = map_install.load_map_install(self.state_dir())
+        changed = deepcopy(accepted)
+        changed['new_maps'][0]['target'] = 'unreviewed.img'
+        (self.state_dir() / 'state.json').write_text(json.dumps(changed))
+        with patch.object(map_install, '_preflight', side_effect=AssertionError('stale review reached device')):
+            with self.assertRaisesRegex(ValueError, 'state changed since review'):
+                map_install.resume_map_install(self.volume, self.state_dir(), expected_state=accepted)
+        self.assertTrue((self.device / 'Garmin/old.img').is_file())
+        self.assertFalse((self.device / 'Garmin/unreviewed.img').exists())
+        self.unmount.assert_not_called()
+
+    def test_matching_expected_resume_state_completes(self):
+        with patch.object(map_install, '_copy_partial', side_effect=OSError('interrupted')):
+            with self.assertRaises(map_install.MapInstallInterrupted):
+                self.start()
+        accepted = map_install.load_map_install(self.state_dir())
+        result = map_install.resume_map_install(self.volume, self.state_dir(), expected_state=accepted)
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(accepted['phase'], 'planned')
+        self.assertFalse(self.mounted)
+
+
 if __name__ == '__main__':
     unittest.main()
