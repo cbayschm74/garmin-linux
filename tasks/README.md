@@ -11,7 +11,7 @@ Coordinator maintains this table in the primary checkout. Worker copies are snap
 | G005 | Read-only map selection helpers | done | Coordinator accepted | G003 done |
 | G006 | Map remount, consent checks, and recovery errors | done | Coordinator accepted | G003 done; separate scope from G005 |
 | G007 | Maps GUI replacement/resume | done | Codex coordinator | Main merge `5fd876d`; 208 tests pass |
-| G008 | Physical Maps GUI validation | needs-device | unassigned | G007 + agreed files/device/operator |
+| G008 | Physical Maps GUI validation | needs-device | Codex preflight / user GUI and device check | Small Chile reinstall proposed; live plan/review pending |
 | G009 | G007 independent review | done | Grok; coordinator accepted | Findings fixed/documented; report integrated |
 | G010 | G007 offscreen GUI tests | done | MiniMax M3 / OMP; accepted | 27 GUI tests integrated; worker released |
 | G011 | G007 workflow/integration tests | done | MiMo Pro / China Token Plan; accepted | 31 workflow tests integrated |

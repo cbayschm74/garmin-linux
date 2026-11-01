@@ -22,7 +22,7 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 - **G012: done.** Map backup progress, automatic dropdown selection, explicit saved-checksum and target-match results implemented. User has tested the updated copy progress and both verification checks and confirmed the improved feedback works. No new workers assigned.
 - **G007, G005/G006 and support G009/G010/G011: done.**
 - **G002 — done:** user confirmed the GUI-transferred course appears correctly and renders on the Edge map. The latest local Edge internal data backup independently passed all 24 file hashes/sizes. Active navigation remains untested.
-- **G008 — needs-device:** plan physical Maps GUI validation only after the user chooses exact target/old/new images and backup/recovery readiness. Do not rewrite working maps merely to test the UI.
+- **G008 — needs-device, coordinator/user:** user requested a small-map test. Proposed Edge SD Chile reinstall: verified 229 MB single-image backup, original `chile_gmapsupp.img` → `chile_gui_test.img` using the same backed-up bytes. Local checksum/header checks passed; Edge and SD detected unmounted. Live target/plan checks and user GUI review/install/rendering remain pending. See the task card; China maps are outside this test.
 - **G004 — needs-host:** verify the actual Omarchy laptop environment before packaging/shell integration.
 - Firmware, automatic account sync, and licensed Garmin map downloads remain feasibility gates, not implemented Express parity. Edge post-reset Wi-Fi setup reportedly required Express; unresolved and separate.
 
