@@ -953,7 +953,8 @@ class CompanionWindow(QMainWindow):
         dialog = QMessageBox(self)
         dialog.setTextFormat(Qt.TextFormat.PlainText)
         dialog.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        dialog.setWindowTitle('Maps verified, unmount failed' if 'safe unmount failed' in message else 'Map operation failed')
+        dialog.setWindowTitle('Maps verified, unmount failed' if 'safe unmount failed' in message else
+                              'Map replacement failed' if state_dir is not None else 'Map operation failed')
         dialog.setText(message)
         dialog.exec()
 
