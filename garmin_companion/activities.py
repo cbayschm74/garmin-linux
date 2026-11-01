@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
 import tempfile
@@ -25,6 +26,35 @@ def _total(sessions: list[dict], field: str) -> float | None:
     return sum(values) if values else None
 
 
+_CACHE_ROW_FIELDS = ('start_time_utc', 'sports', 'duration_seconds', 'elapsed_seconds',
+                     'distance_meters', 'session_count', 'device_from_fit')
+
+
+def _valid_amount(value: object) -> bool:
+    """Return whether a value is a finite nonnegative int/float, excluding bool."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    return value >= 0 and (isinstance(value, int) or math.isfinite(value))
+
+
+def _valid_cached_row(row: object) -> bool:
+    """A usable cached row carries every required field with reportable values."""
+    if not isinstance(row, dict) or any(field not in row for field in _CACHE_ROW_FIELDS):
+        return False
+    if not (row['start_time_utc'] is None or isinstance(row['start_time_utc'], str)):
+        return False
+    if not (isinstance(row['sports'], list)
+            and all(isinstance(sport, str) for sport in row['sports'])):
+        return False
+    if any(row[field] is not None and not _valid_amount(row[field])
+           for field in ('duration_seconds', 'elapsed_seconds', 'distance_meters')):
+        return False
+    session_count = row['session_count']
+    return (isinstance(session_count, int) and not isinstance(session_count, bool)
+            and session_count > 0
+            and (row['device_from_fit'] is None or isinstance(row['device_from_fit'], str)))
+
+
 def _load_decoded_cache(path: Path | None) -> dict[str, dict]:
     if path is None:
         return {}
@@ -32,16 +62,16 @@ def _load_decoded_cache(path: Path | None) -> dict[str, dict]:
         if path.is_symlink() or not path.is_file() or path.stat().st_size > 10 * 1024 * 1024:
             return {}
         data = json.loads(path.read_text(encoding='utf-8'))
-        if data.get('schema') != 1 or not isinstance(data.get('activities'), dict):
+        if not isinstance(data, dict):
             return {}
-        return {digest: row for digest, row in data['activities'].items()
-                if re.fullmatch(r'[0-9a-f]{64}', digest) and isinstance(row, dict)
-                and (row.get('start_time_utc') is None or isinstance(row.get('start_time_utc'), str))
-                and isinstance(row.get('sports'), list) and all(isinstance(sport, str) for sport in row['sports'])
-                and all(row.get(field) is None or isinstance(row.get(field), (int, float))
-                        for field in ('duration_seconds', 'elapsed_seconds', 'distance_meters'))
-                and isinstance(row.get('session_count'), int)
-                and (row.get('device_from_fit') is None or isinstance(row.get('device_from_fit'), str))}
+        schema = data.get('schema')
+        if not isinstance(schema, int) or isinstance(schema, bool) or schema != 1:
+            return {}
+        rows = data.get('activities')
+        if not isinstance(rows, dict):
+            return {}
+        return {digest: row for digest, row in rows.items()
+                if re.fullmatch(r'[0-9a-f]{64}', digest) and _valid_cached_row(row)}
     except (OSError, UnicodeError, ValueError, AttributeError):
         return {}
 

@@ -9,7 +9,36 @@ from typing import Callable
 from xml.etree import ElementTree
 
 MAX_COURSE_BYTES = 50 * 1024 * 1024
+_READ_CHUNK_BYTES = 1024 * 1024
 COURSE_FOLDERS = {'Garmin/Courses', 'Garmin/GPX', 'Garmin/NewFiles'}
+
+
+def _read_bounded(path: Path, check_cancel: Callable[[], bool] | None = None) -> bytes:
+    """Read at most the course limit plus one byte, checking cancellation per chunk.
+
+    The caller rejects an oversized stat result before opening the payload. Bound
+    each read by both the 1 MiB chunk size and the remaining detection window so
+    growth after that check cannot cause an unbounded read. The extra byte
+    distinguishes an exact-limit payload from one that exceeds the limit.
+    """
+    chunks: list[bytes] = []
+    total = 0
+    limit_plus_one = MAX_COURSE_BYTES + 1
+    with path.open('rb') as handle:
+        while True:
+            if check_cancel is not None and check_cancel():
+                raise InterruptedError('Course scan cancelled')
+            remaining = limit_plus_one - total
+            if remaining <= 0:
+                raise ValueError('Course file exceeds the 50 MB preview limit')
+            chunk = handle.read(min(_READ_CHUNK_BYTES, remaining))
+            if not chunk:
+                break
+            total += len(chunk)
+            chunks.append(chunk)
+            if total > MAX_COURSE_BYTES:
+                raise ValueError('Course file exceeds the 50 MB preview limit')
+    return b''.join(chunks)
 
 
 def _local_name(tag: str) -> str:
@@ -131,7 +160,15 @@ def course_library(root: Path, *, check_cancel: Callable[[], bool] | None = None
                 problems.append({'backup': str(backup), 'error': 'Unsafe course path'})
                 continue
             try:
-                data = path.read_bytes()
+                size_bytes = path.stat().st_size
+            except OSError as exc:
+                problems.append({'path': str(path), 'error': str(exc)})
+                continue
+            if size_bytes > MAX_COURSE_BYTES:
+                problems.append({'path': str(path), 'error': 'Course file exceeds the 50 MB preview limit'})
+                continue
+            try:
+                data = _read_bounded(path, check_cancel)
                 digest = hashlib.sha256(data).hexdigest()
                 if digest != entry['sha256'] or len(data) != entry['size_bytes']:
                     raise ValueError('Backup file failed its saved integrity check')
@@ -145,6 +182,8 @@ def course_library(root: Path, *, check_cancel: Callable[[], bool] | None = None
                 preview['backup_paths'] = [str(path)]
                 preview['source_devices'] = [device]
                 courses[digest] = preview
+            except InterruptedError:
+                raise
             except (OSError, ValueError, KeyError, TypeError) as exc:
                 problems.append({'path': str(path), 'error': str(exc)})
     return {'courses': sorted(courses.values(), key=lambda row: (row['format'], row['name'] or '', row['sha256'])),
