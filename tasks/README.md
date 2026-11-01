@@ -14,7 +14,7 @@ Coordinator maintains this table in the primary checkout. Worker copies are snap
 | G008 | Physical Maps GUI validation | needs-device | unassigned | G007 + agreed files/device/operator |
 
 | G009 | G007 independent review | active | Grok | Dispatch `ctx_baf3ecd983e8` |
-| G010 | G007 offscreen GUI tests | active | MiniMax M3 / OMP | Dispatch `ctx_51e3f16a6c18` |
+| G010 | G007 offscreen GUI tests | review | MiniMax M3 delivered; Codex verified | 27 tests, title correction accepted on feature branch; worker released |
 | G011 | G007 workflow/integration tests | active | MiMo 2.6 Pro / OpenCode | Dispatch `ctx_55fe519dcc6f` · China Token Plan |
 
 Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G003](G003-map-gui-design.md), [G004](G004-omarchy-validation.md), [G005](G005-map-selection-helpers.md), [G006](G006-map-install-guards.md), [G007](G007-maps-gui.md), [G008](G008-map-gui-device-validation.md).
@@ -37,3 +37,5 @@ G005 and G006 are integrated. G007 is assigned to Codex in a separate worktree; 
 Run `run_286a3e55cb66`, coordinator Codex. User authorized autonomous task assignment to these three agents on 2026-11-01. Separate Orca worktrees G009-map-gui-review, G010-map-gui-tests, G011-map-workflow-tests are based on G007 checkpoint `daff55a`. Worker test/review scope only; Codex alone edits gui.py in /home/cbayschm/garmin-G007-maps-gui. Grok first launch failed at workspace trust before running task, released, then retried under the Dispatch above. All current launch receipts confirm intended agents/models.
 
 MiMo routing correction: two pre-work launches through xiaomi/mimo-v2.6-pro returned insufficient balance and were explicitly stopped/released. After user confirmed the China Token Plan, CLI discovery exposed xiaomi-token-plan-cn/mimo-v2.6-pro; retry ctx_55fe519dcc6f is positively observed working on that provider. Its worktree was fast-forwarded to 76d9003 and contains coordinator baseline workflow tests for independent strengthening.
+
+G007 current feature checkpoint: 34fb9a9, 184 tests pass. G010 commit 0171dd3 was reviewed and integrated on the feature branch as 59ce57f, with the required recovery-dialog wording corrected. Grok confirmed the wrong-identity cleanup race; it is now fenced and regression-tested. Main still awaits final G007 integration, G009 report, and G011 test delivery.

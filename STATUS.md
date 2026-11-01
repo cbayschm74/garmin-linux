@@ -15,18 +15,18 @@ Read `AGENTS.md`, then [task board](tasks/README.md) and your assigned card. The
 - CLI map features: local archive/IMG inspection, explicit map backup, replacement planning, guarded resumable installation. Installer has synthetic coverage; the working real maps were installed earlier and confirmed by the user. No rewrite is needed to organize this project.
 - GUI has Devices, Backups, Activities, Courses, Maps inspector, and Kubuntu launcher/icon. Edge GPX and fēnix FIT reviewed transfers include fresh identity/hash checks, backup-before-copy, verification, and safe unmount.
 - User confirmed fēnix GUI-transferred course appears, loads, and renders. Edge CLI GPX imports were confirmed on-device; **new Edge GUI hardware validation remains pending**.
-- Main suite rerun on 2026-11-01: **115 tests passed** with `.venv/bin/python -m unittest discover -s tests -q` (synthetic storage and offscreen Qt). This is not hardware validation.
+- Main suite rerun on 2026-11-01: **143 tests passed** with `.venv/bin/python -m unittest discover -s tests -q` (synthetic storage and offscreen Qt). This is not hardware validation.
 - Orca already registers this repository as `garmin-linux`; local CLI worktree/agent options were checked. The organization step launched no workers; the user subsequently started G001 and G003 in Orca.
 
 ## Priorities and parallel assignments
 
-See [task board](tasks/README.md) for ownership. G001 and G003 are integrated. G005 and G006 are ready for separate assignments; no new workers started.
+See [task board](tasks/README.md) for ownership. G001 and G003 are integrated. G005/G006 are integrated; G007 and its independent support tasks are active (see below).
 
 1. **G001 — done:** cache recovery and bounded course-library reads independently reviewed and integrated; 115 tests passed.
 2. **G002 — needs-device:** complete physical Edge GPX GUI transfer validation with selected course and designated device operator. This remains the next functional acceptance check.
 3. **G003 — done:** Maps GUI design accepted with coordinator corrections; no GUI implemented.
-4. **G005/G006 — ready in parallel:** read-only selection helpers and separate remount/install guards. Both use synthetic storage; neither edits gui.py.
-5. **G007 — blocked:** GUI implementation waits for both core tasks. **G008 — needs-device:** later physical map acceptance.
+4. **G005/G006 — done:** reviewed and integrated; combined suite 143 tests passed including the pre-mount metadata correction.
+5. **G007 — active:** Maps GUI implementation and independent review/tests are in progress on its feature branch. **G008 — needs-device:** later physical map acceptance.
 6. **G004 — needs-host:** verify Omarchy environment on the laptop before shell integration.
 
 With no explicit assignment, coordinate a ready task rather than having every agent start the hardware check.
@@ -50,7 +50,7 @@ With no explicit assignment, coordinate a ready task rather than having every ag
 
 ## Active G007 implementation
 
-G005/G006 are integrated and combined acceptance passed 143 tests (including a coordinator pre-mount metadata correction). G007 is in progress on `task/G007-maps-gui`, worktree `/home/cbayschm/garmin-G007-maps-gui`; checkpoint `daff55a` is incomplete and not merged into main. User authorized autonomous Orca assignment. Supervised Run `run_286a3e55cb66`: Grok G009 reviews, MiniMax M3/OMP G010 writes GUI tests, MiMo Pro/OpenCode G011 writes workflow tests. Exact Dispatches/ownership are on the task board. No physical device access; G008 remains pending.
+G005/G006 are integrated and combined acceptance passed 143 tests (including a coordinator pre-mount metadata correction). G007 is in progress on `task/G007-maps-gui`, worktree `/home/cbayschm/garmin-G007-maps-gui`; latest checkpoint `34fb9a9` has 184 passing tests and is not merged into main. The original `daff55a` is an incomplete checkpoint, not the latest implementation. User authorized autonomous Orca assignment. Supervised Run `run_286a3e55cb66`: Grok G009 is finishing its review; MiniMax M3/OMP G010 delivered 27 GUI tests, independently passed after the dialog-title correction, and its worker was released; MiMo G011 is strengthening workflow tests through the corrected `xiaomi-token-plan-cn/mimo-v2.6-pro` provider. Two wrong-route balance-error attempts were stopped before work. Exact Dispatches/ownership are on the task board. No physical device access; G008 remains pending.
 
 ## Recent change
 
