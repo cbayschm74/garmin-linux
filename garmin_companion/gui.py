@@ -374,6 +374,8 @@ def _map_specs(rows, old_names):
     old = {name.casefold() for name in old_names}
     for source, target in rows:
         validate_img_name(target)
+        if '=' in target:
+            raise ValueError('Destination IMG filenames cannot contain =; choose a different name')
         path = Path(source).expanduser().resolve(strict=True)
         if not path.is_file() or path.suffix.lower() != '.img':
             raise ValueError('Choose local IMG files for replacement')
@@ -410,6 +412,8 @@ def _prepare_map_review(selection, rows):
         raise ValueError('Map backup index changed; check the selection again')
     specs = _map_specs(rows, index['names'])
     plan = plan_map_replacement(volume, index['names'], specs, backup)
+    if plan.get('status') != 'ready':
+        raise ValueError('Map replacement plan is not ready')
     # Enforce the installer's stricter name rule even if a planner returns ready.
     if {row['name'].casefold() for row in plan['old_maps']} & {row['target'].casefold() for row in plan['new_maps']}:
         raise ValueError('Installer requires distinct old and new map filenames')
@@ -479,7 +483,7 @@ def _execute_map_review(review, backup_root):
             except Exception as cleanup_error:
                 cleanup = f'Safe-unmount cleanup failed: {cleanup_error}. Mount state needs attention.'
             raise ValueError(f'{exc}\n{cleanup}') from exc
-        if mounted is None:
+        if mounted is None or mounted_evidence is None:
             raise ValueError(f'{exc}\nMount transition did not complete. Refresh Devices to check mount state.') from exc
         raise
 
@@ -757,6 +761,9 @@ class CompanionWindow(QMainWindow):
         self.map_tabs.addTab(self._map_inspect_page(), 'Inspect')
         self.map_tabs.addTab(self._map_replace_page(), 'Replace / Resume')
         layout.addWidget(self.map_tabs)
+        layout.addWidget(self.map_replace_status)
+        self.map_replace_status.setVisible(False)
+        self.map_tabs.currentChanged.connect(lambda index: self.map_replace_status.setVisible(index == 1))
         return page
 
     def _map_inspect_page(self) -> QWidget:
@@ -806,7 +813,9 @@ class CompanionWindow(QMainWindow):
         self.map_load_files.clicked.connect(self.load_map_backup_files)
         layout.addWidget(self.map_load_files)
         self.map_backup_names = QListWidget()
-        self.map_backup_names.setMinimumHeight(110)
+        self.map_backup_names.setMinimumHeight(90)
+        self.map_backup_names.setMaximumHeight(130)
+        self.map_backup_names.itemChanged.connect(self._update_map_controls)
         layout.addWidget(self.map_backup_names)
         self.map_backup_button = QPushButton('Back up selected maps')
         self.map_backup_button.clicked.connect(self.start_map_backup)
@@ -860,7 +869,20 @@ class CompanionWindow(QMainWindow):
         self.map_plan_details.setMinimumHeight(200)
         layout.addWidget(self.map_plan_details)
         scroll.setWidget(self.map_replace_panel)
+        for combo in (self.map_backup_volume, self.map_backup_choice, self.map_target_choice):
+            combo.addItem('Select…', None)
+        self._update_map_controls()
         return scroll
+
+    def _update_map_controls(self, *args):
+        self.map_load_files.setEnabled(bool(self.map_backup_volume.currentData()))
+        checked = any(self.map_backup_names.item(i).checkState() == Qt.CheckState.Checked
+                      for i in range(self.map_backup_names.count()))
+        self.map_backup_button.setEnabled(bool(getattr(self, '_map_backup_listing', None)) and checked)
+        self.map_check_target.setEnabled(bool(self.map_target_choice.currentData() and self.map_backup_choice.currentData()))
+        self.map_plan_button.setEnabled(bool(self._map_selection and not self._map_selection['missing']
+                                             and self.map_new_images.rowCount()))
+        self.map_review_button.setEnabled(self._map_review is not None)
 
     def _map_operations_busy(self):
         return any(worker is not None for worker in (self._map_job_worker, self._map_worker,
@@ -870,6 +892,7 @@ class CompanionWindow(QMainWindow):
         self._map_review = None
         self.map_review_button.setEnabled(False)
         self.map_plan_details.clear()
+        self._update_map_controls()
 
     def _invalidate_map_selection(self, *args):
         self._map_selection = None
@@ -879,6 +902,7 @@ class CompanionWindow(QMainWindow):
     def _clear_map_backup_names(self, *args):
         self.map_backup_names.clear()
         self._map_backup_listing = None
+        self._update_map_controls()
 
     def _run_map_job(self, action, completed, message):
         if self._map_operations_busy():
@@ -912,7 +936,10 @@ class CompanionWindow(QMainWindow):
         if worker.outcome:
             ok, value = worker.outcome
             if ok:
-                completed(value)
+                try:
+                    completed(value)
+                except Exception as exc:
+                    self._map_job_failed(exc)
             else:
                 self._map_job_failed(value)
 
@@ -985,6 +1012,7 @@ class CompanionWindow(QMainWindow):
                 item.setCheckState(Qt.CheckState.Unchecked)
                 self.map_backup_names.addItem(item)
             self.map_replace_status.setText('Check only the images you intend to replace; the checklist starts empty.')
+            self._update_map_controls()
         self._run_map_job(read, show, 'Reading map filenames without hashing image data…')
 
     def start_map_backup(self):
@@ -1022,7 +1050,7 @@ class CompanionWindow(QMainWindow):
                 f'{volume.mountpoint} · {volume.filesystem} · {volume.size_bytes:,} bytes · {volume.status}'
                 f'{reader}\nMissing maps: {", ".join(selection["missing"]) or "none"}\n'
                 f'Left untouched: {", ".join(selection["extra"]) or "none"}')
-            self.map_plan_button.setEnabled(not selection['missing'])
+            self._update_map_controls()
             self.map_replace_status.setText('Target checked. Choose new local images to create a plan.')
         self._run_map_job(lambda: _map_selection(path, Path(backup)), show, 'Matching backup and target identity…')
 
@@ -1136,6 +1164,7 @@ class CompanionWindow(QMainWindow):
             f'Installed: {", ".join(result["maps"])}\nSafely unmount other volumes on the same device before disconnecting. '
             'Then check that the maps appear and render on the device.')
         self._map_selection = None
+        self._update_map_controls()
 
     def _choose_map(self) -> None:
         filename, _ = QFileDialog.getOpenFileName(
@@ -1154,6 +1183,8 @@ class CompanionWindow(QMainWindow):
         self.map_cancel_button.setEnabled(True)
         worker = MapInspectWorker(path, self)
         self._map_worker = worker
+        self._update_course_send()
+        self.refresh_devices()
         worker.results.connect(self._show_map)
         worker.failed.connect(lambda message: self.map_summary.setText(f'Could not inspect file: {message}'))
         worker.progress.connect(lambda percent: self.map_summary.setText(f'Calculating SHA-256… {percent}%'))
