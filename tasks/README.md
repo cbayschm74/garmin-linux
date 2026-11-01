@@ -5,7 +5,7 @@ Coordinator maintains this table in the primary checkout. Worker copies are snap
 | ID | Task | State | Owner | Dependencies |
 | --- | --- | --- | --- | --- |
 | G001 | Review existing cache/course hardening candidate | done | G001 worker; coordinator accepted | Integrated as `051695d`; 115 tests pass |
-| G002 | Validate Edge GPX GUI transfer on hardware | needs-device | unassigned | User/device operator and a selected GPX |
+| G002 | Validate Edge GPX GUI transfer on hardware | active | User GUI/device; Codex coordinates | Edge detected; GPX preflight passed; awaiting GUI transfer |
 | G003 | Design the Maps GUI installation flow | done | G003 worker; coordinator accepted with corrections | Design integrated; no GUI code |
 | G004 | Validate Omarchy environment and integration prerequisites | needs-host | unassigned | Access to Omarchy laptop |
 | G005 | Read-only map selection helpers | done | Coordinator accepted | G003 done |

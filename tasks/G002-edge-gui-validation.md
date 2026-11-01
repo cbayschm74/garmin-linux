@@ -2,9 +2,9 @@
 
 ## Assignment
 
-- State: needs-device
-- Owner / session: unassigned
-- Branch / worktree / base commit: record at claim
+- State: active — read-only preflight passed, awaiting user GUI transfer
+- Owner / session: user operates GUI/device; Codex coordinates and records results
+- Branch / worktree / base commit: main at a5b5135, /home/cbayschm/garmin-linux
 - Depends on: user and stable Edge USB connection; selected local GPX
 - Device operator: coordinator assigns one; all other agents stay off physical storage
 
@@ -26,3 +26,10 @@ Record software commit, transfer/backup verification, unmount result, and user's
 ## Handoff
 
 Unstarted; no new device action authorized by the organizational task. Next: arrange the selected course and one device operator with the user. Current attachment/mount state is unknown; re-detect rather than using historical paths.
+
+
+## Current handoff — 2026-11-01
+
+Fresh scan confirmed a mounted Edge 1000 internal GARMIN Flash and mounted Edge SD. The existing prepared 3,279-point GPX passed inspect_course and review_edge_transfer against the freshly detected internal volume. The inspection was read-only; both mount state and device files were left untouched (internal volume is currently mounted writable). No private source path, coordinates, hash, or persistent device identifier is recorded here.
+
+Next: user chooses that prepared GPX in Courses → Local file, reviews Edge internal target and sends through the real app. Then confirm verified backup/copy/unmount, safely unmount SD, disconnect/power on, and check course visibility/loading/rendering. No GUI transfer or on-device acceptance has yet been reported. Maps remain outside this test; no other device operator/worker is assigned.

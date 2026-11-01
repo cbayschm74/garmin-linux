@@ -21,7 +21,7 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 
 - **G012: done.** Map backup progress, automatic dropdown selection, explicit saved-checksum and target-match results implemented. User has tested the updated copy progress and both verification checks and confirmed the improved feedback works. No new workers assigned.
 - **G007, G005/G006 and support G009/G010/G011: done.**
-- **G002 — needs-device:** validate Edge GPX GUI course transfer with a selected local GPX, one device operator, verified backup/copy/unmount, and user on-device course loading confirmation.
+- **G002 — active:** mounted Edge internal/SD detected; prepared GPX (3,279 points) passed read-only transfer preflight. User next selects it in Courses → Local file, reviews/sends to Edge internal, then safely unmounts SD and confirms on-device course loading. No transfer or mount change performed by Codex during preflight.
 - **G008 — needs-device:** plan physical Maps GUI validation only after the user chooses exact target/old/new images and backup/recovery readiness. Do not rewrite working maps merely to test the UI.
 - **G004 — needs-host:** verify the actual Omarchy laptop environment before packaging/shell integration.
 - Firmware, automatic account sync, and licensed Garmin map downloads remain feasibility gates, not implemented Express parity. Edge post-reset Wi-Fi setup reportedly required Express; unresolved and separate.
