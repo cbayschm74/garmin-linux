@@ -21,3 +21,8 @@ All GUI cases in the accepted design, including stale identity/state/source reje
 ## Handoff
 
 Unstarted, blocked on integrated G005/G006 APIs and tests. Next: coordinator verifies both dependencies, records agreed signatures, then assigns a fresh worktree from integrated main.
+
+
+## Coordinator parallel test/review scope
+
+User explicitly authorized managing Grok, MiniMax M3/OMP, and MiMo 2.6 Pro/OpenCode on 2026-11-01. G009 reviews without source edits; G010 owns tests/test_gui_map_install.py; G011 owns tests/test_gui_map_workflow.py. These expand the test-file scope for G007; Codex remains the only gui.py writer and integrates reviewed commits.
