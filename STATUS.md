@@ -19,7 +19,7 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 
 ## Next / ownership
 
-- **G012: done.** Map backup progress, automatic dropdown selection, explicit saved-checksum and target-match results implemented. User confirmed the preceding physical backup finished before changes. No new workers assigned.
+- **G012: done.** Map backup progress, automatic dropdown selection, explicit saved-checksum and target-match results implemented. User has tested the updated copy progress and both verification checks and confirmed the improved feedback works. No new workers assigned.
 - **G007, G005/G006 and support G009/G010/G011: done.**
 - **G002 — needs-device:** validate Edge GPX GUI course transfer with a selected local GPX, one device operator, verified backup/copy/unmount, and user on-device course loading confirmation.
 - **G008 — needs-device:** plan physical Maps GUI validation only after the user chooses exact target/old/new images and backup/recovery readiness. Do not rewrite working maps merely to test the UI.
@@ -28,7 +28,7 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 
 ## Latest change — G012 backup feedback
 
-Copy/readback callbacks now drive a visible two-phase progress bar with current file, bytes/percentage, measured I/O speed, and elapsed time (updated even between reads). Completion waits for verified publication; failures cannot show 100%. Saved backups appear/are selected in the dropdown automatically. A dedicated saved-backup verification button reports green PASS/red FAIL; target identity/filename matching is separately labeled and does not imply a checksum comparison. Other map jobs show busy animation. Ten new synthetic/offscreen tests cover counts, publication failures, signal delivery, timing/rate, automatic selection, and pass/fail distinctions. Full suite: 218 passed; compilation/diff checks and dark-palette feedback inspection passed. No real storage was opened for this change; reopen the app to load it.
+Copy/readback callbacks now drive a visible two-phase progress bar with current file, bytes/percentage, measured I/O speed, and elapsed time (updated even between reads). Completion waits for verified publication; failures cannot show 100%. Saved backups appear/are selected in the dropdown automatically. A dedicated saved-backup verification button reports green PASS/red FAIL; target identity/filename matching is separately labeled and does not imply a checksum comparison. Other map jobs show busy animation. Ten new synthetic/offscreen tests cover counts, publication failures, signal delivery, timing/rate, automatic selection, and pass/fail distinctions. Full suite: 218 passed; compilation/diff checks and dark-palette feedback inspection passed. No real storage was opened during development. The user subsequently confirmed successful use of copy progress and both verification checks, and found the bar/information much clearer. This confirms backup/verification UI acceptance; map replacement remains G008.
 
 ## Orca coordination and review evidence
 
