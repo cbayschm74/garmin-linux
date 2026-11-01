@@ -19,6 +19,8 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 
 ## Next / ownership
 
+New parallel wave: G014 MiniMax M3 builds a portable checkout setup/check/uninstall helper; G015 MiMo Pro independently tests the desktop lifecycle; G016 Grok writes source-verified recovery guidance. Coordinator integrates/reviews and owns global docs. Run `run_e413c22b78ee`; all workers use separate new worktrees and synthetic data only. Actual Omarchy host validation remains G004.
+
 - **G012: done.** Map backup progress, automatic dropdown selection, explicit saved-checksum and target-match results implemented. User has tested the updated copy progress and both verification checks and confirmed the improved feedback works. No new workers assigned.
 - **G007, G005/G006 and support G009/G010/G011: done.**
 - **G002 — done:** user confirmed the GUI-transferred course appears correctly and renders on the Edge map. The latest local Edge internal data backup independently passed all 24 file hashes/sizes. Active navigation remains untested.
