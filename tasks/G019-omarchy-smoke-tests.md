@@ -2,7 +2,7 @@
 
 ## Assignment
 
-- State: review
+- State: done
 - Owner / session: MiniMax M3 via T3 Code
 - Branch / worktree: coordinator main for G017; T3-managed isolated worktree for workers
 - Base commit: assignment commit containing this card, source baseline `fc5918e`; coordinator provides exact assignment SHA at launch
@@ -96,3 +96,5 @@ without a failure. Python 3.14.8, PyQt 6.11.0 / Qt 6.12.0, `garmin-fit-sdk`
 
 Coordinator reviews the diff and integrates `tests/test_gui_empty_states.py`
 on `main`, then re-runs the full suite. Nothing else is outstanding for G019.
+
+Coordinator acceptance: diff independently reviewed; 15 targeted tests and primary full suite (303 tests) pass. Integrated as `e11927a` and `6e4eb47`; no production source changes.
