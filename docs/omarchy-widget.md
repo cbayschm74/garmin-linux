@@ -237,8 +237,8 @@ The export contains `manifest.json`, `BarWidget.qml`, `status.py`,
 `.gitignore`, `README.md`, and `LICENSE`. `--git` makes one local commit on
 `main` so the directory can be cloned. The command refuses an existing
 destination and refuses to write anywhere under `~/.config/omarchy/plugins`.
-It does not enable the widget, edit `shell.json`, or replace the hand-installed
-copy already on this laptop.
+It does not enable the widget, edit `shell.json`, or replace a plugin that is
+already installed.
 
 Install and removal for the public repository:
 
@@ -251,13 +251,23 @@ omarchy plugin remove org.garminlinux.status
 `add` validates the clone before enabling it. The bundled status script then
 counts Garmin USB storage without a companion checkout. Removal deletes that
 clone, or moves a non-Git folder to a hidden backup. The companion, private
-backups, and other plugins stay. The hand-installed widget on this laptop was
-not removed, so `plugin add` will refuse the id until that copy is removed.
+backups, and other plugins stay.
 
-Nothing has been submitted to plugins.omarchy.org. A listing still needs an
-explicit owner approval before the marketplace issue is opened. A reasonable
-listing is category `Hardware` with tags `bar` and `system`. Those are
-suggestions, not a submission.
+This laptop now runs that published checkout,
+`f5fd9d8168e4c9abea921c85840f452b928113ae`, enabled on the right at index 0.
+`statusCommand` is unset. The bar click still launches
+`/home/cbayschm/.local/bin/garmin-linux-companion`. The previous hand-installed
+folder remains at
+`/home/cbayschm/.config/omarchy/plugins/.org.garminlinux.status.bak.20261101130813`.
+The running shell kept the previous widget until `omarchy restart shell`.
+After that restart the bar reported one Garmin USB device and two storage
+volumes, with no paths or labels.
+
+The listing submission is
+https://github.com/omacom/omarchy-plugin-marketplace/issues/13553,
+category `Hardware`, tags `bar` and `system`, with no preview image. It is
+waiting for maintainer approval. Approval lists the plugin; it is not a
+security review.
 
 ## Checks that do not install the widget
 

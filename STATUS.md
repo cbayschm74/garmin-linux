@@ -19,15 +19,20 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 
 ## Next / ownership
 
-**G031 publishes the Omarchy widget repository (2026-11-01).** The public
-plugin repository is
-https://github.com/cbayschm74/omarchy-garmin-status. Its root has the manifest,
-widget, bundled `status.py`, MIT license, and install/removal instructions.
-`omarchy plugin add` of that URL is the install path. `omarchy plugin disable`
-and `omarchy plugin remove` remove only that plugin. The count does not need
-the companion checkout. The hand-installed widget on this laptop was left
-enabled, so add will refuse the same id until that copy is removed. No
-marketplace issue has been opened. A listing waits for an explicit request.
+**G031 is installed on this laptop and submitted for listing (2026-11-01).**
+The public plugin repository is
+https://github.com/cbayschm74/omarchy-garmin-status at
+`f5fd9d8168e4c9abea921c85840f452b928113ae`. This laptop's bar uses that git
+checkout, enabled on the right at index 0. `statusCommand` is unset, so the
+bundled `status.py` supplies the count. The click still runs
+`/home/cbayschm/.local/bin/garmin-linux-companion`. A shell restart was
+required before the running bar loaded the new widget; it then reported one
+Garmin USB device and two storage volumes, with no paths or labels. The
+previous hand-installed folder is the backup
+`/home/cbayschm/.config/omarchy/plugins/.org.garminlinux.status.bak.20261101130813`.
+Marketplace submission:
+https://github.com/omacom/omarchy-plugin-marketplace/issues/13553.
+Listing waits for maintainer approval.
 [Widget guide](docs/omarchy-widget.md).
 
 **G030 plugin export is ready on Omarchy (2026-11-01).** The bar widget can be
@@ -35,11 +40,12 @@ exported as its own directory with `manifest.json` at the root, a README that
 covers companion and `lsblk` dependencies, install, and removal, and the MIT
 license. `python3 tools/export-omarchy-plugin.py --output DIR --git` writes that
 directory and one local commit. It does not install or enable anything. The
-live hand-installed widget was left enabled and was not replaced. Setup install
-no longer implies that it manages the widget; uninstall names the separate
+live hand-installed widget was left enabled during G030. This laptop later
+replaced that copy with the published checkout; see the G031 paragraph above.
+Setup install no longer implies that it manages the widget; uninstall names the separate
 `omarchy plugin disable` and `omarchy plugin remove` commands and does not run
-them. G031 later published that export as the public plugin repository.
-plugins.omarchy.org was not contacted.
+them. G031 later published that export and opened the marketplace issue linked
+above.
 [Export and removal notes](docs/omarchy-widget.md).
 
 **Actual Omarchy theme switching accepted by user (2026-11-01).** User tested
@@ -77,10 +83,10 @@ lifecycle summary/logs under validation-0.1.0a1/. No tag/publication/submission.
 [Exact release evidence and instructions](docs/portable-release.md).
 **User acceptance:** actual Omarchy theme changes now confirmed correct by user.
 Other desktops use normal Qt palette; Kubuntu host acceptance is G028.
-Marketplace-ready export and setup/removal notes are G030. That does not
-include a listing or a public remote. Actual Kubuntu archive/live theme and
-clean OS validation remain separate. No marketplace listing is claimed ready
-or submitted.
+Marketplace-ready export and setup/removal notes are G030. G031 published
+the public repository and opened the listing issue; maintainer approval is
+still open. Actual Kubuntu archive/live theme and clean OS validation remain
+separate.
 
 
 **G027 automatic GUI themes complete (2026-11-01).** Shared PyQt app now reads
