@@ -13,6 +13,10 @@ Coordinator maintains this table in the primary checkout. Worker copies are snap
 | G007 | Maps GUI replacement/resume | active | Codex coordinator | G005 + G006 integrated |
 | G008 | Physical Maps GUI validation | needs-device | unassigned | G007 + agreed files/device/operator |
 
+| G009 | G007 independent review | active | Grok | Dispatch `ctx_baf3ecd983e8` |
+| G010 | G007 offscreen GUI tests | active | MiniMax M3 / OMP | Dispatch `ctx_51e3f16a6c18` |
+| G011 | G007 workflow/integration tests | active | MiMo 2.6 Pro / OpenCode | Dispatch `ctx_7a483b94a5e9` |
+
 Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G003](G003-map-gui-design.md), [G004](G004-omarchy-validation.md), [G005](G005-map-selection-helpers.md), [G006](G006-map-install-guards.md), [G007](G007-maps-gui.md), [G008](G008-map-gui-device-validation.md).
 
 ## States
@@ -27,3 +31,7 @@ Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G
 4. Coordinator reviews and integrates the task, reruns relevant checks, and updates the board, `STATUS.md`, and milestone checkboxes. Clear ownership only after verifying the previous agent has stopped.
 
 G005 and G006 are integrated. G007 is assigned to Codex in a separate worktree; no other GUI editor is assigned. Physical checks remain separately scheduled.
+
+## Active orchestration
+
+Run `run_286a3e55cb66`, coordinator Codex. User authorized autonomous task assignment to these three agents on 2026-11-01. Separate Orca worktrees G009-map-gui-review, G010-map-gui-tests, G011-map-workflow-tests are based on G007 checkpoint `daff55a`. Worker test/review scope only; Codex alone edits gui.py in /home/cbayschm/garmin-G007-maps-gui. Grok first launch failed at workspace trust before running task, released, then retried under the Dispatch above. All current launch receipts confirm intended agents/models.

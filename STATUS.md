@@ -48,6 +48,10 @@ With no explicit assignment, coordinate a ready task rather than having every ag
 - No supported Garmin account/firmware/licensed-map delivery path has been established for this personal app. Firmware, automatic account sync, and licensed downloads remain feasibility gates. fēnix APAC firmware is not applicable to this ROW watch.
 - Edge post-reset Wi-Fi setup reportedly required Garmin Express; unresolved and separate from these tasks.
 
+## Active G007 implementation
+
+G005/G006 are integrated and combined acceptance passed 143 tests (including a coordinator pre-mount metadata correction). G007 is in progress on `task/G007-maps-gui`, worktree `/home/cbayschm/garmin-G007-maps-gui`; checkpoint `daff55a` is incomplete and not merged into main. User authorized autonomous Orca assignment. Supervised Run `run_286a3e55cb66`: Grok G009 reviews, MiniMax M3/OMP G010 writes GUI tests, MiMo Pro/OpenCode G011 writes workflow tests. Exact Dispatches/ownership are on the task board. No physical device access; G008 remains pending.
+
 ## Recent change
 
 ### 2026-11-01 — G003 design reviewed and integrated
