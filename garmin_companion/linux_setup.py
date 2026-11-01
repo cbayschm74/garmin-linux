@@ -397,8 +397,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
     checkout = PROJECT_ROOT
-    prefix = _resolve_prefix(args.prefix)
     try:
+        prefix = _resolve_prefix(args.prefix)
         if args.command == 'check':
             return run_check(checkout, prefix)
         if args.command == 'install':

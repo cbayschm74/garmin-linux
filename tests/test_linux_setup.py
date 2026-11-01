@@ -84,6 +84,7 @@ class SetupHelperTests(unittest.TestCase):
         (self.checkout / 'tools').mkdir(parents=True)
         (self.checkout / 'requirements.txt').write_text('garmin-fit-sdk==21.217.0\n', encoding='utf-8')
         self.prefix = self.root / 'local prefix'
+        self.patched_tools({'udisksctl': '/synthetic/bin/udisksctl', '7z': '/synthetic/bin/7z'})
         self.project = patch.object(linux_setup, 'PROJECT_ROOT', self.checkout)
         self.project.start()
         self.addCleanup(self.project.stop)
@@ -261,7 +262,7 @@ class SetupHelperTests(unittest.TestCase):
             code, _, err = self.run_main(['install', '--prefix', str(self.prefix)])
         self.assertEqual(code, 1)
         self.assertIn('pip install failed', err)
-        self.assertNotIn('install-desktop', ' '.join(arguments[0] for arguments, _ in runner.calls))
+        self.assertNotIn('install-desktop', ' '.join(' '.join(arguments) for arguments, _ in runner.calls))
 
     def test_install_stops_when_a_dependency_is_still_missing(self):
         runner = FakeRunner(self.checkout, imports=('PyQt6',))
@@ -269,7 +270,7 @@ class SetupHelperTests(unittest.TestCase):
             code, out, err = self.run_main(['install', '--prefix', str(self.prefix)])
         self.assertEqual(code, 1)
         self.assertIn('garmin_fit_sdk', err)
-        self.assertNotIn('install-desktop', ' '.join(arguments[0] for arguments, _ in runner.calls))
+        self.assertNotIn('install-desktop', ' '.join(' '.join(arguments) for arguments, _ in runner.calls))
         self.assertNotIn('Launcher installed', out)
 
     def test_install_reports_a_failed_launcher_registration(self):
@@ -322,7 +323,7 @@ class SetupHelperTests(unittest.TestCase):
         self.assertIn('PARTIAL SETUP', out)
         self.assertIn('NOT ready for device work', out)
         self.assertIn('sudo apt install udisks2', out)
-        self.assertNotIn('sudo', ' '.join(arguments[0] for arguments, _ in runner.calls))
+        self.assertNotIn('sudo', ' '.join(' '.join(arguments) for arguments, _ in runner.calls))
 
     # -- uninstall -------------------------------------------------------
 
@@ -372,6 +373,13 @@ class SetupHelperTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn('could not be removed', err)
         self.assertEqual(foreign.read_text(encoding='utf-8'), '#!/bin/sh\necho mine\n')
+
+    def test_invalid_prefix_resolution_reports_failure_without_traceback(self):
+        with patch.object(linux_setup, '_resolve_prefix', side_effect=OSError('prefix unavailable')):
+            code, _, err = self.run_main(['check'])
+        self.assertEqual(code, 1)
+        self.assertIn('prefix unavailable', err)
+        self.assertNotIn('Traceback', err)
 
     # -- module properties ------------------------------------------------
 

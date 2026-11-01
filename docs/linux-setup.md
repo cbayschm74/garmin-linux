@@ -93,22 +93,29 @@ provide the tools the application needs.
 | --- | --- | --- | --- |
 | Python 3.10 or newer | `python3` | `python` | the helper and the application |
 | Virtual environment support | `python3-venv` | bundled with Python | the checkout `.venv` |
-| PyQt6 | `python3-pyqt6` | system PyQt6 package | the desktop application |
+| PyQt6 | `python3-pyqt6` | `python-pyqt6` | the desktop application |
 | Device mounting | `udisks2` | `udisks2` | mounting Garmin volumes; `udisksctl` is required |
 | FIT SDK | installed from `requirements.txt` | installed from `requirements.txt` | reading activity and course files |
-| 7-Zip (optional) | `p7zip-full` | `p7zip` | looking inside archive-based map files |
+| 7-Zip (optional) | `7zip` | `7zip` | looking inside archive-based map files |
 
 Kubuntu / Ubuntu example:
 
 ```sh
-sudo apt install python3-venv python3-pyqt6 udisks2 p7zip-full
+sudo apt install python3-venv python3-pyqt6 udisks2 7zip
 ```
 
 Arch / Omarchy example (Omarchy uses Arch packages):
 
 ```sh
-sudo pacman -S python python-pyqt6 udisks2 p7zip
+sudo pacman -S python python-pyqt6 udisks2 7zip
 ```
+
+Package names were checked against the official [Arch PyQt6 package](https://archlinux.org/packages/extra/x86_64/python-pyqt6/),
+[Arch 7zip file list](https://archlinux.org/packages/extra/x86_64/7zip/files/), and
+[Ubuntu 26.04 7zip package](https://packages.ubuntu.com/resolute/7zip).
+Both referenced 7zip packages provide the `7z` command used by the app; run
+`check` on the target host to confirm availability. Older Ubuntu releases may
+use different archive-package names.
 
 ## Validation status
 
@@ -118,9 +125,9 @@ sudo pacman -S python python-pyqt6 udisks2 p7zip
 - The development host on 2026-11-01 reported Ubuntu 26.04.1 LTS, Python
   3.14.4, PyQt 6.10.2, FIT SDK 21.217.0, and `udisksctl`, `7z`,
   `desktop-file-validate` and `update-desktop-database` on the path.
-- The actual Omarchy laptop, and the launcher on a real Kubuntu session, are
-  still unverified. That check is tracked separately and is not covered by the
-  synthetic suite.
+- The existing Kubuntu launcher has previously been used. This new helper is
+  checked with isolated prefixes; a clean-machine graphical installation and
+  actual Omarchy laptop validation remain pending. G004 tracks the laptop.
 
 ## Troubleshooting
 
