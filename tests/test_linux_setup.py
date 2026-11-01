@@ -143,7 +143,8 @@ class SetupHelperTests(unittest.TestCase):
         with patch.object(linux_setup, '_run_command', runner):
             code, out, _ = self.run_main(['check'])
         self.assertEqual(code, 0)
-        self.assertIn('[FAIL] 7z', out)
+        self.assertIn('[OPTIONAL MISSING] 7z', out)
+        self.assertNotIn('[FAIL] 7z', out)
         self.assertIn('Result: PASS', out)
 
     def test_check_reports_the_interpreter_and_the_tools_it_inspected(self):
@@ -157,6 +158,16 @@ class SetupHelperTests(unittest.TestCase):
         self.assertIn('[PASS] udisksctl: /usr/bin/udisksctl', out)
         self.assertIn('[PASS] PyQt6', out)
         self.assertIn('Host desktop validation (Kubuntu/Omarchy) is not performed', out)
+
+    def test_check_reports_the_archive_tool_only_when_the_exact_command_exists(self):
+        self.make_valid_environment()
+        runner = FakeRunner(self.checkout)
+        self.patched_tools({'udisksctl': '/usr/bin/udisksctl', '7zz': '/usr/bin/7zz'})
+        with patch.object(linux_setup, '_run_command', runner):
+            code, out, _ = self.run_main(['check'])
+        self.assertEqual(code, 0)
+        self.assertIn('[OPTIONAL MISSING] 7z', out)
+        self.assertNotIn('7zz', out)
 
     def test_check_leaves_personal_backups_and_the_activity_cache_untouched(self):
         self.make_valid_environment()
@@ -185,6 +196,7 @@ class SetupHelperTests(unittest.TestCase):
         self.assertEqual(len(runner.calls), 2)
         for arguments, _ in runner.calls:
             self.assertEqual(arguments[0], str(self.checkout / '.venv' / 'bin' / 'python'))
+            self.assertIn('-B', arguments)
             self.assertIn('-c', arguments)
             self.assertNotIn('pip', arguments)
             self.assertNotIn('venv', arguments)

@@ -26,12 +26,12 @@ not use the network, and does not start the application or a device scan.
 - the checkout environment (`.venv`) and whether it is a recognized environment
 - whether `PyQt6` and `garmin_fit_sdk` import inside that environment
 - whether `udisksctl` (required for mounting devices) and `7z` (optional) are
-  installed
+  installed, using the same command names the application calls
 
 Each line is marked `PASS` or `FAIL`. The command exits non-zero when a
 required environment, dependency or tool is missing, so it can be used as a
-readiness gate in a script. A missing optional `7z` is reported but is not a
-failure.
+readiness gate in a script. A missing optional `7z` is reported as
+`OPTIONAL MISSING` and is not a failure.
 
 `check` says nothing about the desktop environment itself. It does not claim
 that Kubuntu or Omarchy was validated; host validation is a separate, manual

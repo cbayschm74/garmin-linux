@@ -29,10 +29,6 @@ REQUIREMENTS_FILE = 'requirements.txt'
 DEPENDENCY_MODULES = ('PyQt6', 'garmin_fit_sdk')
 REQUIRED_TOOL_NAMES = ('udisksctl',)
 OPTIONAL_TOOL_NAMES = ('7z',)
-TOOL_CANDIDATES = {
-    'udisksctl': ('udisksctl',),
-    '7z': ('7z', '7zz'),
-}
 TOOL_GUIDANCE = {
     'udisksctl': ('udisks2 provides udisksctl, which is required to mount Garmin volumes. '
                   'Kubuntu/Ubuntu: sudo apt install udisks2. Arch/Omarchy: install the udisks2 package.'),
@@ -142,7 +138,7 @@ def _last_lines(result: subprocess.CompletedProcess, count: int = 3) -> str:
 def probe_module(python: Path, module: str) -> DependencyStatus:
     """Probe one import in a subprocess. Nothing is started beyond the import."""
     try:
-        result = _run_command([str(python), '-c', f'import {module}'])
+        result = _run_command([str(python), '-B', '-c', f'import {module}'])
     except OSError as exc:
         return DependencyStatus(module, False, str(exc))
     if result.returncode == 0:
@@ -152,11 +148,11 @@ def probe_module(python: Path, module: str) -> DependencyStatus:
 
 
 def tool_status(name: str) -> ToolStatus:
+    """Look up one command by its exact name, the way the application calls it."""
     required = name in REQUIRED_TOOL_NAMES
-    for candidate in TOOL_CANDIDATES.get(name, (name,)):
-        found = shutil.which(candidate)
-        if found:
-            return ToolStatus(name, found, required)
+    found = shutil.which(name)
+    if found:
+        return ToolStatus(name, found, required)
     return ToolStatus(name, None, required)
 
 
@@ -221,8 +217,10 @@ def run_check(checkout: Path, prefix: Path) -> int:
     for item in report.tools:
         if item.path:
             print(f'  [PASS] {item.name}: {item.path} ({"required" if item.required else "optional"})')
+        elif item.required:
+            print(f'  [FAIL] {item.name}: not found (required)')
         else:
-            print(f'  [FAIL] {item.name}: not found ({"required" if item.required else "optional"})')
+            print(f'  [OPTIONAL MISSING] {item.name}: not found (optional)')
     print('')
     if report.ready:
         print('Result: PASS - this checkout is ready to use.')
@@ -337,8 +335,12 @@ def run_install(checkout: Path, prefix: Path) -> int:
     print('')
     tools = tuple(tool_status(name) for name in REQUIRED_TOOL_NAMES + OPTIONAL_TOOL_NAMES)
     for item in tools:
-        state = f'{item.path} ({"required" if item.required else "optional"})' if item.path else 'not found'
-        print(f'  [{_pass(bool(item.path))}] {item.name}: {state}')
+        if item.path:
+            print(f'  [PASS] {item.name}: {item.path} ({"required" if item.required else "optional"})')
+        elif item.required:
+            print(f'  [FAIL] {item.name}: not found (required)')
+        else:
+            print(f'  [OPTIONAL MISSING] {item.name}: not found (optional)')
     missing_tools = [item for item in tools if item.required and item.path is None]
     if missing_tools:
         print('Result: setup finished, but this checkout is NOT ready for device work.')
