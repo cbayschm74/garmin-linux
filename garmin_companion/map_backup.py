@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 import tempfile
@@ -39,6 +40,83 @@ def _map_entry(source: Path, name: str) -> FileEntry:
         raise ValueError(f'Not a regular Garmin IMG file: {name}')
     stat = path.stat()
     return FileEntry(f'Garmin/{name}', stat.st_size, stat.st_mtime_ns)
+
+
+def list_map_images(volume: GarminVolume) -> list[FileEntry]:
+    """List top-level Garmin IMG files without reading their contents."""
+    source = _mounted_source(volume)
+    directory = source / 'Garmin'
+    if directory.is_symlink() or not directory.is_dir():
+        raise ValueError('Garmin map folder is missing or unsafe')
+    entries = []
+    for path in directory.iterdir():
+        try:
+            validate_img_name(path.name)
+        except ValueError:
+            continue
+        if path.is_symlink() or not path.is_file():
+            raise ValueError(f'Not a regular Garmin IMG file: {path.name}')
+        info = path.stat()
+        entries.append(FileEntry(f'Garmin/{path.name}', info.st_size, info.st_mtime_ns))
+    return sorted(entries, key=lambda entry: entry.relative_path)
+
+
+def _positive_int(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 1
+
+
+def read_map_backup_index(path: Path) -> dict:
+    """Return map-backup names and card identity without hashing image bytes."""
+    original = path.expanduser()
+    if original.is_symlink() or not original.is_dir():
+        raise ValueError('Map backup is missing its COMPLETE marker')
+    path = original.resolve(strict=True)
+    complete = path / 'COMPLETE'
+    if complete.is_symlink() or not complete.is_file():
+        raise ValueError('Map backup is missing its COMPLETE marker')
+    manifest_path = path / 'manifest.json'
+    if manifest_path.is_symlink() or not manifest_path.is_file():
+        raise ValueError('Map backup manifest is unreadable')
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+    except (OSError, UnicodeError, ValueError, TypeError) as exc:
+        raise ValueError('Map backup manifest is unreadable') from exc
+    if not isinstance(manifest, dict):
+        raise ValueError('Map backup manifest is unreadable')
+    model, label = manifest.get('model'), manifest.get('label')
+    uuid, size = manifest.get('volume_uuid'), manifest.get('volume_size_bytes')
+    if (manifest.get('purpose') != 'Garmin map backup' or not isinstance(model, str) or not model
+            or (label is not None and not isinstance(label, str)) or not isinstance(uuid, str) or not uuid
+            or not _positive_int(size)):
+        raise ValueError('Map backup lacks card identity evidence; create a fresh backup-maps backup')
+    rows, count, total = manifest.get('files'), manifest.get('file_count'), manifest.get('total_bytes')
+    if (not isinstance(rows, list) or not _positive_int(count) or count != len(rows)
+            or not isinstance(total, int) or isinstance(total, bool)):
+        raise ValueError('Backup file totals are invalid')
+    names = []
+    seen = set()
+    size_sum = 0
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError('Invalid map backup entry')
+        relative = row.get('relative_path')
+        if not isinstance(relative, str) or not relative.startswith('Garmin/'):
+            raise ValueError('Invalid map backup path')
+        name = relative[len('Garmin/'):]
+        validate_img_name(name)
+        key = name.casefold()
+        if key in seen:
+            raise ValueError('Duplicate map backup entry')
+        seen.add(key)
+        file_size, digest = row.get('size_bytes'), row.get('sha256')
+        if not _positive_int(file_size) or not isinstance(digest, str) or not re.fullmatch(r'[0-9a-f]{64}', digest):
+            raise ValueError('Invalid map backup size or SHA-256')
+        names.append(name)
+        size_sum += file_size
+    if total != size_sum:
+        raise ValueError('Map backup does not match the selected old map set')
+    return {'model': model, 'label': label, 'volume_uuid': uuid, 'volume_size_bytes': size,
+            'file_count': count, 'total_bytes': total, 'names': names}
 
 
 def backup_maps(volume: GarminVolume, names: list[str], destination_root: Path) -> tuple[Path, list[FileEntry]]:

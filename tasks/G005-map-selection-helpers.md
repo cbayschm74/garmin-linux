@@ -2,9 +2,9 @@
 
 ## Assignment
 
-- State: ready
-- Owner / session: unassigned
-- Branch / worktree / base commit: coordinator records at claim; use current main including accepted G003 design
+- State: review
+- Owner / session: Grok session 01a19505-e656-7393-b2a4-2cf95a67bc03
+- Branch / worktree / base commit: `task/G005-map-selection` at `/home/cbayschm/orca/workspaces/garmin-linux/G005-map-selection`, base `83b7c2f7910b97b2b176caa6fcd804f911bfa585`
 - Depends on: G003 (done)
 - Device access: none; synthetic only
 
@@ -25,4 +25,13 @@ Synthetic tests cover normal listing, empty folders, spaces/case, symlinks/non-f
 
 ## Handoff
 
-Unstarted. Next: coordinator records owner, branch/worktree, and exact base before launching. Return a source/test commit and updated handoff for review; do not merge or edit global status/board.
+- Updated: 2026-11-01 11:28 +08
+- State / owner: `review` / Grok session 01a19505-e656-7393-b2a4-2cf95a67bc03
+- Branch / HEAD commit / worktree: `task/G005-map-selection` / implementation commit on this branch, parent `83b7c2f7910b97b2b176caa6fcd804f911bfa585` / `/home/cbayschm/orca/workspaces/garmin-linux/G005-map-selection`
+- Changed files and uncommitted work: `garmin_companion/map_backup.py`, `garmin_companion/map_identity.py`, `tests/test_map_backup.py`, `tests/test_map_identity.py`, this card. No GUI or installer changes.
+- Checks run / results / checks not run: `QT_QPA_PLATFORM=offscreen .venv/bin/python -m unittest discover -s tests -q` passed, 126 tests. `.venv/bin/python -m compileall -q garmin_companion tests` passed. `git diff --check` passed. No physical device, `/dev` enumeration, or private manifest was used. The worktree `.venv` is local and ignored.
+- Decisions and known limitations: `list_map_images` returns sorted top-level regular IMG names and skips other names. A symlink or non-file IMG name fails the whole listing. `read_map_backup_index` checks manifest shape and identity and does not hash or open IMG bytes; `plan_map_replacement` remains the verification step. `list_usb_fat_mounts` returns mounted USB FAT rows only. `select_map_volume` still decides whether a row is the backup's card. A multi-mount or malformed USB FAT row fails the whole list. Primary `tasks/README.md` was not edited.
+- Running processes / device or mount state: none. No device access.
+- Blocker / input needed: coordinator review. G006 may proceed in parallel; its files were not touched.
+- Exact next command or action: review this branch, then integrate before G007. Do not merge from this worktree.
+- Integration commit and acceptance evidence (coordinator): pending.
