@@ -2,7 +2,7 @@
 
 ## Assignment
 
-- State: review
+- State: done
 - Owner / session: MiniMax M3 via T3 Code
 - Branch / worktree: `t3/install-lifecycle-harness`, `/home/cbayschm/.t3/worktrees/garmin-linux/t3-0411cffc`
 - Base commit: `19f085139e468014a129150cddf8449e8fd44c8c`
@@ -198,3 +198,20 @@ Coordinator source review: 38 worker tests independently pass; integrated
 280081d/586a840. Fixed relative artifact paths to resolve before cwd=/tmp,
 refused dangling artifact symlinks and regular-file archive roots. Added a
 relative-path regression. Real source archive lifecycle awaits G023 bundle.
+
+
+## Final coordinator acceptance
+
+Actual helper/venv/pip run against locally built source candidate 3957c0c /
+0.1.0a1 and source baseline 0523281 labeled 0.1.0a0 passed all nine steps,
+zero warnings. Fresh check exit 1 expected; installs/check/reinstall/upgrade/
+rollback/re-upgrade/uninstall exit 0. Launcher pinning and sentinel contents
+verified at each step; only three managed targets removed, trees/venvs retained.
+Candidate --version and native current-theme Wayland desktop-entry smoke pass.
+Live launcher/icon/desktop/plugin/shell config hashes remain unchanged.
+Full source suite 394 tests pass; compile/diff/setup pass. Artifact logs/summary
+under ~/Downloads/GarminLinuxReleases/validation-0.1.0a1/; exact source/hash and
+scope limits docs/portable-release.md. No publication/tag, physical-device or
+private Garmin data access. No task/test GUI process remains. Normal user app
+was not closed. Clean OS/Kubuntu archive/live theme acceptance remains separate.
+Final coordinator evidence commit is the commit containing this acceptance.

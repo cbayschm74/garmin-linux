@@ -31,8 +31,8 @@ Coordinator maintains this table in the primary checkout. Worker copies are snap
 
 | G022 | fēnix 5X physical USB acceptance on Omarchy | done | Codex coordinator / sole device operator | [Card](G022-fenix-omarchy-usb.md) |
 
-| G023 | Reproducible portable source release | review | Grok via T3 Code | [Card](G023-release-archive.md) |
-| G024 | Isolated release install and upgrade validator | review | MiniMax M3 via T3 Code | [Card](G024-install-lifecycle-harness.md) |
+| G023 | Reproducible portable source release | done | Grok via T3 Code | [Card](G023-release-archive.md) |
+| G024 | Isolated release install and upgrade validator | done | MiniMax M3 via T3 Code | [Card](G024-install-lifecycle-harness.md) |
 | G025 | Release readiness and lifecycle review | done | MiMo 2.6 Pro via T3 Code | [Card](G025-release-readiness-review.md) |
 
 | G026 | Compact Garmin bar icon and device count | done | Codex coordinator | [Card](G026-compact-bar-icon.md) |

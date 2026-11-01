@@ -81,6 +81,39 @@ pip and setup processes, verifies launcher pinning and synthetic sentinel
 preservation, and leaves extracted trees/logs/summary.json for inspection. It
 does not launch the normal GUI, exercise devices or prove a clean OS install.
 
-The real lifecycle acceptance result will be recorded after the coordinator run.
+## Local alpha acceptance — 2026-11-01
+
+Built alpha 0.1.0a1 from source commit
+3957c0c918a0cb9491405bf13adfcf4493f2fd84, containing 92 allowlisted source files,
+including the adaptive GUI theme module and lifecycle validator. Two independent
+build directories produced identical archive bytes. Archive SHA-256:
+
+    3a839154dda35ed10beacb60a0b2a4f14030e5dfea7c1a18f478625e49be0d60
+
+Local artifact: ~/Downloads/GarminLinuxReleases/0.1.0a1/garmin-linux-0.1.0a1.tar.gz
+with adjacent .sha256. Validation logs and summary:
+~/Downloads/GarminLinuxReleases/validation-0.1.0a1/.
+
+Actual system-Python helper/venv/pip lifecycle passed nine steps, zero warnings:
+fresh check (expected exit 1), install, ready check, reinstall, earlier-source
+baseline install, candidate upgrade, baseline rollback, candidate re-upgrade,
+candidate uninstall. Every successful step was exit 0. Managed targets were
+removed at the end, unrelated sentinel contents survived, and source trees/venvs
+were retained for inspection. Baseline was exported from 0523281 and labeled
+0.1.0a0 only for validation; it was never a published release.
+
+Extracted candidate runtime reports 0.1.0a1. Its native Wayland desktop-entry
+launch passed all five page/empty-state checks, expected compositor identity
+(xwayland=false), clean close, and automatic current Omarchy theme detection
+(background #282828). Source suite: 394 tests OK; compilation/diff/setup checks
+pass. Primary launcher, desktop entry, icon, plugin source and shell config hashes
+match their pre-validation snapshot after all tests. No device or private Garmin
+data was accessed during packaging.
+
+This is a fresh source-release install on the already verified Omarchy host,
+not a clean OS or native package test. Actual Kubuntu archive install/live theme
+retest, offline install and fresh OS acceptance remain open. Documentation after
+the frozen source commit records these results; the archive intentionally retains
+that exact tested commit rather than silently changing the candidate bytes.
 No release tag, marketplace submission or public publication is part of building
 this local candidate.

@@ -69,3 +69,19 @@ closes normal application launch/library display acceptance, while separate
 manual menu/bar click-route checks, restore and clean-install/upgrade validation
 remain unclaimed. Documentation-only recording; no private backup data read or
 device/user-GUI operation performed by the coordinator.
+
+
+## Portable alpha and adaptive GUI — 2026-11-01
+
+Source candidate 3957c0c / 0.1.0a1 includes automatic live Omarchy colors and
+native Qt desktop fallback. Eleven temporary-theme regressions and inspected
+light/dark pages/editors/dialogs/status feedback pass; full suite 394 tests OK.
+Extracted release native Wayland desktop launch uses actual Omarchy theme
+tokens and passes all five page/empty-state and close checks. No user theme was
+changed, and the user's app was left open.
+
+Real helper/venv/pip source-release install/reinstall/upgrade/rollback/uninstall
+passed nine isolated steps, zero warnings. Live launcher/widget/layout hashes
+unchanged. This validates fresh source installation on this configured Omarchy
+host; clean OS and actual Kubuntu archive/theme retests remain separate. See
+[portable release](portable-release.md) and [GUI themes](gui-theming.md).

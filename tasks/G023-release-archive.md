@@ -2,7 +2,7 @@
 
 ## Assignment
 
-- State: review
+- State: done
 - Owner / session: Grok via T3 Code
 - Branch / worktree: `t3/release-archive` at `/home/cbayschm/.t3/worktrees/garmin-linux/t3-3ae38d53`
 - Base commit: `19f085139e468014a129150cddf8449e8fd44c8c`; source baseline 0523281
@@ -79,3 +79,18 @@ rm -rf /tmp/garmin-linux-g023-review && mkdir /tmp/garmin-linux-g023-review
 ```
 
 Integrate only after that review. G024's real lifecycle run happens after integration, not in this worktree.
+
+
+## Coordinator acceptance
+
+Worker a1ea327 independently reviewed/tested and integrated as d85bc25. Canonical
+VERSION now drives runtime __version__/--version; override cannot contradict
+tracked VERSION. Candidate source 3957c0c918a0cb9491405bf13adfcf4493f2fd84 built
+twice identically: 92 files, including gui_theme.py/validator. SHA-256
+3a839154dda35ed10beacb60a0b2a4f14030e5dfea7c1a18f478625e49be0d60.
+Full suite 394 OK, compile/diff/setup checks pass. G024 actual lifecycle and
+extracted native theme GUI pass. Local archive under
+~/Downloads/GarminLinuxReleases/0.1.0a1/, exact details docs/portable-release.md.
+No publication/tag/push, no device/private-data operations or active task process.
+Worker worktree retained. Actual clean OS/Kubuntu archive coverage remains open.
+Final coordinator evidence commit is the commit containing this handoff.

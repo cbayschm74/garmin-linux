@@ -116,7 +116,7 @@ For coordinated work, use the task-specific resume prompt in `docs/agent-workflo
 - [x] Design the Maps GUI selection, review, guarded install, and resume flow against the existing APIs. Accepted design: `docs/map-gui-design.md`; G005/G006 core helpers precede G007 GUI, with G008 physical acceptance separate.
 - [ ] Add guarded installation of user-downloaded OpenMTBMap IMG files after archive inspection, map-specific backup/recovery design, and on-device validation for each model. QMapShack can display these IMG maps for planning; it is not the project's map transfer path. Keep Garmin-licensed map delivery in Express.
 - [ ] Keep long operations cancellable and show their result and destination.
-- [ ] Package and smoke-test on Kubuntu and Omarchy, including unplugged-device behavior. Omarchy native temporary-data GUI and physical USB/disconnect checks pass; user confirms normal app launch, verified backups, Activities and Courses. Packaging/clean-install checks remain.
+- [ ] Package and smoke-test on Kubuntu and Omarchy, including unplugged-device behavior. Portable source alpha 0.1.0a1 built and real isolated install/reinstall/upgrade/rollback/uninstall plus extracted native GUI/current-theme smoke passed on Omarchy; all 394 tests pass. Actual Kubuntu archive install and clean OS checks remain.
 - **Done when:** ordinary tasks work without using the terminal on both machines.
 
 ### 8. Desktop integration
@@ -130,7 +130,7 @@ For coordinated work, use the task-specific resume prompt in `docs/agent-workflo
 ### 9. Release and maintenance
 
 - [x] Add checkout setup/check/install/update/uninstall guidance and source-verified recovery/troubleshooting instructions. G014/G016 integrated; actual Omarchy environment/native GUI/core USB and normal GUI display are accepted; clean-machine graphical installation remains open.
-- [ ] Test clean install and upgrade on both machines, plus disconnects and malformed files.
+- [ ] Test clean install and upgrade on both machines, plus disconnects and malformed files. G023/G024 actual source-release lifecycle passes on configured Omarchy in isolated roots; fresh OS and actual Kubuntu archive checks remain.
 - [ ] Tag a first release describing supported features and known Garmin service limits.
 - **Done when:** the user can reinstall the app on either machine from the repository and recover their backed-up data.
 

@@ -9,15 +9,36 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 ## Current verified baseline
 
 - Primary checkout `/home/cbayschm/garmin-linux`, branch `main`. G007 source merged as `5fd876d`; use Git for current HEAD because final tests/documentation follow that merge.
-- **371 tests pass**, with Python compilation and diff checks. Fixtures use temporary storage, mocked USB/UDisks, and offscreen Qt; physical acceptance is recorded separately below.
+- **394 tests pass**, with Python compilation and diff checks. Fixtures use temporary storage, mocked USB/UDisks, and offscreen Qt; physical acceptance is recorded separately below.
 - Shared Python core/PyQt6 app supports detection, selected-data backups/catalog, activity summaries/export, activity-to-course preparation, GPX/FIT preview/conversion, and reviewed Edge GPX / fēnix FIT transfers.
 - **G007 Maps → Replace / Resume is implemented and integrated.** It supports explicit map backup/checklists, verified map-backup selection, device/reader identity matching, ordered local IMG inputs, read-only planning, source/target review, guarded writable mounting, backup/readback checks, and resumable installation. Inspect remains separate and cancellable. Other map operations have no mid-operation Cancel; the window waits for them.
 - Review cancellation precedes remount/writes. Accepted-plan checking is enforced inside the final installer re-plan. Resume pins the internally reloaded state to consent. Cleanup refuses replacement-device identities. Changed plans remain visible but require fresh selection/review. Saved complete records do not establish current mount state.
 - Dark-palette page/review rendering was checked. Existing course GUI, operation guards, inspection cancellation, timer restoration, interrupted state, and synthetic real planner/installer round trips pass.
 - User previously confirmed fēnix GUI courses load/render and Edge CLI GPX courses appear. **G002 is now user-validated:** Edge GPX GUI transfer succeeded, and the course appears and renders on the Edge map. Previously installed OpenMTBMap maps render on both devices; the user has now confirmed a real GUI map backup completed successfully. The subsequent Chile GUI replacement also passed user acceptance (G008).
-- Kubuntu launcher/icon already uses this main checkout; reopen the app to load changes. G004 verified the Omarchy laptop environment (4.0.6-1), dependencies, all 288 tests, and temporary-data offscreen GUI rendering. G017 native Wayland/desktop-entry launch and G018 installed shell widget checks pass. Edge core USB/read-only backup/unmount passed G021. fēnix core USB/read-only backup/unmount also passed G022. Normal GUI launch, verified backup display, Activities and Courses are now user-accepted on Omarchy; packaging remains pending.
+- Kubuntu launcher/icon already uses this main checkout; reopen the app to load changes. G004 verified the Omarchy laptop environment (4.0.6-1), dependencies, all 288 tests, and temporary-data offscreen GUI rendering. G017 native Wayland/desktop-entry launch and G018 installed shell widget checks pass. Edge core USB/read-only backup/unmount passed G021. fēnix core USB/read-only backup/unmount also passed G022. Normal GUI launch/library viewing is user-accepted. Live Omarchy colors/native Qt fallback and portable source alpha lifecycle now pass; actual Kubuntu archive/clean OS acceptance remains open.
 
 ## Next / ownership
+
+**G023–G027 integrated and accepted (2026-11-01).** Portable source alpha
+0.1.0a1 built from 3957c0c918a0cb9491405bf13adfcf4493f2fd84, 92 files, repeated
+builds byte-identical. Canonical VERSION drives runtime/CLI; mismatched tracked
+version overrides refused. Actual isolated install/check/reinstall/upgrade/
+rollback/re-upgrade/uninstall passed nine steps, zero warnings; unrelated
+sentinels preserved, source trees/venvs retained, managed launch targets removed.
+Extracted release native Wayland/current Omarchy theme GUI smoke passes all
+five pages and clean close. Full source suite: 394 OK, compilation/diff/setup pass.
+Live launcher/icon/desktop/plugin/shell config hashes unchanged by packaging;
+normal user app left open. No device/private Garmin data access or task/test
+process remains. All three workers completed, worktrees retained; no active
+assignment. Local archive: ~/Downloads/GarminLinuxReleases/0.1.0a1/ with checksum,
+lifecycle summary/logs under validation-0.1.0a1/. No tag/publication/submission.
+[Exact release evidence and instructions](docs/portable-release.md).
+**User action:** reopen app once to load G027; subsequent Omarchy color changes
+update the open GUI. Other desktops use normal Qt palette.
+**Next work:** marketplace-ready plugin repository/export and dependency/setup/
+removal polish; actual Kubuntu archive/live theme and clean OS validation remain
+separate. No marketplace listing is claimed ready or submitted.
+
 
 **G027 automatic GUI themes complete (2026-11-01).** Shared PyQt app now reads
 Omarchy's current public color tokens and updates live across atomic file/

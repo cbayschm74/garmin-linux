@@ -210,3 +210,12 @@ as dadb2c1/4af5278. Baseline findings remain historical evidence.
   regular-file archive roots. The real archive lifecycle will run actual helper,
   venv and pip processes in isolated prefixes; it is not a mocked test or a claim
   of a fresh OS. No release tag/publication performed.
+
+
+Final coordinator result: R3 resolved by canonical VERSION -> runtime version
+and --version CLI; conflicting tracked-version overrides refused. Candidate
+3957c0c / 0.1.0a1 includes G027 theming. Actual isolated lifecycle passed nine
+steps with no warnings; launcher repointing/rollback/removal and sentinel
+preservation pass. Extracted native current-theme GUI smoke passes. 394 source
+tests pass. Refer to docs/portable-release.md for exact artifacts/source/hash.
+Host-local acceptance does not claim clean OS/Kubuntu archive or X11 coverage.
