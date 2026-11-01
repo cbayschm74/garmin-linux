@@ -2,7 +2,7 @@
 
 ## Assignment
 
-- State: review
+- State: done — accepted with coordinator design corrections
 - Owner / session: Grok session 01a19505-e656-7393-b2a4-2cf95a67bc03
 - Branch / worktree: `task/G003-map-design` at `/home/cbayschm/orca/workspaces/garmin-linux/G003-map-design`
 - Base commit: `d8e87e390cbf2a05b0a3819756ea33274f292ab7`
@@ -35,3 +35,12 @@ Check each named API/argument against current source and tests. Document design 
 - Blocker / input needed: coordinator review. Primary `tasks/README.md` still showed G003 unassigned at claim time; this worker did not edit the board, `STATUS.md`, or `PLAN.md`.
 - Exact next command or action: coordinator reviews `docs/map-gui-design.md` against the map modules and, if accepted, assigns proposed tasks A and B (read-only helpers, then writable remount / `MapInstallInterrupted`) before any `gui.py` edit. Task C is the GUI. Task D is the physical check and stays `needs-device`.
 - Integration commit and acceptance evidence (coordinator): pending.
+
+
+## Coordinator acceptance — 2026-11-01 (Asia/Singapore)
+
+Integrated design `e554bf6` as `8170fba` and handoff `2d4e35b` as `6ccdc63`. Independently checked actual backup/planner/identity/installer signatures and execution paths. No source changes were part of this task.
+
+Coordinator corrected retained review identity, final internal re-plan consent checking, metadata fields absent from the plan, pre-state remount cleanup, verified final unmount, exact filename error text, current GUI operation-guard description, and the test command (use discovery; module-based `tests.test_*` imports failed in the current environment). These are design corrections for later implementation, not existing behavior.
+
+Follow-ups: G005 selection helpers and G006 install/remount guards are ready for separate assignments. G007 GUI is blocked on both; G008 is a future physical acceptance task. Full current main synthetic discovery: 115 passed. Diff/link checks pass. No GUI/USB/private backup was opened. Evaluation and worker worktrees preserved; primary untracked mise.toml untouched.

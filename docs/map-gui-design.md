@@ -1,6 +1,6 @@
 # Maps GUI installation flow
 
-Design for review. This document plans how the desktop app should call the existing map backup, planner, identity, and installer APIs. It does not authorize implementing the GUI, writing a device, or merging to `main`.
+Accepted design with coordinator corrections on 2026-11-01. This document plans how the desktop app should call the existing map backup, planner, identity, and installer APIs. It does not authorize implementing the GUI, writing a device, or merging to `main`.
 
 Base reviewed: `d8e87e390cbf2a05b0a3819756ea33274f292ab7` on `task/G003-map-design`. Sources: `README.md` map section, `PLAN.md` milestones 6–7, `garmin_companion/map_backup.py`, `map_plan.py`, `map_identity.py`, `map_install.py`, `map_inspect.py`, `mount_control.py`, `backup_catalog.py`, `gui.py` Maps page and course-transfer review, and `tests/test_map_*.py`, `test_mount_control.py`, and `test_gui_course_transfer.py`.
 
@@ -22,7 +22,7 @@ These are behaviors of the current functions, checked against the implementation
 
 2. **The planner and the installer disagree on filenames.** `plan_map_replacement` can return `status: ready` when a new target reuses an old filename. It rejects a target that collides with a file that is not being replaced, and it rejects an existing `TARGET.img.partial`. `start_map_install` then raises `ValueError('Installer requires distinct old and new map filenames')` when the case-folded sets overlap. The GUI treats that overlap as a plan error and does not call `start_map_install`.
 
-3. **`start_map_install` does not accept the reviewed plan.** It calls `plan_map_replacement` again, writes `state.json` only after that plan succeeds, then calls `resume_map_install`. The GUI re-plans after the user accepts and compares the hashes, names, sources, targets, backup path, model, label, size, and block path with the accepted plan. A difference stops the worker before `start_map_install`. `start_map_install` still plans once more internally. That remaining check is the same one the CLI uses.
+3. **`start_map_install` does not accept the reviewed plan.** It calls `plan_map_replacement` again, writes `state.json` only after that plan succeeds, then calls `resume_map_install`. The GUI re-plans after the user accepts and compares the hashes, names, sources, targets, backup path, model, label, size, and block path with the accepted plan. A difference stops the worker before `start_map_install`. `start_map_install` still plans once more internally. That final re-plan is not bound to GUI consent today: a source changed before the internal re-plan could become the new baseline. Task B adds an optional `expected_plan` argument and checks its stable fields against that internal plan before state creation. The GUI passes the accepted plan; existing CLI callers may omit it.
 
 4. **Identity is `select_map_volume`, not the planner.** `plan_map_replacement` checks FAT, model, label, and `volume_size_bytes`, then hashes the named images. The UUID comparison lives in `select_map_volume(path, backup)`. The CLI calls it before `plan_map_replacement`, `start_map_install`, and `resume_map_install`. The GUI uses that same order. A scan match still has to agree with the backup UUID, size, label, and, when `scan()` sees the block path, the model.
 
@@ -55,7 +55,7 @@ Out of this design: Garmin account or Express login, licensed-map download, firm
 
 Use a `QTabWidget` on the Maps page. **Inspect** is the current chooser, progress text, Cancel button, and result card. **Replace** is the new flow. One map worker runs at a time. Starting Replace disables Inspect, and the reverse. The 15-second device refresh timer stops for the duration, using the same save-and-restore pattern as `start_course_transfer`.
 
-Device backup, mount changes, and course transfer already refuse to start while one of those workers is active. Extend that guard in both directions so a map backup, plan, remount, install, or resume is included. `closeEvent` waits for an install, resume, map-backup, or plan worker the way it waits for `CourseTransferWorker`: no `requestInterruption()`. Inspect keeps its current interruption behavior.
+Device backup, mount changes, and course transfer already guard against their existing device-operation workers, but not against map inspection or the proposed map workers. Extend that guard in both directions so a map backup, plan, remount, install, or resume is included. `closeEvent` waits for an install, resume, map-backup, or plan worker the way it waits for `CourseTransferWorker`: no `requestInterruption()`. Inspect keeps its current interruption behavior.
 
 ### 1. Back up selected images
 
@@ -140,16 +140,18 @@ Buttons: **Cancel**, which closes the dialog, and **Replace selected maps**. **R
 
 ### 5. Replace
 
-The accept handler stores the plan fields listed in finding 3, plus the block path. The worker then:
+Before showing review, store the plan fields listed in finding 3, the selected volume metadata (label, size, filesystem), and `capture_volume(volume)` evidence (UUID, canonical path, mount ID). The plan itself has no label or volume-size fields; these belong to the separate review snapshot. Revalidate selection after planning and before opening the dialog. Retain that evidence across acceptance; never replace it with a fresh capture just before remount. The worker then:
 
 1. Stops if a device-backup, mount, transfer, or other map worker is active.
 2. `volume = select_map_volume(block_path, backup_dir)`.
-3. `remount_writable_for_map_install(volume, capture_volume(volume))`, then `select_map_volume` again. The helper returns the current volume without calling `udisksctl` when the mount is already read-write. A failure here means no state directory was created. The status tells the user to refresh Devices and check whether the volume is mounted.
+3. `remount_writable_for_map_install(volume, reviewed_evidence)`, then `select_map_volume` again. The helper returns the current volume without calling `udisksctl` when the mount is already read-write. A failure here means no state directory was created. The status tells the user to refresh Devices and check whether the volume is mounted.
 4. `plan = plan_map_replacement(...)` with the same names and specifications.
-5. Compare the new plan with the accepted snapshot: backup path, model, label, block path, size, and the ordered old and new name/size/SHA-256/source/target tuples. Mountpoint and free-byte fields may differ after a remount. Any other difference updates the page with the new plan and does not call `start_map_install`.
-6. `start_map_install(volume, old_names, specifications, backup_dir, backup_root / 'MapInstalls')`.
+5. Compare the new plan with the accepted snapshot: backup path, model, label, block path, size, and the ordered old and new name/size/SHA-256/source/target tuples. Mountpoint and free-byte fields may differ after a remount. A difference stops before `start_map_install` and requires a fresh review. If this attempt changed the mount to writable, safely unmount only the same UUID/mount instance through the task B reader-compatible cleanup helper before presenting that new review. If cleanup fails or identity differs, show the actual mount state as unknown/needs attention; never force unmount or report safe removal.
+6. `start_map_install(volume, old_names, specifications, backup_dir, backup_root / 'MapInstalls', expected_plan=accepted_plan)`.
 
 The state root matches the CLI default when the window uses `~/GarminBackups`: `~/GarminBackups/MapInstalls`. Tests pass the temporary backup root, so they do not write the home directory. `unmount` stays at its default `True`.
+
+For any failure after remount but before a durable install state exists, use the same guarded cleanup and report its result. Once a state exists, preserve it and use Resume; do not hide it behind a new plan.
 
 The status line for the whole call is fixed, because the core does not emit phases: the selected old files remain until the first new image verifies, and the window stays open. Success uses `result['state_dir']` and `result['maps']`. The completion text says the volume was unmounted and that sibling volumes still need a safe unmount.
 
@@ -161,7 +163,7 @@ The status line for the whole call is fixed, because the core does not emit phas
 
 - Phase `complete`: show the saved model, label, backup, old names, and new targets from the state file. Do not call `select_map_volume` or `resume_map_install`. Say that this record is already complete and that a completed record does not remount the card.
 - Any other accepted phase: show phase, model, label, `size_bytes`, backup path, old names, and new sources/targets. The user picks the current block device with the same two lists as step 2. A confirm dialog, **Resume replacement**, has **Cancel** and **Resume**. Cancel returns before any remount.
-- The worker calls `select_map_volume(path, Path(state['backup']))`, remounts read-write through the task B helper when needed, then `resume_map_install(volume, state_dir)`. It does not call `plan_map_replacement`.
+- Before showing resume review, retain the selected volume metadata and `capture_volume(volume)` evidence along with the loaded state. After acceptance, revalidate both the state and that evidence, use the task B remount helper with the retained evidence, select the volume again with the same backup, then call `resume_map_install(volume, state_dir)`. It does not call `plan_map_replacement`. Changed state or identity requires fresh review. Cleanup before a resume starts follows the same UUID/mount-instance guard as Replace.
 
 Resume success with a `maps` key uses the same completion text as a fresh install. A return value without `maps` means the state was already complete.
 
@@ -203,7 +205,7 @@ Show `str(exc)` verbatim. The table is the mapping an implementer should assert 
 | Plan | Free space below the first image plus 16 MiB | `Not enough free space to stage one new IMG before removing old maps` | device write |
 | Plan | Estimated final free space below 16 MiB | `Not enough space for all new IMGs after removing selected old maps` | device write |
 | Plan | Remount during hashing | `Garmin volume disconnected or was remounted during planning` | device write |
-| Review | Old and new case-folded names overlap | local GUI refusal, using the installer sentence `Installer requires distinct old and new filenames` | `start_map_install` and remount |
+| Review | Old and new case-folded names overlap | local GUI refusal, using the installer sentence `Installer requires distinct old and new map filenames` | `start_map_install` and remount |
 | Replace | Accepted snapshot differs from the re-plan | no exception; the page shows the new plan | `start_map_install` |
 | Replace | Remount helper raises | the helper's `ValueError` text | `start_map_install` |
 | Replace | `start_map_install` before state creation, read-only | `Map volume must be mounted read-write` | state directory |
@@ -245,7 +247,7 @@ Installer phases, for the resume screen:
 
 `start_map_install` wraps `OSError` and `ValueError` from `resume_map_install` as `ValueError(f'{exc}; resume with state directory: {state_dir}')`. Task B subclasses that as `MapInstallInterrupted` so the path is an attribute. The message string stays stable for `assertRaisesRegex` in `tests/test_map_install.py`.
 
-The final unmount belongs to `resume_map_install`. Task B changes that call to `udisksctl unmount -b <path> --no-user-interaction` and retries `org.freedesktop.UDisks2.Error.DeviceBusy` up to three times, re-checking the mount id and writability between tries, using the same bounds as `change_mount`. Phase becomes `complete` only after unmount succeeds. An `OSError` still fails immediately with `safe unmount failed`, so the existing synthetic test keeps its meaning. A successful unmount remains a single `subprocess.run` call.
+The final unmount belongs to `resume_map_install`. Task B changes that call to `udisksctl unmount -b <path> --no-user-interaction` with a 30-second timeout per attempt and up to three attempts total for `org.freedesktop.UDisks2.Error.DeviceBusy`, re-checking the mount id and writability between tries, using the same bounds as `change_mount`. After the command succeeds, re-read the block record: require the same UUID/path and no mountpoints. Command exit status alone is not proof of unmount. Phase becomes `complete` only after that verification succeeds. A timeout, remaining mount, or identity mismatch preserves a resumable state and reports the failure without forced cleanup. An `OSError` still fails immediately with `safe unmount failed`, so the existing synthetic test keeps its meaning. A successful unmount remains a single `subprocess.run` call.
 
 ## Ownership of device operations
 
@@ -263,13 +265,13 @@ One designated operator uses the physical devices. This design task and the synt
 
 ## Missing APIs and follow-up tasks
 
-The coordinator assigns real IDs and updates the board. These scopes are disjoint. A and B can run in parallel after this design is accepted. C waits for both and is the only one that edits `gui.py`. D waits for C and for a named device operator.
+The coordinator assigns real IDs and updates the board. These scopes are disjoint. A = G005, B = G006, C = G007, D = G008. A and B can run in parallel after this design is accepted. C waits for both and is the only one that edits `gui.py`. D waits for C and for a named device operator.
 
 ### Task A — Read-only selection helpers
 
 Allowed files: `garmin_companion/map_backup.py`, `garmin_companion/map_identity.py`, `tests/test_map_backup.py`, `tests/test_map_identity.py`.
 
-- `list_map_images(volume) -> list[FileEntry]`. Use the mounted `Garmin/` directory and the same regular-file rules as `_map_entry`. Return only names that pass `validate_img_name`, sorted by filename. Do not hash. A symlink `Garmin` directory or a symlink image raises `ValueError('Not a regular Garmin IMG file: ...')` when that image is visited; skip names that fail `validate_img_name` (including `*.img.partial`). Do not recurse.
+- `list_map_images(volume) -> list[FileEntry]`. Use the mounted `Garmin/` directory and the same regular-file rules as `_map_entry`. Return only names that pass `validate_img_name`, sorted by filename. Do not hash. Reject a missing, non-directory, or symlink `Garmin` directory before enumerating it. A symlink image raises `ValueError('Not a regular Garmin IMG file: ...')` when that image is visited; skip names that fail `validate_img_name` (including `*.img.partial`). Do not recurse.
 - `read_map_backup_index(path) -> dict`. Require a directory with `COMPLETE` and a readable manifest whose `purpose` is `Garmin map backup`. Return `model`, `label`, `volume_uuid`, `volume_size_bytes`, `file_count`, `total_bytes`, and `names` from `Garmin/<name>` entries. Do not hash and do not call this verification. Raise `ValueError` with the existing backup messages when `COMPLETE` or the identity fields are missing.
 - `list_usb_fat_mounts() -> list[dict]`. Read-only `lsblk` plus the USB check already used by `_block_record`. Each row has `path`, `label`, `uuid`, `size`, `fstype`, and `mountpoint` for a USB FAT/vfat/msdos volume with exactly one mount. Do not open `GarminDevice.xml` and do not construct a `GarminVolume`. Tests mock `lsblk` / `udevadm`.
 
@@ -279,11 +281,13 @@ Acceptance: new unit tests on temporary directories and mocked block records. No
 
 Allowed files: `garmin_companion/mount_control.py`, `garmin_companion/map_install.py`, `tests/test_mount_control.py`, `tests/test_map_install.py`.
 
-- `remount_writable_for_map_install(volume, evidence) -> GarminVolume` in `mount_control.py`. Re-read the block device with `capture_volume`. Refuse when UUID, path, size, label, or filesystem differ. If `_mount_is_writable` is already true, return the current volume and do not call `udisksctl`. Otherwise unmount and mount with `-o rw`, both with `--no-user-interaction`, retrying only `DeviceBusy` as `change_mount` does. Verify one mount, read-write, and the same UUID. Return a volume whose mountpoint is the new mount; the caller runs `select_map_volume` again before planning or resuming. Do not call `select_volume`, so a `backup-matched-reader` card still works. Do not add a Devices-page button for this function.
+- `remount_writable_for_map_install(volume, evidence) -> GarminVolume` in `mount_control.py`. The evidence is captured before user review, not recreated on acceptance. First require `capture_volume(volume) == evidence`; `capture_volume` returns UUID/path/mount ID and separately validates the block record's size, label, filesystem and mountpoints against the reviewed `volume`. Refuse changed identity, metadata, or mount instance before any UDisks command. For already-writable storage return the revalidated volume without remount. Otherwise normally unmount and mount with `-o rw`, `--no-user-interaction`, and 30-second timeouts. Use at most three unmount attempts, retrying only DeviceBusy, revalidating evidence between attempts. Recheck UUID/path/size/label/filesystem before mounting and require one writable mount afterward. Do not use `select_volume`: reader cards must work. Return the updated volume; caller re-runs `select_map_volume` before planning or resuming. No generic writable Devices button.
+- Provide a reader-compatible guarded unmount helper for pre-install cleanup and installer completion. It accepts current volume plus expected UUID/path/mount ID, validates the selection, uses the same bounded ordinary unmount policy, and verifies same identity with no remaining mounts. Never force unmount or touch a replaced device. A failed pre-install attempt that changed mount mode must report cleanup outcome; an established install state remains recoverable through Resume.
+- Add optional keyword-only `expected_plan: dict | None = None` to `start_map_install`. Compare its stable projection with the internally recomputed plan **before creating state**: model, volume path, resolved backup, ordered old name/size/hash tuples, and ordered new resolved-source/target/size/hash tuples. Free-space values and mountpoint may change after remount; they still undergo normal checks. A mismatch raises a clear review-again ValueError, with no state or map writes. Existing callers without `expected_plan` retain their behavior.
 - `class MapInstallInterrupted(ValueError)` with `state_dir: Path`. `start_map_install` raises it from the existing wrapper, with the same message string.
-- Installer unmount flag and busy retry, as specified above, without reordering phase writes.
+- Installer unmount flag and busy retry, as specified above, without reordering phase writes. Capture expected UUID/path/mount evidence at successful preflight before device writes, and retain it for final unmount; do not establish a fresh identity baseline after copying.
 
-Acceptance: mocked `udisksctl` tests for an already-writable volume, a read-only volume that becomes read-write, a UUID change refused before mount, a `DeviceBusy` unmount that succeeds on retry, and `MapInstallInterrupted.state_dir` on a synthetic copy failure. Existing regex assertions still pass. No physical device.
+Acceptance: mocked tests for already-writable and read-only transitions; changed UUID/metadata/mount ID refused before any command; bounded busy retries/timeouts; a reader card; guarded cleanup and failure reporting; command success with a remaining mount refused; final UUID mismatch refused; a source changed before the internal re-plan rejected against `expected_plan` before state creation; and `MapInstallInterrupted.state_dir` on a synthetic copy failure. Existing regex assertions still pass. No physical device.
 
 ### Task C — Maps GUI
 
@@ -299,10 +303,10 @@ This task is the first editor of `gui.py` for map installation. Do not run it wh
 
 ## Test plan for task C
 
-Run from the worktree:
+Run from the worktree using discovery: `tests` is not an importable local package in the current environment, so `unittest tests.test_...` is not a reliable command.
 
 ```sh
-QT_QPA_PLATFORM=offscreen .venv/bin/python -m unittest tests.test_gui_map_install tests.test_gui_course_transfer tests.test_map_install tests.test_map_plan tests.test_map_backup tests.test_map_identity tests.test_mount_control -q
+QT_QPA_PLATFORM=offscreen .venv/bin/python -m unittest discover -s tests -q
 ```
 
 The GUI cases use synthetic `GarminVolume` values, temporary backup roots, and mocks. They do not open the user's `~/GarminBackups` or a real block device.
@@ -316,7 +320,7 @@ The GUI cases use synthetic `GarminVolume` values, temporary backup roots, and m
 7. Planner failures for a changed device hash, collision, low space, and a non-IMG source surface the core text.
 8. Overlapping old and new names disable **Replace selected maps** and do not call `start_map_install`, even when a patched planner returns `ready`.
 9. Review **Cancel** does not call the remount helper or `start_map_install`.
-10. Accept calls `select_map_volume`, the remount helper, a comparing re-plan, then `start_map_install` with `SOURCE=TARGET.img` strings in row order and state root `<backup_root>/MapInstalls`. A changed hash between the dialog and the re-plan does not call `start_map_install`.
+10. Accept uses retained pre-dialog evidence, `select_map_volume`, the remount helper, a comparing re-plan, then `start_map_install` with ordered `SOURCE=TARGET.img` strings, state root `<backup_root>/MapInstalls`, and `expected_plan=accepted_plan`. A changed hash between dialog and re-plan does not start installation. A changed source before the installer’s own re-plan is also refused by the core. Identity/mount changes require fresh review; pre-state failures after a writable transition perform guarded cleanup and show its outcome.
 11. A failed unmount shows **Maps verified, unmount failed**, the `state_dir` attribute, and does not call `change_mount` unmount.
 12. Resume after a failed first partial calls `resume_map_install` and does not call `plan_map_replacement`.
 13. Resume of a changed installed image shows the SHA-256 refusal.
@@ -340,5 +344,10 @@ At integration, the coordinator runs the full `unittest discover` suite, `compil
 
 - Worker edits for this design are `docs/map-gui-design.md` and `tasks/G003-map-gui-design.md` only.
 - Later GUI code stays in the workers named above. Private backup manifests, IMG bytes, device XML, and identifiers stay out of Git.
-- `start_map_install` remains the only write entry. The GUI does not copy IMG bytes itself, does not unlink `Garmin/*.img` itself, and does not invent a restore.
+- `start_map_install` is the new-install entry; `resume_map_install` performs recovery writes. The GUI does not copy IMG bytes itself, does not unlink `Garmin/*.img` itself, and does not invent a restore.
 - Review **Cancel** is safe because it precedes the first device-changing call. A mid-copy Cancel is not available from the current installer.
+
+
+## Coordinator review record — 2026-11-01
+
+Accepted the source/API mapping and scoped follow-up sequence after checking current main. Corrected review-to-remount identity retention, explicitly separated volume metadata from plan fields, required accepted-plan comparison inside the installer's final re-plan, specified guarded cleanup for pre-state failures, and required post-command unmount verification. These are future G006/G007 requirements, not claims that the current core implements them. Clarified current GUI guards and the exact distinct-filename error text. Corrected the test command after module-based unittest invocation failed to import the local tests; discovery is the verified command. Historical `complete` records are records only: callers may have used `unmount=False`, so a local completed record never proves the device's current mount state.

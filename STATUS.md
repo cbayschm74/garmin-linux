@@ -20,12 +20,14 @@ Read `AGENTS.md`, then [task board](tasks/README.md) and your assigned card. The
 
 ## Priorities and parallel assignments
 
-See [task board](tasks/README.md) for ownership. G001 is integrated; G003 is running in its original worktree (user-reported).
+See [task board](tasks/README.md) for ownership. G001 and G003 are integrated. G005 and G006 are ready for separate assignments; no new workers started.
 
 1. **G001 — done:** cache recovery and bounded course-library reads independently reviewed and integrated; 115 tests passed.
 2. **G002 — needs-device:** complete physical Edge GPX GUI transfer validation with selected course and designated device operator. This remains the next functional acceptance check.
-3. **G003 — active:** design the Maps GUI installation/recovery flow in a separate document. Can run beside G001 with separate file scopes.
-4. **G004 — needs-host:** verify Omarchy environment on the laptop before shell integration.
+3. **G003 — done:** Maps GUI design accepted with coordinator corrections; no GUI implemented.
+4. **G005/G006 — ready in parallel:** read-only selection helpers and separate remount/install guards. Both use synthetic storage; neither edits gui.py.
+5. **G007 — blocked:** GUI implementation waits for both core tasks. **G008 — needs-device:** later physical map acceptance.
+6. **G004 — needs-host:** verify Omarchy environment on the laptop before shell integration.
 
 With no explicit assignment, coordinate a ready task rather than having every agent start the hardware check.
 
@@ -48,9 +50,13 @@ With no explicit assignment, coordinate a ready task rather than having every ag
 
 ## Recent change
 
+### 2026-11-01 — G003 design reviewed and integrated
+
+Accepted `docs/map-gui-design.md` from `e554bf6`/`2d4e35b` as `8170fba`/`6ccdc63`, with coordinator corrections for retained consent evidence, installer internal re-plan checking, guarded pre-state cleanup, post-unmount verification, and runnable test commands. Created G005/G006 ready scopes, G007 dependency, and G008 physical placeholder. Main suite: 115 passed. Documentation review only: no application changes, device access, GUI launch, or new workers. The accepted design is the implementation reference.
+
 ### 2026-11-01 — G001 reviewed and integrated
 
-Accepted worker source/test `4481402` and handoff `9a1bd18`, integrated as `051695d` and `88ad35a`. Independent review and main each passed 115 tests, compilation, and diff checks. Cache recovery retains source integrity checks; course reads are bounded and cancellable. README, task board, and G001 acceptance evidence updated. Optional historical benchmark report remains on its evaluation branch. G003 is still pending review. No device/private backup access; existing untracked `mise.toml` preserved.
+Accepted worker source/test `4481402` and handoff `9a1bd18`, integrated as `051695d` and `88ad35a`. Independent review and main each passed 115 tests, compilation, and diff checks. Cache recovery retains source integrity checks; course reads are bounded and cancellable. README, task board, and G001 acceptance evidence updated. Optional historical benchmark report remains on its evaluation branch. G003 was subsequently reviewed; see the newer entry. No device/private backup access; existing untracked `mise.toml` preserved.
 
 ### 2026-11-01 — multi-agent organization
 
