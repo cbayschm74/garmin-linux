@@ -5,9 +5,9 @@ Linux desktop. The helper lives in the checkout and runs from any working
 directory:
 
 ```sh
-python3 /path/to/checkout/tools/setup-linux.py check
-python3 /path/to/checkout/tools/setup-linux.py install
-python3 /path/to/checkout/tools/setup-linux.py uninstall
+/usr/bin/python3 /path/to/checkout/tools/setup-linux.py check
+/usr/bin/python3 /path/to/checkout/tools/setup-linux.py install
+/usr/bin/python3 /path/to/checkout/tools/setup-linux.py uninstall
 ```
 
 The helper is standard library only. It never imports the GUI, never scans,
@@ -83,6 +83,33 @@ all source or map data are preserved.
 Updating is done by rerunning `install`; the helper does not pull Git changes
 for you. Rerun `install` after updating the checkout, or after moving it to a
 different path, because the launcher points at this checkout.
+
+## Interpreter and upgrade requirements
+
+Use the interpreter that provides distro PyQt6. On this Omarchy host that is
+/usr/bin/python3 (3.14.8); mise's default python3 (3.15.2) cannot inherit the
+distro Qt bindings. Fresh installation now probes QtCore/QtGui/QtWidgets before
+creating a venv, refusing an incompatible interpreter without leaving a sticky
+environment. Existing environments are deliberately reused; if an older attempt
+created one with the wrong Python, move it aside after inspection and recreate
+with the correct system interpreter. The helper never deletes it for you.
+Tested PyQt/Qt combinations are 6.10.2/6.10.2 on Kubuntu and 6.11.0/6.12.0 on
+Omarchy; other versions are not claimed tested.
+
+For a portable release, extract to a writable location: installation creates
+.venv inside it and fetches the pinned FIT SDK from PyPI. Keep the previous
+release tree/venv until the new release works. Upgrade or rollback means running
+the chosen tree's setup helper with the same prefix; the three managed launcher
+files are repointed to that tree. Never move/delete a tree still referenced by
+the launcher or Omarchy widget.
+
+Omarchy widget settings contain absolute source/interpreter paths. After a
+checkout/release move or upgrade, regenerate settings from the new tree using
+the command-setting block in the [widget guide](omarchy-widget.md), then refresh.
+The setup helper deliberately does not edit shell configuration. Before removing
+a launcher, disable its widget with omarchy plugin disable org.garminlinux.status
+if no longer wanted. Uninstall preserves source, venv, private backups and cache;
+it does not remove the optional widget's folder.
 
 ## Prerequisites
 

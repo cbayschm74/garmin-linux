@@ -349,6 +349,8 @@ def plan_members(archive: Path) -> tuple[list[tarfile.TarInfo], str]:
         if member.name in seen:
             raise ValidationError(f'archive contains a duplicate member: {member.name}')
         seen.add(member.name)
+        if member.isfile() and '/' not in member.name:
+            raise ValidationError('archive root must be a directory, not a file')
         if member.isdir():
             pass
         elif member.isfile():
@@ -858,9 +860,10 @@ def archive_summary(info: ArchiveInfo) -> dict:
 
 def run_validation(args: argparse.Namespace) -> int:
     artifacts = args.artifacts.expanduser()
-    if artifacts.exists():
+    if artifacts.exists() or artifacts.is_symlink():
         raise ValidationError(f'the artifacts directory already exists: {artifacts}')
-    python = args.python.expanduser()
+    artifacts = artifacts.resolve()
+    python = args.python.expanduser().absolute()
     if not python.is_file() or not os.access(python, os.X_OK):
         raise ValidationError(f'the selected Python is not an executable file: {python}')
     timeouts = dict(DEFAULT_TIMEOUTS)

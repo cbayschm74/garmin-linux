@@ -185,3 +185,28 @@ Before/at integration of G023 + G024 and any real lifecycle run:
 *Review performed by MiMo 2.6 Pro (G025). Baseline
 `19f085139e468014a129150cddf8449e8fd44c8c`; 317 tests pass. No device, GUI,
 private data, or user-config access occurred.*
+
+
+## Coordinator disposition at integration
+
+Reviewed report against the primary checkout; integrated worker b344cf3/c9fc597
+as dadb2c1/4af5278. Baseline findings remain historical evidence.
+
+- R1: fresh setup now probes the selected interpreter's Qt submodules before
+  creating a venv. An actual mise-Python negative run refused installation before
+  venv/pip/launcher mutation. Existing venvs remain deliberately untouched, with
+  explicit mismatch/recreation guidance.
+- R2: setup and direct desktop registration probe QtCore/QtGui/QtWidgets, not
+  just the PyQt namespace. Document tested combinations rather than inventing an
+  untested version floor.
+- R3: version unification is reserved for G023 integration before real builds.
+- R4/R5/R6: setup docs now state writable release roots, network dependency,
+  release-tree pinning, previous-tree rollback, manual widget command migration
+  and widget disable as a separate uninstall action. The helper keeps its
+  narrow three-file ownership; real lifecycle acceptance is still pending G023.
+- R7 remains a documented X11 limitation. R8 stale current-host claims corrected.
+- G024 validation code independently reviewed and its tests pass. Coordinator
+  fixed relative artifact paths before subprocess cwd changes and malformed
+  regular-file archive roots. The real archive lifecycle will run actual helper,
+  venv and pip processes in isolated prefixes; it is not a mocked test or a claim
+  of a fresh OS. No release tag/publication performed.

@@ -202,7 +202,7 @@ That install is local to the checkout. It does not install desktop packages and 
 
 ## This host and Omarchy
 
-Project notes describe the menu launcher on Kubuntu and say the Omarchy laptop was not validated. For this task, the coordinator checked the current worker host on 2026-11-01 and reported Ubuntu 26.04.1 LTS, Python 3.14.4, PyQt/Qt 6.10.2, and FIT SDK 21.217.0, with `udisksctl` and `7z` available. This guide did not repeat that check. The Omarchy laptop is still unverified. Do not infer its shell version or assume those packages are installed there.
+The guide was originally reviewed against Kubuntu (Python 3.14.4, PyQt/Qt 6.10.2). Subsequent G004/G017/G018 host checks verified Omarchy 4.0.6-1, system Python 3.14.8, PyQt 6.11.0 / Qt 6.12.0, native Wayland GUI and the installed bar widget. G021/G022 verified real Edge/fēnix read-only backups and safe unmount, and the user accepted normal GUI library viewing. See [host validation](linux-validation.md). Clean OS install, restore and other toolkit versions remain separate acceptance; use the matching system Python rather than mise Python.
 
 The integrated [Linux setup helper](linux-setup.md) can check dependencies without changing files, reinstall the launcher, or remove it while preserving data. Recovery of an interrupted device operation still uses the reviewed paths above.
 

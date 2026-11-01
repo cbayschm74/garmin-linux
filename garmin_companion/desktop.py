@@ -55,7 +55,7 @@ def install_desktop(prefix: Path, *, remove: bool = False) -> list[Path]:
         python = PROJECT_ROOT / '.venv/bin/python'
         if not python.is_file():
             raise ValueError('Create the project virtual environment first; see README.md')
-        subprocess.run([str(python), '-c', 'import PyQt6, garmin_fit_sdk'], check=True)
+        subprocess.run([str(python), '-c', 'from PyQt6 import QtCore, QtGui, QtWidgets; import garmin_fit_sdk'], check=True)
         script = ('#!/bin/sh\n# Garmin Linux Companion launcher\n'
                   f'cd {shlex.quote(str(PROJECT_ROOT))} || exit 1\n'
                   f'exec {shlex.quote(str(python))} -m garmin_companion gui "$@"\n')

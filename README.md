@@ -19,7 +19,7 @@ The command-line core can detect and back up both devices, summarize activities,
 The Kubuntu system Python has PyQt6 (`python3-pyqt6`). Create the project environment with access to system packages, then install the FIT SDK and open the desktop app:
 
 ```sh
-python3 -m venv --system-site-packages .venv
+/usr/bin/python3 -m venv --system-site-packages .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -m garmin_companion gui
 ```
@@ -33,9 +33,9 @@ The first Activities load decodes each distinct FIT file and can take several se
 The portable checkout helper checks dependencies, sets up the local virtual environment and launcher, or removes the launcher while preserving data:
 
 ```sh
-python3 tools/setup-linux.py check
-python3 tools/setup-linux.py install
-python3 tools/setup-linux.py uninstall
+/usr/bin/python3 tools/setup-linux.py check
+/usr/bin/python3 tools/setup-linux.py install
+/usr/bin/python3 tools/setup-linux.py uninstall
 ```
 
 `check` is read-only and does not scan devices. `install` creates or reuses this checkout's `.venv`, installs pinned Python requirements and registers a user-local launcher. It never installs OS packages automatically. After updating the checkout, rerun `install`; it does not update Git itself. `uninstall` leaves the checkout, virtual environment, backups and cache in place.
@@ -50,7 +50,7 @@ Install the launcher from this checkout:
 .venv/bin/python -m garmin_companion install-desktop
 ```
 
-Open **Garmin Linux Companion** from the application menu, then right-click its taskbar icon and choose the pin option. The installer writes a launch script under `~/.local/bin`, a desktop entry under `~/.local/share/applications`, and an SVG icon under `~/.local/share/icons/hicolor/scalable/apps`. It uses this checkout's `.venv` and works when launched from another directory. Rerun the installer after moving the checkout. On the Omarchy laptop, the [Garmin status widget](docs/omarchy-widget.md) is installed on the right bar and opens the same launcher. Physical USB acceptance on that laptop remains pending.
+Open **Garmin Linux Companion** from the application menu, then right-click its taskbar icon and choose the pin option. The installer writes a launch script under `~/.local/bin`, a desktop entry under `~/.local/share/applications`, and an SVG icon under `~/.local/share/icons/hicolor/scalable/apps`. It uses this checkout's `.venv` and works when launched from another directory. Rerun the installer after moving the checkout. On the Omarchy laptop, the [Garmin status widget](docs/omarchy-widget.md) is installed on the right bar and opens the same launcher. Edge and fēnix detection/read-only backup/safe-unmount acceptance on that laptop passed G021/G022.
 
 Remove the launcher and icon with:
 
@@ -94,7 +94,7 @@ Preparation supports a single-session GPS activity with 2–10,000 retained poin
 Install Garmin's official FIT decoder in a local environment:
 
 ```sh
-python3 -m venv --system-site-packages .venv
+/usr/bin/python3 -m venv --system-site-packages .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -m garmin_companion activities
 .venv/bin/python -m garmin_companion activities --json

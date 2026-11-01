@@ -37,7 +37,9 @@ TOOL_GUIDANCE = {
 }
 DEPENDENCY_GUIDANCE = {
     'PyQt6': ('PyQt6 is provided by the system package and inherited by the checkout environment. '
-              'Kubuntu/Ubuntu: sudo apt install python3-pyqt6. Arch/Omarchy: install the system PyQt6 package.'),
+              'Kubuntu/Ubuntu: sudo apt install python3-pyqt6. Arch/Omarchy: install the system PyQt6 package. '
+              'Use the interpreter that can import QtWidgets (usually /usr/bin/python3), not a mise/pyenv Python. '
+              'An existing venv is reused: recreate it deliberately if built with another Python.'),
     'garmin_fit_sdk': ('The FIT SDK is pinned in requirements.txt and installed into the checkout '
                        'environment by the install command.'),
 }
@@ -138,7 +140,8 @@ def _last_lines(result: subprocess.CompletedProcess, count: int = 3) -> str:
 def probe_module(python: Path, module: str) -> DependencyStatus:
     """Probe one import in a subprocess. Nothing is started beyond the import."""
     try:
-        result = _run_command([str(python), '-B', '-c', f'import {module}'])
+        statement = 'from PyQt6 import QtCore, QtGui, QtWidgets' if module == 'PyQt6' else f'import {module}'
+        result = _run_command([str(python), '-B', '-c', statement])
     except OSError as exc:
         return DependencyStatus(module, False, str(exc))
     if result.returncode == 0:
@@ -257,6 +260,11 @@ def _install_environment(checkout: Path) -> tuple[bool, str]:
     if state == ENVIRONMENT_UNRECOGNIZED:
         return False, (f'Refusing to replace an unrecognized environment at '
                        f'{environment_directory(checkout)}. Remove it yourself and rerun.')
+    base_qt = probe_module(Path(sys.executable), 'PyQt6')
+    if not base_qt.ok:
+        return False, (f'Selected Python {sys.executable} cannot import PyQt6 QtWidgets/QtCore/QtGui. '
+                       'Use the system interpreter that provides Qt, usually /usr/bin/python3, '
+                       'to run tools/setup-linux.py install. No environment was created.')
     directory = environment_directory(checkout)
     print(f'Creating the checkout environment: {directory}')
     try:

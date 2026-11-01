@@ -2,7 +2,7 @@
 
 ## Assignment
 
-- State: review
+- State: done
 - Owner / session: MiMo 2.6 Pro via T3 Code
 - Branch / worktree: T3-managed isolated worktree, record at handoff
 - Base commit: assignment commit containing this card (exact SHA supplied at launch); source baseline 0523281
@@ -54,3 +54,10 @@ Completed for review (MiMo 2.6 Pro via T3 Code, 2026-11-01).
   `docs/release-readiness-review.md`, fix R8 doc staleness in coordinator-owned
   files, decide the R3 version source before the first real G023 build, then
   run the real archive lifecycle per the report's acceptance checklist.
+
+
+Coordinator accepted review and integrated dadb2c1/4af5278. R1/R2 corrected with
+deep Qt probes and early mismatch refusal; real mise-negative run passes.
+R4/R5/R6 documented, R8 stale docs corrected, R7 retained as X11 limit. R3 and
+actual lifecycle results remain G023/G024 integration work. No source approval
+of unreviewed worker code is inferred. No private/device/user-GUI access.

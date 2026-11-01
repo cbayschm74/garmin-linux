@@ -561,6 +561,21 @@ class HarnessTests(unittest.TestCase):
         self.assertEqual(summary['steps'][1]['status'], 'fail')
         self.assertEqual(summary['cleanup'], 'removed')
 
+    def test_relative_artifact_path_is_resolved_before_subprocess_execution(self):
+        previous = Path.cwd()
+        try:
+            os.chdir(self.root)
+            args = validate_install.build_parser().parse_args([
+                '--archive', str(self.archive), '--artifacts', 'relative-artifacts',
+                '--python', sys.executable, '--validate-only'])
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(validate_install.run_validation(args), 0)
+            result = json.loads((self.root / 'relative-artifacts/summary.json').read_text())
+            self.assertEqual(Path(result['artifacts']), self.root / 'relative-artifacts')
+            self.assertTrue(Path(result['prefix']).is_absolute())
+        finally:
+            os.chdir(previous)
+
     def test_existing_artifacts_directory_is_refused(self):
         self.artifacts.mkdir(parents=True)
         code, output = self.run_harness('--python', sys.executable)

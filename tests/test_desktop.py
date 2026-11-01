@@ -253,7 +253,7 @@ class DesktopLifecycleTests(unittest.TestCase):
     def test_dependency_probe_checks_pyqt6_and_fit_sdk_with_checkout_venv(self):
         desktop.install_desktop(self.prefix)
         python = self.project / '.venv' / 'bin' / 'python'
-        self.assertIn(mock.call([str(python), '-c', 'import PyQt6, garmin_fit_sdk'], check=True),
+        self.assertIn(mock.call([str(python), '-c', 'from PyQt6 import QtCore, QtGui, QtWidgets; import garmin_fit_sdk'], check=True),
                       self.run_mock.call_args_list)
 
     # ---- repeat install / update -----------------------------------------
@@ -418,7 +418,7 @@ class DesktopLifecycleTests(unittest.TestCase):
         self.assertEqual(self.snapshot(self.prefix), {})
         python = self.project / '.venv' / 'bin' / 'python'
         self.assertEqual(self.run_mock.call_args_list,
-                         [mock.call([str(python), '-c', 'import PyQt6, garmin_fit_sdk'],
+                         [mock.call([str(python), '-c', 'from PyQt6 import QtCore, QtGui, QtWidgets; import garmin_fit_sdk'],
                                     check=True)])
 
     def test_install_succeeds_without_desktop_utilities(self):

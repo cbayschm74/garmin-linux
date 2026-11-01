@@ -49,7 +49,8 @@ class FakeRunner:
                     return subprocess.CompletedProcess(arguments, 1, '', 'pip could not reach the index')
                 return subprocess.CompletedProcess(arguments, 0, '', 'Successfully installed')
         if '-c' in arguments:
-            name = arguments[arguments.index('-c') + 1].removeprefix('import ')
+            statement = arguments[arguments.index('-c') + 1]
+            name = 'PyQt6' if statement == 'from PyQt6 import QtCore, QtGui, QtWidgets' else statement.removeprefix('import ')
             if name in self.imports:
                 return subprocess.CompletedProcess(arguments, 0, '', '')
             return subprocess.CompletedProcess(arguments, 1, '',
@@ -255,6 +256,15 @@ class SetupHelperTests(unittest.TestCase):
             if arguments[1:3] in (['-m', 'venv'], ['-m', 'pip']) or 'install-desktop' in arguments:
                 self.assertEqual(cwd, str(self.checkout))
         self.assertIn('Result: setup finished', out)
+
+    def test_wrong_base_python_fails_before_creating_a_sticky_environment(self):
+        runner = FakeRunner(self.checkout, imports=('garmin_fit_sdk',))
+        with patch.object(linux_setup, '_run_command', runner):
+            code, _, err = self.run_main(['install', '--prefix', str(self.prefix)])
+        self.assertEqual(code, 1)
+        self.assertIn('/usr/bin/python3', err)
+        self.assertFalse((self.checkout / '.venv').exists())
+        self.assertFalse(any('pip' in argv or 'install-desktop' in argv for argv, _ in runner.calls))
 
     def test_install_stops_when_the_requirements_cannot_be_installed(self):
         runner = FakeRunner(self.checkout, fail_pip=True)

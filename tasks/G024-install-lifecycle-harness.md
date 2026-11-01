@@ -192,3 +192,9 @@ Python is 3.14.8 with PyQt6 available; `garmin_fit_sdk` comes from pip.
   artifacts directory must not exist before the run.
 - State: `review`. Worker completion is review; the coordinator marks `done`
   after integration and real host acceptance.
+
+
+Coordinator source review: 38 worker tests independently pass; integrated
+280081d/586a840. Fixed relative artifact paths to resolve before cwd=/tmp,
+refused dangling artifact symlinks and regular-file archive roots. Added a
+relative-path regression. Real source archive lifecycle awaits G023 bundle.
