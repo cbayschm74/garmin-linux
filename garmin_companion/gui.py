@@ -477,6 +477,9 @@ def _execute_map_review(review, backup_root):
         if isinstance(exc, MapInstallInterrupted) or state_started:
             raise
         if original_read_only and mounted is not None and mounted_evidence is not None:
+            if (mounted_evidence['uuid'], mounted_evidence['path']) != (review['evidence']['uuid'], review['evidence']['path']):
+                raise ValueError(f'{exc}\nSafe-unmount cleanup skipped: USB identity changed; '
+                                 'Refresh Devices to check mount state.') from exc
             try:
                 result = guarded_unmount(mounted, mounted_evidence)
                 cleanup = result['message']
@@ -484,7 +487,7 @@ def _execute_map_review(review, backup_root):
                 cleanup = f'Safe-unmount cleanup failed: {cleanup_error}. Mount state needs attention.'
             raise ValueError(f'{exc}\n{cleanup}') from exc
         if mounted is None or mounted_evidence is None:
-            raise ValueError(f'{exc}\nMount transition did not complete. Refresh Devices to check mount state.') from exc
+            raise ValueError(f'{exc}\nMount transition or verification did not complete. Refresh Devices to check mount state.') from exc
         raise
 
 

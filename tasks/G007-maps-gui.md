@@ -31,3 +31,8 @@ User explicitly authorized managing Grok, MiniMax M3/OMP, and MiMo 2.6 Pro/OpenC
 ## Coordinator dependency correction during implementation
 
 Review found the resume equivalent of the final-plan race: resume_map_install reloads state after GUI consent checks, so the core must also bind that loaded state to the reviewed snapshot. Scope expanded to map_install.py and its existing tests for optional expected_state, forwarded by the GUI and initial installer. Existing CLI calls remain compatible. A regression refuses a changed state before preflight/device reads; matching reviewed resume completes. Codex is the sole editor of these files.
+
+
+## Cleanup identity regression
+
+Coordinator added tests/test_gui_map_cleanup.py after reproducing a post-remount replacement: newly captured wrong-UUID evidence must never authorize cleanup of the replacement. The GUI fences cleanup to the original reviewed UUID/path and reports skipped cleanup/unknown mount state instead. Two focused regressions cover replacement and failed evidence capture. M3's recovery-dialog title failure was also corrected without weakening its assertion. Current feature suite: 184 passed.
