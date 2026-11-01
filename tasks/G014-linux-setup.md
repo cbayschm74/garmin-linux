@@ -1,6 +1,6 @@
 # G014 — Portable checkout setup
 
-- State: review
+- State: done
 - Owner: MiniMax M3 / OMP; coordinator supervises Orca run `run_e413c22b78ee`.
 - Base: `ea2dab4` (main claim commit containing this card); branch `task/G014-linux-setup`.
 - Allowed files: new `garmin_companion/linux_setup.py`, `tools/setup-linux.py`, `tests/test_linux_setup.py`, `docs/linux-setup.md`, this card only.
@@ -26,3 +26,7 @@ Tests use temporary checkout/prefix and mocked subprocess/tools; no live install
 - Limitations: everything above is synthetic or host-local; no Garmin device was scanned, mounted or written, and the GUI was never started. `pip install` needs network access on first install. The helper reports that host desktop validation is not performed, so Omarchy and a real Kubuntu launcher session remain unverified and stay with G004. A missing `udisksctl` leaves the application installed but ends the install with `PARTIAL SETUP` and exit code 1, printing the package command as guidance only.
 - Device access: none. Active operations or processes from this task: none.
 - Next action for the coordinator: review the three commits on `task/G014-linux-setup` (implementation `1cf453f`, handoff, and the review fixes on the tip), rerun `.venv/bin/python -m unittest discover -s tests -q` after integration, and move the board row to `done` if the review accepts it.
+
+## Coordinator acceptance
+
+Source commits `1cf453f`, `39bf603`, `6bc401f`, `c2682f3` integrated through `eff3151`. Coordinator corrected prefix-resolution error handling, isolated all required-tool mocks, strengthened failure assertions and updated package guidance against official package sources. Full suite independently passed 247 methods; compileall/diff checks passed. Real read-only check passed from the checkout and from `/tmp`, with an unused prefix containing spaces. Separate real desktop utility smoke checks installed/updated/removed only a temporary prefix and preserved unrelated synthetic data. No normal GUI or USB operation was started. Worker settled and released; task accepted. Actual laptop validation remains G004.

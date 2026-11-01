@@ -9,7 +9,7 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 ## Current verified baseline
 
 - Primary checkout `/home/cbayschm/garmin-linux`, branch `main`. G007 source merged as `5fd876d`; use Git for current HEAD because final tests/documentation follow that merge.
-- **222 tests pass**, with Python compilation and diff checks. Fixtures use temporary storage, mocked USB/UDisks, and offscreen Qt; physical acceptance is recorded separately below.
+- **247 tests pass**, with Python compilation and diff checks. Fixtures use temporary storage, mocked USB/UDisks, and offscreen Qt; physical acceptance is recorded separately below.
 - Shared Python core/PyQt6 app supports detection, selected-data backups/catalog, activity summaries/export, activity-to-course preparation, GPX/FIT preview/conversion, and reviewed Edge GPX / fēnix FIT transfers.
 - **G007 Maps → Replace / Resume is implemented and integrated.** It supports explicit map backup/checklists, verified map-backup selection, device/reader identity matching, ordered local IMG inputs, read-only planning, source/target review, guarded writable mounting, backup/readback checks, and resumable installation. Inspect remains separate and cancellable. Other map operations have no mid-operation Cancel; the window waits for them.
 - Review cancellation precedes remount/writes. Accepted-plan checking is enforced inside the final installer re-plan. Resume pins the internally reloaded state to consent. Cleanup refuses replacement-device identities. Changed plans remain visible but require fresh selection/review. Saved complete records do not establish current mount state.
@@ -19,7 +19,7 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 
 ## Next / ownership
 
-New parallel wave: G014 MiniMax M3 builds a portable checkout setup/check/uninstall helper; G015 MiMo Pro independently tests the desktop lifecycle; G016 Grok writes source-verified recovery guidance. Coordinator integrates/reviews and owns global docs. Run `run_e413c22b78ee`; all workers use separate new worktrees and synthetic data only. Actual Omarchy host validation remains G004. Worker dispatches: G014 `ctx_12a3ad77dc59` (OMP M3), G015 `ctx_4afa0ac4b2c1` (OpenCode MiMo China Token Plan), G016 `ctx_4e1d57614c15` (Grok). Worktrees are `G014-linux-setup`, `G015-desktop-tests`, and `G016-recovery-guide` under the Orca project workspace root, all based on claim `ea2dab4`. Do not reuse settled historical dispatches.
+Parallel setup wave (`run_e413c22b78ee`): **G014 done** (MiniMax M3 setup/check/uninstall helper, integrated and independently tested), **G016 done** (Grok recovery guide, reviewed/corrected and integrated). Both workers settled/released. **G015 active**: MiMo Pro China Token Plan independently tests desktop lifecycle in its isolated worktree; provider connection reset triggered its own retry, session remains live. Dispatch `ctx_4afa0ac4b2c1`, worktree `G015-desktop-tests`, base `ea2dab4`. Coordinator owns integration/global docs. Actual Omarchy host validation remains G004.
 
 - **G012: done.** Map backup progress, automatic dropdown selection, explicit saved-checksum and target-match results implemented. User has tested the updated copy progress and both verification checks and confirmed the improved feedback works. No new workers assigned.
 - **G007, G005/G006 and support G009/G010/G011: done.**

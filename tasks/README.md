@@ -18,9 +18,9 @@ Coordinator maintains this table in the primary checkout. Worker copies are snap
 | G012 | Map backup progress and verification feedback | done | Codex coordinator | 218 tests; progress, auto-selection, PASS/FAIL |
 | G013 | Map editor contrast and planning/install progress | done | Codex coordinator | 222 tests; synthetic install/failure and dark editor checks |
 
-| G014 | Portable Linux checkout setup | active | MiniMax M3 / OMP | User-local setup; synthetic checks only |
+| G014 | Portable Linux checkout setup | done | MiniMax M3 / OMP | User-local setup; synthetic checks only |
 | G015 | Desktop lifecycle independent tests | active | MiMo Pro / China Token Plan | Existing desktop.py, isolated prefixes |
-| G016 | Recovery and troubleshooting guide | active | Grok | Source-verified docs; no devices |
+| G016 | Recovery and troubleshooting guide | done | Grok | Source-verified docs; no devices |
 
 Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G003](G003-map-gui-design.md), [G004](G004-omarchy-validation.md), [G005](G005-map-selection-helpers.md), [G006](G006-map-install-guards.md), [G007](G007-maps-gui.md), [G008](G008-map-gui-device-validation.md), [G009](G009-map-gui-review.md), [G010](G010-map-gui-tests.md), [G011](G011-map-workflow-tests.md), [G012](G012-map-backup-feedback.md), [G013](G013-map-install-feedback.md).
 

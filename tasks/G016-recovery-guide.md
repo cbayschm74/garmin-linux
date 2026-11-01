@@ -1,6 +1,6 @@
 # G016 — Recovery and troubleshooting guide
 
-- State: review
+- State: done
 - Owner: Grok configured default; coordinator supervises run `run_e413c22b78ee`. Dispatch `ctx_4e1d57614c15`.
 - Base: `ea2dab4e9e125cc16e941cbd6ffa595cf97de803` on branch `task/G016-recovery-guide`, worktree `/home/cbayschm/orca/workspaces/garmin-linux/G016-recovery-guide`.
 - Allowed files: new `docs/recovery-and-troubleshooting.md`, this card only. Read relevant core/docs as needed; no source edits.
@@ -28,3 +28,7 @@ Validate every proposed command against argparse/source or --help (no actual wri
   - CLI course import unmounts once. GUI unmount retries `org.freedesktop.UDisks2.Error.DeviceBusy` at most three times. Both are from source, not from running `udisksctl`.
   - Exact `ModuleNotFoundError` text for a missing PyQt or FIT install was not executed here. `desktop.py` does call `import PyQt6, garmin_fit_sdk` before publishing a launcher.
 - Next action for the coordinator: review the guide against the cited modules, then integrate. No device operation is requested.
+
+## Coordinator acceptance
+
+Guide commits `c4cacfb` and `914c8f3` integrated as `891fe93` and `14c0327`. Coordinator corrected the complete-state CLI path: it selects/checks the current target before the core complete fast path; only the GUI reads a complete record without checking the target. Clarified unresolved vs completed state history, ambiguous stalled I/O, linked integrated setup helper and corrected obsolete GUI help text. Source/help checks and diff check passed. No device access. Worker settled and released; task accepted.
