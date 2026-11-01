@@ -1,6 +1,6 @@
 # G011 — G007 support
 
-- State: active
+- State: review — coordinator accepted; awaiting main integration
 - Owner: MiMo 2.6 Pro via OpenCode
 - Base: G007 checkpoint commit containing this card; coordinator records actual Orca worktree/Dispatch in main board.
 - Allowed files: `tests/test_gui_map_workflow.py` and this card only.
@@ -22,3 +22,8 @@ Remaining/next: coordinator reviews and integrates this commit; physical-device 
 ## Coordinator reassignment after account correction
 
 User confirmed the MiMo account is corrected. The previous Dispatch stopped without changes because the API reported insufficient balance. This worktree is fast-forwarded to G007 `76d9003`; it now contains ten coordinator baseline tests in tests/test_gui_map_workflow.py. Review and strengthen them rather than replacing correct assertions. Independently verify the real fixture and add focused tests for gaps: stale mount ID/volume metadata, successful remount followed by capture/selection failure, source changed before the installer's own re-plan, and resume after old-file removal (not only a failed first partial). Source remains read-only. Report concrete implementation failures promptly through Orca mail; coordinator owns repairs. Run full discovery and commit only this test file and this card. This coordinator update supersedes the original prompt's daff55a baseline reference; all privacy/device/scope/lifecycle constraints remain in force.
+
+
+## Coordinator acceptance — 2026-11-01
+
+Scoped commits independently inspected and integrated on task/G007-maps-gui. Full combined feature suite: 207 tests passed, compilation and diff checks passed. No device or private data access. Remaining step is main integration and final board update.

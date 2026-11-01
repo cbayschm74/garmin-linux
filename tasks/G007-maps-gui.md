@@ -2,7 +2,7 @@
 
 ## Assignment
 
-- State: active
+- State: review — ready for main integration
 - Owner / session: Codex coordinator
 - Branch / worktree: task/G007-maps-gui at /home/cbayschm/garmin-G007-maps-gui; base is the coordinator claim commit
 - Depends on: G005 and G006
@@ -36,3 +36,8 @@ Review found the resume equivalent of the final-plan race: resume_map_install re
 ## Cleanup identity regression
 
 Coordinator added tests/test_gui_map_cleanup.py after reproducing a post-remount replacement: newly captured wrong-UUID evidence must never authorize cleanup of the replacement. The GUI fences cleanup to the original reviewed UUID/path and reports skipped cleanup/unknown mount state instead. Two focused regressions cover replacement and failed evidence capture. M3's recovery-dialog title failure was also corrected without weakening its assertion. Current feature suite: 184 passed.
+
+
+## Final feature acceptance before main merge
+
+All G005/G006 dependencies are integrated. G009 Grok report, G010 MiniMax M3 tests (27), and G011 MiMo China Token Plan workflow tests (20 additional, 30 in file) are reviewed and integrated on the feature branch. Coordinator fixed all accepted safety/UI findings and added the relevant regressions. Full suite: 207 passed; compilation and branch diff checks passed. Dark-palette page/review rendering inspected. No real USB, map installation, launcher change, or private backup read occurred. Next: merge task/G007-maps-gui into main, rerun standard checks, update STATUS/PLAN/board, and finish Orca settlement accounting. G008 remains a separate physical test.
