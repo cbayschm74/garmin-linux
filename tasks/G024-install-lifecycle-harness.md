@@ -168,8 +168,9 @@ Python is 3.14.8 with PyQt6 available; `garmin_fit_sdk` comes from pip.
 - Branch: `t3/install-lifecycle-harness`
 - Worktree: `/home/cbayschm/.t3/worktrees/garmin-linux/t3-0411cffc`
 - Base: `19f085139e468014a129150cddf8449e8fd44c8c`
-- Code and test commit: recorded in the follow-up commit below; the card
-  update is the branch HEAD.
+- Code and test commit: `d5ad0f7f3e5b4cd5013d29cd85b5fa4991066418`
+  ("Add isolated release install and upgrade validator"). The card update is
+  the branch HEAD (one commit on top of it).
 - Changed files: `tools/validate-install.py` (new, mode 755),
   `tests/test_install_validation.py` (new), `tasks/G024-install-lifecycle-harness.md`
   (this card).
