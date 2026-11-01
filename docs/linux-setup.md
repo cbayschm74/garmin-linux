@@ -113,7 +113,8 @@ sudo pacman -S python python-pyqt6 udisks2 7zip
 Package names were checked against the official [Arch PyQt6 package](https://archlinux.org/packages/extra/x86_64/python-pyqt6/),
 [Arch 7zip file list](https://archlinux.org/packages/extra/x86_64/7zip/files/), and
 [Ubuntu 26.04 7zip package](https://packages.ubuntu.com/resolute/7zip).
-Both referenced 7zip packages provide the `7z` command used by the app; run
+The Arch file list and local Ubuntu package query (`dpkg-query -S /usr/bin/7z`)
+confirm that `7zip` provides the `7z` command used by the app; run
 `check` on the target host to confirm availability. Older Ubuntu releases may
 use different archive-package names.
 

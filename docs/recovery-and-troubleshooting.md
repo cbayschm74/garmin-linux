@@ -172,7 +172,7 @@ Removal leaves the checkout, `~/GarminBackups`, and the activity cache in place:
 
 `--prefix` selects a different root. The help text does not print the default. The command above uses `~/.local`.
 
-The `gui` help line says `open the read-only desktop device view`. The window can mount a volume and can write during a reviewed backup, course transfer, or map replacement. Follow the review text in the window. The help line is not a promise that the window never writes.
+The desktop app can mount volumes and perform reviewed backups, course transfers and map replacement. Follow the review text before starting an operation. Opening the app does not itself authorize a device write.
 
 ## Missing Qt, FIT, udisks, or 7-Zip
 

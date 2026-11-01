@@ -15,7 +15,7 @@ from .detector import scan
 def main() -> int:
     parser = argparse.ArgumentParser(description="Local Garmin device tools")
     commands = parser.add_subparsers(dest="command", required=True)
-    commands.add_parser('gui', help='open the read-only desktop device view')
+    commands.add_parser('gui', help='open Garmin Linux Companion desktop app')
     desktop_command = commands.add_parser('install-desktop', help='install or remove the user-local desktop launcher')
     desktop_command.add_argument('--prefix', type=Path, default=Path.home() / '.local')
     desktop_command.add_argument('--remove', action='store_true', help='remove this app launcher and icon')
