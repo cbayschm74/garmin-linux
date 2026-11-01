@@ -182,7 +182,7 @@ required.
   `exec`s the checkout's `.venv` python with `"$@"` passthrough, and `sh -n`
   accepts the generated script for hostile paths — but the launcher is never
   executed here. Actual application-menu launch was verified historically by
-  the maintainer (see `docs/history/status-through-2026-10-05.md`) and was not
+  the maintainer (see [October status archive](history/status-through-2026-10-18.md)) and was not
   re-verified.
 - **Desktop utilities are optional.** With `desktop-file-validate` or
   `update-desktop-database` absent, install/remove proceed without them, as
