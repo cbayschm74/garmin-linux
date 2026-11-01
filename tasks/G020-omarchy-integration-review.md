@@ -2,7 +2,7 @@
 
 ## Assignment
 
-- State: review
+- State: done
 - Owner / session: MiMo 2.6 Pro via T3 Code
 - Branch / worktree: `t3/omarchy-integration-review` in T3-managed worktree `/home/cbayschm/.t3/worktrees/garmin-linux/t3-07de5243`
 - Base commit: `a878612af7faccb8b534a05320d59457ee5f13c6` (exact assignment SHA; source baseline `fc5918e`)
@@ -65,3 +65,5 @@ and integrates.
 - Next action: coordinator reviews `docs/omarchy-integration-review.md`,
   integrates on `main`, and applies the section-1/section-4 checklists during
   G017 execution and the G018/G019 integration window.
+
+Coordinator acceptance: report independently reviewed and integrated from worker HEAD `7608d25`; native identity/GLib launch/clean shutdown and primary launcher registration resolved by G017. Plugin code/lifecycle remain G018 acceptance; no source change required by this review.

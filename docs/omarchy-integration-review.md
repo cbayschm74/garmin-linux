@@ -16,6 +16,20 @@ widget code is **not in this baseline** (`integrations/` does not exist at
 `a878612`), so nothing here approves G018 code; the plugin section below
 reviews the contract that code must satisfy.
 
+## Coordinator disposition after integration
+
+Reviewed against current primary checkout on 2026-11-01. G017 subsequently
+verified the native platform, desktop-entry launch, compositor-side app ID and
+clean shutdown using isolated data; see [native validation](omarchy-native-validation.md).
+The complete suite including all 41 desktop lifecycle tests passed on main
+(303 tests). Ordinary primary-checkout launcher registration succeeded with
+`desktop-file-validate` present. Manual menu/icon/pinning acceptance remains
+open. The checklists below retain the worker's assignment-base observations;
+“pending” there describes that baseline. G018 code and live plugin lifecycle
+still require coordinator review/acceptance. The proposed disposable-plugin
+rehearsal is a review suggestion, not an approval requirement or prerequisite
+to testing the managed Garmin plugin's own reversible lifecycle.
+
 ## Method and evidence sources
 
 - Baseline source: `garmin_companion/desktop.py`, `garmin_companion/gui.py`

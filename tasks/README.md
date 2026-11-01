@@ -25,7 +25,7 @@ Coordinator maintains this table in the primary checkout. Worker copies are snap
 | G017 | Native Wayland GUI and launcher validation | done | Codex coordinator | [Card](G017-omarchy-native-validation.md) |
 | G018 | Omarchy Garmin bar widget | active | Grok via T3 Code | [Card](G018-omarchy-widget.md) |
 | G019 | Independent GUI smoke tests | done | MiniMax M3 via T3 Code | [Card](G019-omarchy-smoke-tests.md) |
-| G020 | Independent desktop and widget integration review | active | MiMo 2.6 Pro via T3 Code | [Card](G020-omarchy-integration-review.md) |
+| G020 | Independent desktop and widget integration review | done | MiMo 2.6 Pro via T3 Code | [Card](G020-omarchy-integration-review.md) |
 
 Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G003](G003-map-gui-design.md), [G004](G004-omarchy-validation.md), [G005](G005-map-selection-helpers.md), [G006](G006-map-install-guards.md), [G007](G007-maps-gui.md), [G008](G008-map-gui-device-validation.md), [G009](G009-map-gui-review.md), [G010](G010-map-gui-tests.md), [G011](G011-map-workflow-tests.md), [G012](G012-map-backup-feedback.md), [G013](G013-map-install-feedback.md), [G014](G014-linux-setup.md), [G015](G015-desktop-lifecycle-tests.md), [G016](G016-recovery-guide.md).
 

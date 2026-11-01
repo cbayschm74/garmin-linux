@@ -28,8 +28,10 @@ without opening personal data. Manual application-menu selection remains pending
 G019's 15 independently reviewed tests are integrated; all 303 tests pass,
 compilation/diff checks pass. Reproducible harness: `tools/gui_smoke.py`;
 [evidence](docs/omarchy-native-validation.md). No physical device access or
-smoke process remains. G018 (Grok widget) and G020 (MiMo review) are active in
-isolated T3 worktrees; await completion notifications, do not reuse their scopes.
+smoke process remains. G020's independent MiMo review is accepted and integrated; source identity and
+quoting checks agree with native acceptance. Its plugin ownership/rollback
+checklist will guide G018 installation. G018 (Grok widget) remains active in an
+isolated T3 worktree; await its completion notification, do not reuse its scope.
 
 **G004 completed on the Omarchy laptop (2026-11-01).** Actual host is Omarchy
 4.0.6-1 / Wayland, system Python 3.14.8, PyQt 6.11.0 / Qt 6.12.0, and Quickshell
