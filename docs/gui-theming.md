@@ -53,3 +53,10 @@ Implementation: garmin_companion/gui_theme.py; window integration in gui.py.
 For a reproducible synthetic regression run:
 
     QT_QPA_PLATFORM=offscreen .venv/bin/python -m unittest discover -s tests -p test_gui_theme.py -q
+
+
+## User acceptance — 2026-11-01
+
+The user tested several actual Omarchy desktop themes and confirms the app colors
+changed correctly. This supplements the synthetic atomic-replacement and native
+current-theme checks. Actual Kubuntu validation is handed off separately in G028.

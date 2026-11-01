@@ -19,6 +19,15 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 
 ## Next / ownership
 
+**Actual Omarchy theme switching accepted by user (2026-11-01).** User tested
+several themes and confirms app colors follow them correctly. G029 prepares a
+USB-ready full-main bundle plus the pinned alpha/baseline/checksums and recipient
+instructions. G028 is ready for the Kubuntu coordinator to claim; no worker is
+launched on that machine. See docs/returning-to-kubuntu.md. Preserve divergent
+Kubuntu work and review before integration; no reset/clean/forced checkout.
+No private Garmin data, venv, user settings or agent sessions belong in the pack.
+
+
 **G023–G027 integrated and accepted (2026-11-01).** Portable source alpha
 0.1.0a1 built from 3957c0c918a0cb9491405bf13adfcf4493f2fd84, 92 files, repeated
 builds byte-identical. Canonical VERSION drives runtime/CLI; mismatched tracked

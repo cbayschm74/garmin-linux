@@ -49,3 +49,8 @@ Pending.
 - Next: review/integrate completed G023 archive builder, unify release version and
   run the real G024 archive lifecycle. Packaging must include this theme module.
 - Documentation: docs/gui-theming.md. No marketplace submission/publishing done.
+
+
+User subsequently tested multiple actual Omarchy themes and confirmed the app
+colors changed correctly. User acceptance now supplements synthetic/live native
+checks; no additional theme or device operation performed to record it.
