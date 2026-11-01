@@ -6,6 +6,10 @@ The project will start with safe USB detection, backups, activity files, and cou
 
 For planning and viewing tracks alongside this app, see the [Linux route editor comparison](docs/route-editors.md).
 
+## Working with agents in Orca
+
+Start with [AGENTS.md](AGENTS.md), the short [current handoff](STATUS.md), and the [task board](tasks/README.md). The [agent workflow](docs/agent-workflow.md) covers separate worktrees, task ownership, review, and copyable handoff prompts. Orca already has this repository registered on the current machine. Each writing agent gets its own worktree; physical Garmin operations have one designated operator.
+
 ## Current state
 
 The command-line core can detect and back up both devices, summarize activities, and transfer courses through model-specific USB paths. The desktop app shows devices, verified backups, activities, courses, and local map inspection, creates device-data backups, and offers reviewed GPX transfer to the Edge 1000 and FIT transfer to the fēnix 5X. Map transfers remain CLI commands. See [STATUS.md](STATUS.md) for the next step and [docs/device-compatibility.md](docs/device-compatibility.md) for observed hardware details.

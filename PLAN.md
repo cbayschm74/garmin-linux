@@ -1,6 +1,6 @@
 # Garmin Linux companion: project plan
 
-Last updated: 2026-10-15
+Last updated: 2026-11-01
 
 ## Goal
 
@@ -10,14 +10,14 @@ The long-term goal includes activity sync, firmware, and maps. Each server-depen
 
 ## Working rules for short sessions
 
-1. At the start of each session, read this file and `STATUS.md`. Work on the single item marked **Next** in `STATUS.md` unless the user changes priority.
-2. Keep each step small enough to finish, verify, and document in one session. A step may be split further if it grows.
-3. End every session by updating `STATUS.md`: completed work, evidence or test result, current blocker, exact next action, and files changed. Record decisions that affect later work here.
+1. At session start, read `AGENTS.md`, short `STATUS.md`, the task board in `tasks/README.md`, and your assigned task card. Use this plan for relevant milestone scope. The coordinator assigns parallel work; agents do not all claim STATUS's next item.
+2. Keep tasks bounded with allowed files, explicit acceptance checks, one owner, and one writing agent per worktree. See `docs/agent-workflow.md` for Orca setup and review steps.
+3. Workers update their task card with commit, evidence, blockers, and exact next action. The coordinator reviews/integrates changes and updates `STATUS.md`, the task board, and milestone state. Read historical logs only when relevant.
 4. Never store Garmin passwords, tokens, activity data, or device identifiers in the repository. Use sample or synthetic files for tests.
 5. Back up device data before any write. Start with read-only detection and copying. Do not write firmware or maps to a device as an experiment.
 6. Use documented Garmin interfaces where available. Label unofficial Connect access as optional and fragile.
 
-To resume in a new Codex session, say: **“Continue the Garmin Linux project from `/home/cbayschm/garmin-linux/STATUS.md`. Complete the next step, verify it, and update the status file.”** On the Omarchy laptop, use the path where this project is copied or cloned.
+For coordinated work, use the task-specific resume prompt in `docs/agent-workflow.md`. To resume as the project coordinator, say: **“Continue the Garmin Linux project from `/home/cbayschm/garmin-linux/STATUS.md`. Complete the next step, verify it, and update the status file.”** On the Omarchy laptop, use the path where this project is copied or cloned.
 
 ## Milestones
 
