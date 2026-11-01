@@ -1,4 +1,4 @@
-"""First read-only desktop view for the Garmin Linux companion."""
+"""Desktop workflows for verified Garmin backups, courses, and maps."""
 
 from __future__ import annotations
 
@@ -973,7 +973,7 @@ class CompanionWindow(QMainWindow):
             combo.addItem('Select…', None)
         paths = set()
         for volume in volumes:
-            if not volume.mountpoint:
+            if not volume.mountpoint or volume.filesystem.lower() not in {'fat', 'vfat', 'msdos'}:
                 continue
             label = f'{volume.device_name or volume.model} · {volume.label} · {volume.path}'
             self.map_backup_volume.addItem(label, volume.path)
