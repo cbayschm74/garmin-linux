@@ -25,7 +25,7 @@ def main():
         ('malformed', ['/usr/bin/printf', 'not-json'], 'error', 0, 600),
         ('nonzero', [sys.executable, '-c', f'print({json.dumps(PAYLOAD)!r}); raise SystemExit(1)'], 'error', 0, 600),
         ('missing-command', ['/no-such-garmin-smoke-command'], 'error', 0, 600),
-        ('unconfigured', [], 'error', 0, 600),
+        ('unconfigured', [], None, None, 1200),
         ('watchdog', [sys.executable, '-c', 'import time,signal; signal.signal(signal.SIGTERM,signal.SIG_IGN); time.sleep(30)'], 'error', 0, 7800),
     ]
     with tempfile.TemporaryDirectory(prefix='garmin-qml-check-') as temporary:
@@ -54,6 +54,13 @@ ShellRoot {
             if result.returncode or len(lines) != 1:
                 raise RuntimeError(f'{name}: QML load failed\n{output}')
             actual = json.loads(lines[0])
+            if name == 'unconfigured':
+                blob = json.dumps(actual)
+                assert actual['state'] in {'disconnected', 'connected'}, (name, actual)
+                assert actual['tooltip'] != 'Status command is not configured', actual
+                assert '/dev/' not in blob and 'GARMIN' not in blob, actual
+                print(name, 'PASS', blob)
+                continue
             assert (actual['state'], actual['count']) == (state, count), (name, actual)
             assert actual['devices'] == (1 if state == 'connected' else 0), (name, actual)
             if name == 'watchdog':

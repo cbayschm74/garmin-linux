@@ -5,9 +5,10 @@ import qs.Ui
 import qs.Commons
 
 // Third-party bar widget. The host injects bar, moduleName, and settings.
-// statusCommand and launchCommand are argv arrays supplied by the coordinator
-// (see docs/omarchy-widget.md). Nothing here is joined into a shell command,
-// and this file does not read Garmin volumes itself.
+// An empty statusCommand runs the bundled status.py through python3.
+// An explicit statusCommand or launchCommand replaces that default.
+// Nothing here is joined into a shell command, and this file does not read
+// Garmin volumes itself.
 BarWidget {
   id: root
   moduleName: "org.garminlinux.status"
@@ -86,6 +87,13 @@ BarWidget {
     return commandArgv(setting("launchCommand", []))
   }
 
+  function bundledStatusCommand() {
+    var path = decodeURIComponent(String(Qt.resolvedUrl("status.py")).replace(/^file:\/\//, ""))
+    if (path.charAt(0) !== "/") return []
+    if (path.indexOf("\n") !== -1 || path.indexOf("\r") !== -1 || path.indexOf("\u0000") !== -1) return []
+    return ["python3", "-B", path]
+  }
+
   function workingDirectory() {
     var value = setting("workingDirectory", "")
     if (typeof value !== "string" || value.charAt(0) !== "/") return ""
@@ -140,6 +148,7 @@ BarWidget {
   function refresh() {
     if (statusProcess.running) return
     var command = commandArgv(setting("statusCommand", []))
+    if (command.length === 0) command = bundledStatusCommand()
     if (command.length === 0) {
       statusSettled = true
       killedByWatchdog = false

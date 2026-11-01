@@ -23,7 +23,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_ID = 'org.garminlinux.status'
 SOURCE_DIR = Path('integrations/omarchy') / PLUGIN_ID
 README_SOURCE = Path('integrations/omarchy/plugin-repo/README.md')
-PAYLOAD_FILES = ('manifest.json', 'BarWidget.qml')
+PAYLOAD_FILES = ('manifest.json', 'BarWidget.qml', 'status.py', '.gitignore')
 EXPORT_FILES = PAYLOAD_FILES + ('README.md', 'LICENSE')
 FILE_MODE = 0o644
 GIT_NAME = 'Garmin Linux Companion'
@@ -103,14 +103,9 @@ def _destination(destination: Path) -> Path:
 
 def _sources(checkout: Path) -> dict[str, Path]:
     plugin = checkout / SOURCE_DIR
-    readme = checkout / README_SOURCE
-    license_file = checkout / 'LICENSE'
-    mapping = {
-        'manifest.json': plugin / 'manifest.json',
-        'BarWidget.qml': plugin / 'BarWidget.qml',
-        'README.md': readme,
-        'LICENSE': license_file,
-    }
+    mapping = {name: plugin / name for name in PAYLOAD_FILES}
+    mapping['README.md'] = checkout / README_SOURCE
+    mapping['LICENSE'] = checkout / 'LICENSE'
     for name, path in mapping.items():
         _require_regular(path, name)
     return mapping

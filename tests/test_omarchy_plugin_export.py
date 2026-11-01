@@ -41,12 +41,15 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(tuple(sorted(path.name for path in destination.iterdir())),
                          tuple(sorted(EXPORT_FILES)))
         self.assertFalse((destination / '.git').exists())
-        for name in ('manifest.json', 'BarWidget.qml'):
+        for name in ('manifest.json', 'BarWidget.qml', 'status.py', '.gitignore'):
             self.assertEqual((destination / name).read_bytes(), (SOURCE / name).read_bytes())
         self.assertEqual((destination / 'LICENSE').read_bytes(),
                          (REPO_ROOT / 'LICENSE').read_bytes())
         readme = (destination / 'README.md').read_text(encoding='utf-8')
-        self.assertIn('omarchy plugin add', readme)
+        self.assertIn(
+            'omarchy plugin add https://github.com/cbayschm74/omarchy-garmin-status.git --enable',
+            readme)
+        self.assertIn('omarchy plugin disable org.garminlinux.status', readme)
         self.assertIn('omarchy plugin remove org.garminlinux.status', readme)
         self.assertIn('lsblk', readme)
         self.assertIn('not listed at plugins.omarchy.org', readme)

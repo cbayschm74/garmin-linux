@@ -19,6 +19,17 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 
 ## Next / ownership
 
+**G031 publishes the Omarchy widget repository (2026-11-01).** The public
+plugin repository is
+https://github.com/cbayschm74/omarchy-garmin-status. Its root has the manifest,
+widget, bundled `status.py`, MIT license, and install/removal instructions.
+`omarchy plugin add` of that URL is the install path. `omarchy plugin disable`
+and `omarchy plugin remove` remove only that plugin. The count does not need
+the companion checkout. The hand-installed widget on this laptop was left
+enabled, so add will refuse the same id until that copy is removed. No
+marketplace issue has been opened. A listing waits for an explicit request.
+[Widget guide](docs/omarchy-widget.md).
+
 **G030 plugin export is ready on Omarchy (2026-11-01).** The bar widget can be
 exported as its own directory with `manifest.json` at the root, a README that
 covers companion and `lsblk` dependencies, install, and removal, and the MIT
@@ -27,8 +38,8 @@ directory and one local commit. It does not install or enable anything. The
 live hand-installed widget was left enabled and was not replaced. Setup install
 no longer implies that it manages the widget; uninstall names the separate
 `omarchy plugin disable` and `omarchy plugin remove` commands and does not run
-them. No public repository was created and plugins.omarchy.org was not
-contacted. A listing waits for a public GitHub root and an explicit request.
+them. G031 later published that export as the public plugin repository.
+plugins.omarchy.org was not contacted.
 [Export and removal notes](docs/omarchy-widget.md).
 
 **Actual Omarchy theme switching accepted by user (2026-11-01).** User tested

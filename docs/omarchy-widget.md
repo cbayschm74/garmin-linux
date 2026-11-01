@@ -100,13 +100,15 @@ The widget reads these fields from its `shell.json` layout entry:
 | Key | Meaning |
 | --- | --- |
 | `statusCommand` | Argv array, or a JSON array string. A plain string is one executable path and is not split in a shell. |
-| `workingDirectory` | Absolute checkout path. Required so `python -m garmin_companion` imports this tree. |
+| `workingDirectory` | Absolute checkout path. Required only when `statusCommand` runs `python -m garmin_companion`. The bundled `status.py` does not need it. |
 | `launchCommand` | Argv array for left click. Empty means the click does nothing. |
 | `pollIntervalSec` | Default 30. Values below 15 are raised to 15. Maximum 3600. |
 | `commandTimeoutSec` | Default 8. Clamped to at least 6 and at most one second below the poll interval. |
 
-An empty `statusCommand` shows `Status command is not configured` and does not
-start a process. Polls do not overlap: a tick while the command is running is
+An empty `statusCommand` runs the bundled `status.py` with `python3 -B`.
+A configured command replaces that default. The bundled script is read-only
+lsblk metadata and does not need the companion checkout. Polls do not overlap:
+a tick while the command is running is
 ignored. The watchdog sends SIGTERM when the command exceeds
 `commandTimeoutSec`, then SIGKILL one second later, and shows `Status command
 timed out` instead of treating the kill as disconnected. Click uses
@@ -231,23 +233,31 @@ python3 tools/export-omarchy-plugin.py --output /path/to/new-directory --git
 omarchy plugin validate /path/to/new-directory
 ```
 
-The export contains only `manifest.json`, `BarWidget.qml`, `README.md`, and
-`LICENSE`. `--git` makes one local commit on `main` so the directory can be
-cloned. The command refuses an existing destination and refuses to write
-anywhere under `~/.config/omarchy/plugins`. It does not enable the widget,
-edit `shell.json`, or replace the hand-installed copy already on this laptop.
+The export contains `manifest.json`, `BarWidget.qml`, `status.py`,
+`.gitignore`, `README.md`, and `LICENSE`. `--git` makes one local commit on
+`main` so the directory can be cloned. The command refuses an existing
+destination and refuses to write anywhere under `~/.config/omarchy/plugins`.
+It does not enable the widget, edit `shell.json`, or replace the hand-installed
+copy already on this laptop.
 
-The export README documents the companion checkout, `lsblk`, install,
-command settings, and removal. Removal of a Git checkout deletes that clone
-only. Removal of a non-Git folder, including the current managed install,
-moves it to a hidden backup. The companion, private backups, and other plugins
-stay. This task does not run removal against the live enabled widget.
+Install and removal for the public repository:
 
-No public repository has been created and nothing has been submitted to
-plugins.omarchy.org. Publishing needs a public GitHub repository root and an
-explicit owner approval before any marketplace issue is opened. A reasonable
-listing, once that exists, is category `Hardware` with tags `bar` and `system`.
-Those are suggestions, not a submission.
+```sh
+omarchy plugin add https://github.com/cbayschm74/omarchy-garmin-status.git --enable
+omarchy plugin disable org.garminlinux.status
+omarchy plugin remove org.garminlinux.status
+```
+
+`add` validates the clone before enabling it. The bundled status script then
+counts Garmin USB storage without a companion checkout. Removal deletes that
+clone, or moves a non-Git folder to a hidden backup. The companion, private
+backups, and other plugins stay. The hand-installed widget on this laptop was
+not removed, so `plugin add` will refuse the id until that copy is removed.
+
+Nothing has been submitted to plugins.omarchy.org. A listing still needs an
+explicit owner approval before the marketplace issue is opened. A reasonable
+listing is category `Hardware` with tags `bar` and `system`. Those are
+suggestions, not a submission.
 
 ## Checks that do not install the widget
 
