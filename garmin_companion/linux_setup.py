@@ -183,6 +183,14 @@ def _resolve_prefix(prefix: Path | str) -> Path:
     return Path(prefix).expanduser().resolve()
 
 
+def _pass(ok: bool) -> str:
+    return 'PASS' if ok else 'FAIL'
+
+
+def _fail(message: str) -> None:
+    print(f'FAILED: {message}', file=sys.stderr)
+
+
 def _format_environment(state: str) -> str:
     return {
         ENVIRONMENT_READY: 'ready',
@@ -235,14 +243,6 @@ def run_check(checkout: Path, prefix: Path) -> int:
     print('')
     print(HOST_VALIDATION_NOTE)
     return 0 if report.ready else 1
-
-
-def _pass(ok: bool) -> str:
-    return 'PASS' if ok else 'FAIL'
-
-
-def _fail(message: str) -> None:
-    print(f'FAILED: {message}', file=sys.stderr)
 
 
 def _install_environment(checkout: Path) -> tuple[bool, str]:

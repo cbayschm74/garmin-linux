@@ -1,8 +1,8 @@
 # G014 — Portable checkout setup
 
-- State: active
+- State: review
 - Owner: MiniMax M3 / OMP; coordinator supervises Orca run `run_e413c22b78ee`.
-- Base: main claim commit containing this card; record actual worktree/HEAD at startup.
+- Base: `ea2dab4` (main claim commit containing this card); branch `task/G014-linux-setup`.
 - Allowed files: new `garmin_companion/linux_setup.py`, `tools/setup-linux.py`, `tests/test_linux_setup.py`, `docs/linux-setup.md`, this card only.
 
 Implement a standard-library setup entry point usable from another cwd: `python3 /path/to/checkout/tools/setup-linux.py check|install|uninstall [--prefix PATH]`, prefix default ~/.local. Public `main(argv=None)` in linux_setup.py; thin script imports from its own checkout without relying on cwd. No GUI imports or device access.
@@ -14,3 +14,14 @@ Implement a standard-library setup entry point usable from another cwd: `python3
 `uninstall`: only delegate existing desktop removal (current Python can run stdlib-only desktop command), preserving .venv, checkout, backups, cache, all source/map data. Document update by rerunning install; no automatic Git update; distro dependency commands are guidance, not executed. Paths with spaces supported; subprocess argv lists, no shell=True. No change to desktop.py or __main__.py.
 
 Tests use temporary checkout/prefix and mocked subprocess/tools; no live install or pip. Cover no-mutation check, missing dependencies/tool, unsafe existing environment, failure halting install, correct scoped argv/cwd, idempotent environment reuse, uninstall preservation. Document Kubuntu and Arch/Omarchy prerequisites with actual laptop validation pending. Run targeted and full synthetic suite. Do not use real devices, private data, other worktrees, global settings, or delegate. End with reviewable commit, card handoff, exact tests and limitations; do not merge main. Follow injected Orca lifecycle commands.
+
+## Handoff — MiniMax M3 / OMP
+
+- Worktree: `/home/cbayschm/orca/workspaces/garmin-linux/G014-linux-setup`; branch `task/G014-linux-setup`; base `ea2dab4`; implementation commit `1cf453f`.
+- Changed files: `garmin_companion/linux_setup.py` (new), `tools/setup-linux.py` (new, executable), `tests/test_linux_setup.py` (new), `docs/linux-setup.md` (new), this card. No other source file was touched; `desktop.py` and `__main__.py` are unchanged.
+- Implementation: `main(argv=None)` parses `check|install|uninstall` with `--prefix` (default `~/.local`). `check` only reads the checkout, probes the checkout `.venv` interpreter with `import PyQt6` / `import garmin_fit_sdk`, and reports the interpreter plus `udisksctl` (required) and `7z` (optional) with `PASS`/`FAIL` per line; it exits non-zero when a required item is missing and never mutates anything or uses the network. `install` refuses a symlinked, non-directory or unrecognized `.venv`, otherwise creates it with `python3 -m venv --system-site-packages`, reuses a valid one, installs the pinned `requirements.txt` with that environment's `-m pip install -r <absolute path>`, re-probes both dependencies, and only then runs `<venv>/bin/python -m garmin_companion install-desktop --prefix <prefix>` with the checkout as cwd. `uninstall` calls the existing `desktop.install_desktop(prefix, remove=True)`, which removes only launcher, desktop entry and icon. All subprocesses use argument lists (no shell), so spaces in paths are safe.
+- Checks: 21 new synthetic tests (`tests/test_linux_setup.py`) pass; the full suite is 243 passed (222 baseline + 21); `compileall` over `garmin_companion`, `tests` and `tools` is clean; `git diff --check` is clean.
+- Real but isolated smoke runs, all in temporary directories that were deleted afterwards: `check` from `/tmp` against this checkout (PASS, no mutation); `install` into `/tmp/setup smoke/prefix` reusing the worktree `.venv`; `install` on a copied checkout without `.venv` at `/tmp/fresh checkout`, which created a real environment, installed the pinned SDK and registered the launcher; `uninstall` removed the managed files again while the checkout, its `.venv` and the personal data roots stayed untouched. Nothing was written to `~/.local`, `~/GarminBackups` or the activity cache.
+- Limitations: everything above is synthetic or host-local; no Garmin device was scanned, mounted or written, and the GUI was never started. `pip install` needs network access on first install. The helper reports that host desktop validation is not performed, so Omarchy and a real Kubuntu launcher session remain unverified and stay with G004. A missing `udisksctl` does not fail the install; the run then states the checkout is not ready for device work and prints the package command as guidance only.
+- Device access: none. Active operations or processes from this task: none.
+- Next action for the coordinator: review `1cf453f` on `task/G014-linux-setup`, rerun `.venv/bin/python -m unittest discover -s tests -q` after integration, and move the board row to `done` if the review accepts it.
