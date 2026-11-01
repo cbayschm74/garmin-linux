@@ -19,10 +19,10 @@ Coordinator maintains this table in the primary checkout. Worker copies are snap
 | G013 | Map editor contrast and planning/install progress | done | Codex coordinator | 222 tests; synthetic install/failure and dark editor checks |
 
 | G014 | Portable Linux checkout setup | done | MiniMax M3 / OMP | User-local setup; synthetic checks only |
-| G015 | Desktop lifecycle independent tests | active | MiMo Pro / China Token Plan | Existing desktop.py, isolated prefixes |
+| G015 | Desktop lifecycle independent tests | done | MiMo Pro / China Token Plan; coordinator accepted | 41 tests integrated; 288 pass; findings recorded |
 | G016 | Recovery and troubleshooting guide | done | Grok | Source-verified docs; no devices |
 
-Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G003](G003-map-gui-design.md), [G004](G004-omarchy-validation.md), [G005](G005-map-selection-helpers.md), [G006](G006-map-install-guards.md), [G007](G007-maps-gui.md), [G008](G008-map-gui-device-validation.md), [G009](G009-map-gui-review.md), [G010](G010-map-gui-tests.md), [G011](G011-map-workflow-tests.md), [G012](G012-map-backup-feedback.md), [G013](G013-map-install-feedback.md).
+Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G003](G003-map-gui-design.md), [G004](G004-omarchy-validation.md), [G005](G005-map-selection-helpers.md), [G006](G006-map-install-guards.md), [G007](G007-maps-gui.md), [G008](G008-map-gui-device-validation.md), [G009](G009-map-gui-review.md), [G010](G010-map-gui-tests.md), [G011](G011-map-workflow-tests.md), [G012](G012-map-backup-feedback.md), [G013](G013-map-install-feedback.md), [G014](G014-linux-setup.md), [G015](G015-desktop-lifecycle-tests.md), [G016](G016-recovery-guide.md).
 
 ## States
 

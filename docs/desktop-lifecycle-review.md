@@ -8,6 +8,18 @@
   `install-desktop` CLI behavior as documented in README "Install the launcher")
   plus `tests/test_desktop.py`. No production source was edited.
 
+## Coordinator integration (2026-11-01)
+
+Integrated on `main` as `24f2585`, `d4f5ef5`, `71f7de0`. The 263-test figure
+below is the worker worktree at its base commit; on integrated `main` the same
+suite passes **288** tests (247 baseline + 41 new, zero skips on this host),
+with clean `compileall` and `git diff --check`. The coordinator additionally
+ran the real `install-desktop` CLI against a temporary prefix (not mocked):
+install, `--remove`, and unmanaged-target refusal all behaved as this report
+describes, and F1 was reproduced on `main` as the raw codec message. Findings
+F1–F4 were accepted as recorded with **no production change** in this task; see
+`tasks/G015-desktop-lifecycle-tests.md` for the disposition.
+
 ## Method
 
 Everything runs against synthetic state: a fake checkout root with a stub

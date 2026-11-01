@@ -124,6 +124,7 @@ For coordinated work, use the task-specific resume prompt in `docs/agent-workflo
 - [ ] Omarchy 4.0.4-1: add a native Quickshell `bar-widget` plugin with a device-status icon and click action that opens the app. Keep Garmin credentials and file operations in the shared app, outside the shell plugin.
 - [ ] Validate the plugin with `omarchy plugin validate` and test enable, disable, and bar placement on the laptop.
 - [x] Kubuntu: install a `.desktop` launcher and SVG icon, verify launch and matching KDE desktop identity/WM_CLASS, and document taskbar pinning. The user's pin action remains to be confirmed.
+- [x] Independently verify the desktop launcher lifecycle against the README promises: generated launcher/entry/icon and modes, reinstall after a checkout move, uninstall that preserves sibling files, refusal of unmanaged/symlink/directory targets before any mutation, missing venv and failed dependency probes publishing nothing, cwd independence, and hostile-path quoting with no payload execution. G015 added 41 synthetic tests and an independent review; 288 tests pass. Findings F1–F4 are recorded in `docs/desktop-lifecycle-review.md`; no production change was required.
 - **Done when:** each desktop launches the same app from its bar/taskbar and displays the expected device status.
 
 ### 9. Release and maintenance

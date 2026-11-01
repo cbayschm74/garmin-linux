@@ -1,7 +1,7 @@
 # G015 — Independent desktop lifecycle tests
 
-- State: review
-- Owner: MiMo Pro / OpenCode China Token Plan; coordinator supervises run `run_e413c22b78ee`.
+- State: done
+- Owner: MiMo Pro / OpenCode China Token Plan; coordinator accepted and integrated on 2026-11-01.
 - Base: main claim commit containing this card; record actual worktree/HEAD at startup.
 - Allowed files: new `tests/test_desktop.py`, new `docs/desktop-lifecycle-review.md`, this card only. No production edits.
 
@@ -20,3 +20,14 @@ No dependency on G014 APIs: this independently checks the current desktop lifecy
 - Remaining work: none in scope. Deliberately untested: real menu launch/pin, GUI, devices, real `~/.local` (per constraints); launcher execution never performed.
 - Device/hardware access: none. No mounts, scans, backups, cache, GUI launch, or global installs; all state synthetic and temporary. No operation or process left active.
 - Next action for coordinator: independently rerun the full suite in this worktree, review `tests/test_desktop.py` and `docs/desktop-lifecycle-review.md`, decide on F1–F4 source corrections (none required for promised behavior), then integrate and mark `done`.
+
+## Coordinator acceptance — 2026-11-01
+
+- Integrated the worker commits onto `main` as `24f2585` (tests + review doc), `d4f5ef5` (card handoff), `71f7de0` (coordinator-requested assertion narrowing). Scope respected: only `tests/test_desktop.py`, `docs/desktop-lifecycle-review.md`, and this card changed; no production source was touched.
+- Diff review: the 41 tests assert observable artifacts — launcher/entry/icon layout and modes, Exec/TryExec decoding through an independent Desktop Entry decoder, reinstall after a checkout move, uninstall preserving siblings, refusal of unmanaged/symlink/directory targets with byte-level "no mutation" snapshots, missing-venv and failed-probe paths publishing nothing, cwd independence, hostile-path quoting with no payload execution, optional validator behavior, and updater invocation/skip. They decode generated files the way a consumer would instead of mirroring `desktop.py` internals, so they are not tautological.
+- Coordinator checks on `main`: `QT_QPA_PLATFORM=offscreen .venv/bin/python -m unittest discover -s tests -q` → **288 passed** (247 baseline + 41 new, zero skips on this host); `python -m compileall -q garmin_companion tests` clean; `git diff --check` clean.
+- Independent real-CLI smoke (not mocked, temporary prefix outside the repo): `python -m garmin_companion install-desktop --prefix <tmp>` installed the three promised files and exited 0; `--remove` deleted them and left only `update-desktop-database`'s `mimeinfo.cache`; an unmanaged icon was refused with the uniform message `Existing path is not managed by this launcher installer: …` and exit 1. Host has both `desktop-file-validate` and `update-desktop-database`, so the validator and updater paths ran for real.
+- F1 reproduced on `main` with the real CLI: a non-UTF-8 unmanaged file at a managed path prints `'utf-8' codec can't decode byte 0xff in position 0: invalid start byte` instead of the uniform refusal text. The refusal still happens before any mutation and `UnicodeDecodeError` subclasses `ValueError`, which `__main__.py` catches, so this is message quality only.
+- F1–F4 disposition: **no production change in this task.** None of them breaks a README promise; F1 is message wording, F2 is a limitation for paths containing a literal tab (outside the promised spaces/metacharacter scope), F3 and F4 are error-type/wording asymmetry. The findings stay recorded in `docs/desktop-lifecycle-review.md` for a future source-fix task.
+- Device/hardware access: none. No GUI launch, no scan, no mount, no `~/.local` install, no personal data; all state synthetic and temporary.
+- Next action: none for G015. Remaining open project items are G004 (needs the Omarchy host) and the physical release gates in `PLAN.md`.
