@@ -53,3 +53,10 @@ Backup and unmount acceptance pending.
   live GUI/menu/bar acceptance, disconnect-during-operation resilience, packaging
   and restore validation remain separate. This is real core USB/backup/unmount
   acceptance, not a claim that GUI or restore behavior was physically tested.
+
+### Post-test status and GUI acceptance — 2026-11-01
+
+Fresh standalone metadata status and live bar IPC both report disconnected/count
+0, observed without a forced refresh. User also confirms the normal app opens,
+shows verified backups, and loads Activities/Courses correctly. No device or
+user-GUI operation was performed to record this; no private backup contents read.

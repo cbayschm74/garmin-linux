@@ -59,3 +59,13 @@ still connected at handoff, safe to unplug. No source content writes, maps,
 firmware, GUI or transfer operation. Both models now pass real core USB/backup/
 unmount acceptance. Human GUI/menu/bar selection, restore and clean-install
 validation remain separate. Source baseline remains 317 tests; docs-only run.
+
+## Normal Omarchy GUI — user acceptance, 2026-11-01
+
+User confirms the app opens correctly, Backups shows verified copies, and
+Activities and Courses load correctly. Standalone/live bar status subsequently
+observed disconnected/count 0 without forced refresh after fēnix testing. This
+closes normal application launch/library display acceptance, while separate
+manual menu/bar click-route checks, restore and clean-install/upgrade validation
+remain unclaimed. Documentation-only recording; no private backup data read or
+device/user-GUI operation performed by the coordinator.

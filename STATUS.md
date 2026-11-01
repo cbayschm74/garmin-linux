@@ -15,9 +15,23 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 - Review cancellation precedes remount/writes. Accepted-plan checking is enforced inside the final installer re-plan. Resume pins the internally reloaded state to consent. Cleanup refuses replacement-device identities. Changed plans remain visible but require fresh selection/review. Saved complete records do not establish current mount state.
 - Dark-palette page/review rendering was checked. Existing course GUI, operation guards, inspection cancellation, timer restoration, interrupted state, and synthetic real planner/installer round trips pass.
 - User previously confirmed fēnix GUI courses load/render and Edge CLI GPX courses appear. **G002 is now user-validated:** Edge GPX GUI transfer succeeded, and the course appears and renders on the Edge map. Previously installed OpenMTBMap maps render on both devices; the user has now confirmed a real GUI map backup completed successfully. The subsequent Chile GUI replacement also passed user acceptance (G008).
-- Kubuntu launcher/icon already uses this main checkout; reopen the app to load changes. G004 verified the Omarchy laptop environment (4.0.6-1), dependencies, all 288 tests, and temporary-data offscreen GUI rendering. G017 native Wayland/desktop-entry launch and G018 installed shell widget checks pass. Edge core USB/read-only backup/unmount passed G021. fēnix core USB/read-only backup/unmount also passed G022. Human menu/bar click acceptance and packaging remain pending.
+- Kubuntu launcher/icon already uses this main checkout; reopen the app to load changes. G004 verified the Omarchy laptop environment (4.0.6-1), dependencies, all 288 tests, and temporary-data offscreen GUI rendering. G017 native Wayland/desktop-entry launch and G018 installed shell widget checks pass. Edge core USB/read-only backup/unmount passed G021. fēnix core USB/read-only backup/unmount also passed G022. Normal GUI launch, verified backup display, Activities and Courses are now user-accepted on Omarchy; packaging remains pending.
 
 ## Next / ownership
+
+**Normal Omarchy GUI accepted by the user (2026-11-01).** User confirms the app
+opens correctly, Backups shows verified copies, and Activities and Courses load
+correctly. This completes normal launch/library-view acceptance alongside G017's
+native automated checks and G021/G022's real read-only backups. The report does
+not specify whether launch was from the menu or bar, so no distinct manual click
+route is claimed. Fresh standalone and live bar status both show disconnected /
+count 0 after the fēnix test, without forcing a refresh. User's app/session was
+left alone; this recording used metadata-only status checks and documentation
+edits, with no device operation or private backup read.
+**Next:** packaging and repeatable clean-install/upgrade/uninstall validation.
+Restore and interruption resilience remain separate acceptance work. No active
+worker assignment; all T3 worker worktrees retained as evidence. Source baseline
+remains 317 passing tests; no source change for this acceptance record.
 
 **G022 fēnix physical USB acceptance passed on Omarchy (2026-11-01).** Separately
 connected watch detected in Mass Storage as one VFAT GARMIN volume; mounted XML

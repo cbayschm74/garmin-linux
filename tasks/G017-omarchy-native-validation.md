@@ -36,3 +36,11 @@ Final commit: the commit containing this handoff (`git log -1 --format=%H -- tas
 - Remaining: user menu selection acceptance, G018 widget, physical USB acceptance.
   Next safe action: review G018 result and validate/install its scoped widget.
 See [native evidence](../docs/omarchy-native-validation.md).
+
+## User acceptance — 2026-11-01
+
+User confirms the ordinary app opens correctly, displays verified backups and
+loads Activities and Courses. This is real user GUI acceptance, supplementing
+the temporary-data native tests; exact menu/bar launch route was not specified.
+Coordinator did not open private backup data or manipulate the user's GUI to
+record this confirmation. Packaging/clean-install lifecycle remains separate.

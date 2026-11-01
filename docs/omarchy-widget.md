@@ -221,3 +221,7 @@ by both standalone status and live bar as connected / **1 Garmin USB volume**.
 Read-only data backup/independent verification/safe unmount also passed. The bar
 correctly retains connected status while the unmounted watch remains on USB;
 physical disconnect observation follows the user unplugging it.
+
+Subsequent standalone/live bar observations after fēnix testing both report
+disconnected/count 0 without forced refresh. User confirms normal app launch,
+verified backup display and Activities/Courses; exact launch route was not named.

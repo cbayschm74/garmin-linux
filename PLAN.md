@@ -116,12 +116,12 @@ For coordinated work, use the task-specific resume prompt in `docs/agent-workflo
 - [x] Design the Maps GUI selection, review, guarded install, and resume flow against the existing APIs. Accepted design: `docs/map-gui-design.md`; G005/G006 core helpers precede G007 GUI, with G008 physical acceptance separate.
 - [ ] Add guarded installation of user-downloaded OpenMTBMap IMG files after archive inspection, map-specific backup/recovery design, and on-device validation for each model. QMapShack can display these IMG maps for planning; it is not the project's map transfer path. Keep Garmin-licensed map delivery in Express.
 - [ ] Keep long operations cancellable and show their result and destination.
-- [ ] Package and smoke-test on Kubuntu and Omarchy, including unplugged-device behavior.
+- [ ] Package and smoke-test on Kubuntu and Omarchy, including unplugged-device behavior. Omarchy native temporary-data GUI and physical USB/disconnect checks pass; user confirms normal app launch, verified backups, Activities and Courses. Packaging/clean-install checks remain.
 - **Done when:** ordinary tasks work without using the terminal on both machines.
 
 ### 8. Desktop integration
 
-- [x] Omarchy 4.0.6-1: add/install native Quickshell `org.garminlinux.status` bar widget with a USB icon, bounded read-only status polling, and shared launcher click action. G018 source/runtime checks pass; launch handler tested with temporary native GUI data. Physical connected-device status remains pending.
+- [x] Omarchy 4.0.6-1: add/install native Quickshell `org.garminlinux.status` bar widget with a USB icon, bounded read-only status polling, and shared launcher click action. G018 source/runtime checks pass; launch handler tested with temporary native GUI data. Physical Edge/fēnix connected and post-disconnect status passed G021/G022.
 - [x] Validate the plugin with `omarchy plugin validate` and test enable, disable, and bar placement on the laptop. G018 passed; disable restores original parsed config, and unrelated settings survive installation. See `docs/omarchy-widget.md`.
 - [x] Kubuntu: install a `.desktop` launcher and SVG icon, verify launch and matching KDE desktop identity/WM_CLASS, and document taskbar pinning. The user's pin action remains to be confirmed.
 - [x] Independently verify the desktop launcher lifecycle against the README promises: generated launcher/entry/icon and modes, reinstall after a checkout move, uninstall that preserves sibling files, refusal of unmanaged/symlink/directory targets before any mutation, missing venv and failed dependency probes publishing nothing, cwd independence, and hostile-path quoting with no payload execution. G015 added 41 synthetic tests and an independent review; 288 tests pass. Findings F1–F4 are recorded in `docs/desktop-lifecycle-review.md`; no production change was required.
@@ -129,7 +129,7 @@ For coordinated work, use the task-specific resume prompt in `docs/agent-workflo
 
 ### 9. Release and maintenance
 
-- [x] Add checkout setup/check/install/update/uninstall guidance and source-verified recovery/troubleshooting instructions. G014/G016 integrated; actual Omarchy and clean-machine graphical validation remain separate gates.
+- [x] Add checkout setup/check/install/update/uninstall guidance and source-verified recovery/troubleshooting instructions. G014/G016 integrated; actual Omarchy environment/native GUI/core USB and normal GUI display are accepted; clean-machine graphical installation remains open.
 - [ ] Test clean install and upgrade on both machines, plus disconnects and malformed files.
 - [ ] Tag a first release describing supported features and known Garmin service limits.
 - **Done when:** the user can reinstall the app on either machine from the repository and recover their backed-up data.

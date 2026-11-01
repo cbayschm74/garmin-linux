@@ -71,3 +71,11 @@ Only observations made directly on the connected hardware are marked **Observed*
 
 - **Kubuntu machine, observed:** Ubuntu 26.04.1 LTS with KDE Plasma workspace package 6.6.6, Python 3.14.4, Git 2.53.0, Qt 6.10.2 and PyQt6 6.10.2 available in the active Python environment. `PySide6` was not found. These were checked through command-line package and Python metadata; the Plasma GUI itself was not started in the tool session.
 - **Omarchy laptop, observed 2026-11-01:** Omarchy 4.0.6-1, Wayland, system Python 3.14.8 (mise default `python3` is 3.15.2), PyQt 6.11.0, Qt 6.12.0, Quickshell 0.3.2.r7.g2b4501a-1. Missing PyQt6 and 7-Zip installed; checkout venv uses `/usr/bin/python` and FIT SDK 21.217.0. All 288 synthetic tests pass without skips; temporary-data offscreen GUI renders and empty-state/background-worker checks pass. Native Wayland GUI/desktop-entry launch and installed shell-widget checks subsequently passed in G017/G018. Edge and fēnix core USB/read-only backup/unmount subsequently passed in G021/G022; human live-bar/menu click acceptance remains pending. See [Omarchy setup](omarchy-setup.md) and [widget guide](omarchy-widget.md).
+
+## Omarchy normal GUI — user accepted 2026-11-01
+
+User confirms the app opens correctly, Backups displays verified copies, and
+Activities and Courses load correctly. Edge/fēnix backup and unmount evidence
+above remains separately scoped. Fresh standalone/live bar status after fēnix
+testing is disconnected/count 0 without forced refresh. Packaging and restore
+validation remain open; the exact human launch route was not reported.

@@ -57,3 +57,13 @@ G018 owns the bar widget. Physical USB detection/backup/unmount acceptance on
 Omarchy remains untested. No physical device or personal data was accessed in
 G017, and no smoke-test process remains running. Native smoke data was removed;
 the user-local launcher registration intentionally remains installed.
+
+## Subsequent user acceptance — 2026-11-01
+
+The user confirms the normal app opens correctly, Backups shows verified copies,
+and Activities and Courses load correctly. This records normal application
+launch/library-view acceptance after the real Edge/fēnix backups, in addition to
+the isolated automated evidence above. The report does not name the menu/bar
+launch route, so a distinct manual click route is not claimed. No additional
+agent GUI launch, backup read, or device operation was needed for this record.
+Packaging and clean-install/upgrade validation remain open.
