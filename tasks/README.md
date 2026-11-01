@@ -10,14 +10,14 @@ Coordinator maintains this table in the primary checkout. Worker copies are snap
 | G004 | Validate Omarchy environment and integration prerequisites | needs-host | unassigned | Access to Omarchy laptop |
 | G005 | Read-only map selection helpers | done | Coordinator accepted | G003 done |
 | G006 | Map remount, consent checks, and recovery errors | done | Coordinator accepted | G003 done; separate scope from G005 |
-| G007 | Maps GUI replacement/resume | active | Codex coordinator | G005 + G006 integrated |
+| G007 | Maps GUI replacement/resume | done | Codex coordinator | Main merge `5fd876d`; 208 tests pass |
 | G008 | Physical Maps GUI validation | needs-device | unassigned | G007 + agreed files/device/operator |
 
-| G009 | G007 independent review | active | Grok | Dispatch `ctx_baf3ecd983e8` |
-| G010 | G007 offscreen GUI tests | review | MiniMax M3 delivered; Codex verified | 27 tests, title correction accepted on feature branch; worker released |
-| G011 | G007 workflow/integration tests | active | MiMo 2.6 Pro / OpenCode | Dispatch `ctx_55fe519dcc6f` · China Token Plan |
+| G009 | G007 independent review | done | Grok; coordinator accepted | Findings fixed/documented; report integrated |
+| G010 | G007 offscreen GUI tests | done | MiniMax M3 / OMP; accepted | 27 GUI tests integrated; worker released |
+| G011 | G007 workflow/integration tests | done | MiMo Pro / China Token Plan; accepted | 31 workflow tests integrated |
 
-Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G003](G003-map-gui-design.md), [G004](G004-omarchy-validation.md), [G005](G005-map-selection-helpers.md), [G006](G006-map-install-guards.md), [G007](G007-maps-gui.md), [G008](G008-map-gui-device-validation.md).
+Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G003](G003-map-gui-design.md), [G004](G004-omarchy-validation.md), [G005](G005-map-selection-helpers.md), [G006](G006-map-install-guards.md), [G007](G007-maps-gui.md), [G008](G008-map-gui-device-validation.md), [G009](G009-map-gui-review.md), [G010](G010-map-gui-tests.md), [G011](G011-map-workflow-tests.md).
 
 ## States
 
@@ -30,12 +30,13 @@ Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G
 3. Worker changes its card and assigned files. It reports `review`, commit, checks, and limitations to the coordinator. It does not edit other cards, this board, or project status.
 4. Coordinator reviews and integrates the task, reruns relevant checks, and updates the board, `STATUS.md`, and milestone checkboxes. Clear ownership only after verifying the previous agent has stopped.
 
-G005 and G006 are integrated. G007 is assigned to Codex in a separate worktree; no other GUI editor is assigned. Physical checks remain separately scheduled.
+G005/G006/G007 and support tasks G009/G010/G011 are complete. No new worker is assigned. G002 and G008 need a selected device/test scope; G004 needs the Omarchy laptop. Synthetic acceptance does not authorize rewriting working maps.
 
-## Active orchestration
+## Completed orchestration
 
-Run `run_286a3e55cb66`, coordinator Codex. User authorized autonomous task assignment to these three agents on 2026-11-01. Separate Orca worktrees G009-map-gui-review, G010-map-gui-tests, G011-map-workflow-tests are based on G007 checkpoint `daff55a`. Worker test/review scope only; Codex alone edits gui.py in /home/cbayschm/garmin-G007-maps-gui. Grok first launch failed at workspace trust before running task, released, then retried under the Dispatch above. All current launch receipts confirm intended agents/models.
+Run `run_286a3e55cb66`, coordinator Codex. User authorized autonomous assignment on 2026-11-01. Each worker used a separate Orca worktree and bounded scope; Codex was the sole GUI editor. All final worker_done reports were accepted and processed.
 
-MiMo routing correction: two pre-work launches through xiaomi/mimo-v2.6-pro returned insufficient balance and were explicitly stopped/released. After user confirmed the China Token Plan, CLI discovery exposed xiaomi-token-plan-cn/mimo-v2.6-pro; retry ctx_55fe519dcc6f is positively observed working on that provider. Its worktree was fast-forwarded to 76d9003 and contains coordinator baseline workflow tests for independent strengthening.
-
-G007 current feature checkpoint: 34fb9a9, 184 tests pass. G010 commit 0171dd3 was reviewed and integrated on the feature branch as 59ce57f, with the required recovery-dialog wording corrected. Grok confirmed the wrong-identity cleanup race; it is now fenced and regression-tested. Main still awaits final G007 integration, G009 report, and G011 test delivery.
+- Grok: G009 report `330280c`/`6c7f207`; final Dispatch `ctx_baf3ecd983e8`. Initial workspace-trust failure was released and retried. Final release reported user_takeover/retained; terminal left untouched.
+- MiniMax M3 / OMP: G010 test commit `0171dd3`, 27 GUI tests. Dispatch `ctx_51e3f16a6c18` released with transcript archived. One recovery-title assertion exposed a mismatch, fixed without weakening the assertion.
+- MiMo Pro / OpenCode: G011 final `db1d8ee`/`3030612`, 31 workflow tests. Two pre-work generic Xiaomi launches returned insufficient balance and were stopped/released. Correct model route `xiaomi-token-plan-cn/mimo-v2.6-pro` ran successfully under `ctx_55fe519dcc6f`; final release reported user_takeover/retained.
+- Runtime reports no reclaimable worker resources. Evaluation and worker worktrees preserved. Main source merge `5fd876d`; final combined suite 208 passed. Physical G008 remains outstanding.

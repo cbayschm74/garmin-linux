@@ -85,3 +85,8 @@ discovery. The other 26 new tests pass unchanged against `76d9003`.
 ## Coordinator acceptance — 2026-11-01
 
 Scoped commits independently inspected and integrated on task/G007-maps-gui. Full combined feature suite: 207 tests passed, compilation and diff checks passed. No device or private data access. Remaining step is main integration and final board update.
+
+
+## Main acceptance
+
+Integrated through main merge 5fd876d. Final main suite: 208 tests passed, compilation and diff checks passed. G009 report findings were resolved or documented as intentional existing-state preservation; G010 assertions were retained. No hardware acceptance claimed.

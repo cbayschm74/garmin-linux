@@ -2,7 +2,7 @@
 
 ## Assignment
 
-- State: review — ready for main integration
+- State: done — integrated and verified on main
 - Owner / session: Codex coordinator
 - Branch / worktree: task/G007-maps-gui at /home/cbayschm/garmin-G007-maps-gui; base is the coordinator claim commit
 - Depends on: G005 and G006
@@ -41,3 +41,8 @@ Coordinator added tests/test_gui_map_cleanup.py after reproducing a post-remount
 ## Final feature acceptance before main merge
 
 All G005/G006 dependencies are integrated. G009 Grok report, G010 MiniMax M3 tests (27), and G011 MiMo China Token Plan workflow tests (20 additional, 30 in file) are reviewed and integrated on the feature branch. Coordinator fixed all accepted safety/UI findings and added the relevant regressions. Full suite: 207 passed; compilation and branch diff checks passed. Dark-palette page/review rendering inspected. No real USB, map installation, launcher change, or private backup read occurred. Next: merge task/G007-maps-gui into main, rerun standard checks, update STATUS/PLAN/board, and finish Orca settlement accounting. G008 remains a separate physical test.
+
+
+## Main integration acceptance
+
+Main merge 5fd876d integrates the implementation, reviewed worker tests, and review report. Final MiMo db1d8ee delta brings the full suite to 208 passed. Compilation, diff/link checks, readable dark-palette Maps/review rendering, operation guards, no-write cancellation, recovery state, and real synthetic planner/installer integration are verified. G007 is complete; G008 remains needs-device. Orca Run run_286a3e55cb66 has all three final worker reports accepted, M3 released, Grok/MiMo retained by runtime user_takeover, and no reclaimable resources. Main user's untracked mise.toml preserved.

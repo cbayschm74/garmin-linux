@@ -1,6 +1,6 @@
 # G009 — G007 support
 
-- State: review — coordinator accepted; awaiting main integration
+- State: done — coordinator reviewed and integrated
 - Owner: Grok
 - Base: G007 checkpoint commit containing this card; coordinator records actual Orca worktree/Dispatch in main board.
 - Allowed files: `docs/g007-grok-review.md` and this card only.
@@ -24,3 +24,8 @@ Read AGENTS.md and relevant gui.py map additions plus accepted design. Setup a p
 ## Coordinator acceptance — 2026-11-01
 
 Scoped commits independently inspected and integrated on task/G007-maps-gui. Full combined feature suite: 207 tests passed, compilation and diff checks passed. No device or private data access. Remaining step is main integration and final board update.
+
+
+## Main acceptance
+
+Integrated through main merge 5fd876d. Final main suite: 208 tests passed, compilation and diff checks passed. G009 report findings were resolved or documented as intentional existing-state preservation; G010 assertions were retained. No hardware acceptance claimed.

@@ -292,6 +292,7 @@ class MapWorkflowTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'plan changed since it was reviewed') as caught:
                 gui._execute_map_review(review, self.root / 'backups')
         installer.assert_called_once()
+        self.assertIsInstance(caught.exception, map_install.MapPlanChanged)
         self.assertIn('Volume safely unmounted', str(caught.exception))
         self.assertFalse(self.mounted)
         self.assertFalse((self.root / 'backups/MapInstalls').exists())
@@ -301,9 +302,10 @@ class MapWorkflowTests(unittest.TestCase):
         review = self.review()
         review['plan']['new_maps'][0]['sha256'] = '0' * 64
         with patch.object(gui, 'start_map_install') as install:
-            with self.assertRaisesRegex(ValueError, 'plan changed since it was reviewed'):
+            with self.assertRaisesRegex(ValueError, 'plan changed since it was reviewed') as caught:
                 gui._execute_map_review(review, self.root / 'backups')
             install.assert_not_called()
+        self.assertIsInstance(caught.exception, map_install.MapPlanChanged)
         self.unmount.assert_not_called()
         self.assertFalse((self.root / 'backups/MapInstalls').exists())
         self.assertTrue((self.device / 'Garmin/old.img').is_file())
@@ -404,3 +406,19 @@ class MapWorkflowTests(unittest.TestCase):
         self.assertIn('Saved map install state changed since review', str(caught.exception))
         self.assertTrue((self.device / 'Garmin/old.img').is_file())
         self.assertFalse((self.device / 'Garmin/unreviewed.img').exists())
+
+    def test_changed_plan_refusal_keeps_structured_plan_and_volume_through_cleanup(self):
+        review = self.review()
+        self.one.write_bytes(self.one.read_bytes() + b'changed')
+        with patch.object(gui, '_read_only', return_value=True), \
+             patch.object(gui, 'remount_writable_for_map_install', return_value=self.volume):
+            with self.assertRaises(map_install.MapPlanChanged) as caught:
+                gui._execute_map_review(review, self.root / 'backups')
+        error = caught.exception
+        self.assertIn('plan changed since it was reviewed', str(error))
+        self.assertIn('Volume safely unmounted', str(error))
+        self.assertEqual([row['target'] for row in error.plan['new_maps']], ['first.img', 'second.img'])
+        self.assertNotEqual(error.plan['new_maps'][0]['sha256'], review['plan']['new_maps'][0]['sha256'])
+        self.assertIs(error.volume, self.volume)
+        self.assertFalse(self.mounted)
+        self.assertFalse((self.root / 'backups/MapInstalls').exists())
