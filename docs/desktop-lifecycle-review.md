@@ -62,19 +62,20 @@ newline-in-path round trip. The tests assert no payload marker file appears.
 ## Findings
 
 No promise in README is broken. Four real edge behaviors are recorded below
-with minimal reproductions; none was fixed in production source. F1/F3 are
-pinned by tests (without pinning the undesired part), F2 is documented only
-because it lies outside the card's promised quoting scope.
+with minimal reproductions; none was fixed in production source. F1/F3/F4 are
+pinned by tests, and F2 is documented only because it lies outside the card's
+promised quoting scope (coordinator classified it as a limitation, not a bug).
 
-### F1 — non-UTF-8 unmanaged file at a managed path escapes the refusal message (minor)
+### F1 — non-UTF-8 unmanaged file at a managed path: message-quality issue only
 
 `desktop.py:49` calls `path.read_text()` while checking management markers, so
 a non-UTF-8 file at a managed path raises `UnicodeDecodeError` instead of the
 `ValueError('Existing path is not managed by this launcher installer')` used
-for every other unmanaged content. The refusal-before-mutation guarantee still
-holds, and `__main__.py`'s `except (... ValueError ...)` still catches it
-(`UnicodeDecodeError` is a `ValueError` subclass), but the CLI prints the raw
-codec message instead of the refusal text.
+for every other unmanaged content. This is **not a safety or data-loss issue**:
+`UnicodeDecodeError` subclasses `ValueError`, so `__main__.py`'s
+`except (... ValueError ...)` handler still catches and prints it, and the
+refusal-before-mutation guarantee holds (verified). The only defect is message
+quality: the CLI shows the raw codec message instead of the refusal text.
 
 ```sh
 .venv/bin/python - <<'EOF'
@@ -92,12 +93,14 @@ EOF
 # actual:   UnicodeDecodeError 'utf-8' codec can't decode byte 0xff in position 0 ...
 ```
 
-Pinned without the defect: `test_non_utf8_unmanaged_file_refused_without_mutation`
-asserts refusal and zero mutation but deliberately does not pin the exception
-type. A `errors='replace'` read or a `try/except UnicodeError` around the
-marker check would restore the uniform `ValueError` refusal.
+Pinned in `test_non_utf8_unmanaged_file_refused_without_mutation`: the test
+asserts the user-handled `ValueError` refusal and zero mutation (per
+coordinator review; `UnicodeDecodeError` satisfies it as a subclass). A
+`errors='replace'` read or a `try/except UnicodeError` around the marker check
+would give the uniform refusal message. Coordinator decides whether the
+message-quality fix is worth making.
 
-### F2 — tab characters in paths produce spec-invalid desktop entries (low; outside promised scope)
+### F2 — tab characters in paths are a limitation, not a promised-scope bug
 
 `_desktop_value` escapes `\`, `\n`, and `\r` but not tab, while the Desktop
 Entry spec escapes tab as `\t` and forbids raw control characters in string
@@ -105,7 +108,10 @@ values. A checkout or prefix path containing a literal tab therefore generates
 Exec/TryExec values that `desktop-file-validate` rejects (verified on this
 host): with the validator present, install aborts with a raw
 `CalledProcessError` before writing; with the validator absent, the
-spec-invalid entry is written and desktops may ignore it.
+spec-invalid entry is written and desktops may ignore it. Per coordinator
+review this is a limitation for an unusual path, not a defect in the promised
+spaces/metacharacter support; recorded precisely with no forced production
+change.
 
 ```sh
 .venv/bin/python - <<'EOF'
@@ -125,8 +131,8 @@ desktop-file-validate /tmp/g015-f2.desktop
 Not covered by tests: tab-in-path is not part of the promised quoting scope
 ("paths with spaces and literal shell metacharacters"), and a newline in the
 path already round-trips correctly (tested). Adding `value.replace('\t', '\\t')`
-to `_desktop_value` would make the control-character handling consistent.
-Coordinator decides whether this warrants a source fix.
+to `_desktop_value` would make the control-character handling consistent, but
+that is left to the coordinator's discretion.
 
 ### F3 — update-desktop-database failure surfaces after the files already changed (observation)
 
@@ -178,7 +184,8 @@ required.
   `desktop-file-validate` over generated entries in `/tmp` only (evidence for
   the hostile-path acceptance test and F2).
 - The tests pin documented/observed behavior of `desktop.py`; if the
-  coordinator adopts fixes for F1–F4, `test_non_utf8_unmanaged_file_refused_without_mutation`
-  (error type), `test_update_database_failure_surfaces_after_files_changed`
+  coordinator adopts fixes for F1–F4, the affected tests are
+  `test_non_utf8_unmanaged_file_refused_without_mutation` (stays green under a
+  unified `ValueError` refusal), `test_update_database_failure_surfaces_after_files_changed`
   and `test_dependency_probe_failure_publishes_nothing` (propagated error
-  types) should be updated alongside the source change.
+  types) and should be updated alongside the source change.

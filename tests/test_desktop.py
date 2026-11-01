@@ -378,15 +378,18 @@ class DesktopLifecycleTests(unittest.TestCase):
             desktop.install_desktop(self.prefix)
 
     def test_non_utf8_unmanaged_file_refused_without_mutation(self):
-        # Finding F1 in docs/desktop-lifecycle-review.md: the refusal for a
-        # non-UTF-8 file surfaces as UnicodeDecodeError rather than the
-        # ValueError used for other unmanaged content. The safety promise
-        # (refuse before any mutation) is what is asserted here.
+        # A non-UTF-8 unmanaged file at a managed path is refused through the
+        # same user-handled ValueError channel as other unmanaged content
+        # (UnicodeDecodeError subclasses ValueError, and __main__ catches it),
+        # so this is safe; only the message text is the raw codec error rather
+        # than the refusal text (message-quality finding F1 in
+        # docs/desktop-lifecycle-review.md). Refusal before any mutation is
+        # asserted here.
         paths = self.managed_paths()
         paths['launcher'].parent.mkdir(parents=True)
         paths['launcher'].write_bytes(b'\xff\xfe\x00binary')
         before = self.snapshot(self.prefix)
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             desktop.install_desktop(self.prefix)
         self.assertEqual(self.snapshot(self.prefix), before)
 
