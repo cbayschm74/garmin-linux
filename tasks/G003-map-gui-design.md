@@ -2,9 +2,10 @@
 
 ## Assignment
 
-- State: ready
-- Owner / session: unassigned
-- Branch / worktree / base commit: record at claim
+- State: review
+- Owner / session: Grok session 01a19505-e656-7393-b2a4-2cf95a67bc03
+- Branch / worktree: `task/G003-map-design` at `/home/cbayschm/orca/workspaces/garmin-linux/G003-map-design`
+- Base commit: `d8e87e390cbf2a05b0a3819756ea33274f292ab7`
 - Depends on: none for design
 - Device access: none
 
@@ -24,4 +25,13 @@ Check each named API/argument against current source and tests. Document design 
 
 ## Handoff
 
-Unstarted. Next: claim and inspect listed APIs in a separate worktree. Can run beside G001 because file scopes are separate. No running processes or hardware actions.
+- Updated: 2026-11-01 11:10 +08
+- State / owner: `review` / Grok session 01a19505-e656-7393-b2a4-2cf95a67bc03
+- Branch / HEAD commit / worktree: `task/G003-map-design` / design commit recorded below / `/home/cbayschm/orca/workspaces/garmin-linux/G003-map-design`
+- Changed files and uncommitted work: `docs/map-gui-design.md`, `tasks/G003-map-gui-design.md`. No application source.
+- Checks run / results / checks not run: imported the current map, mount, backup, and catalog callables and compared their signatures plus `SPACE_MARGIN` (16777216) and `FAT32_MAX_FILE_BYTES` (4294967295) with the design. Every quoted core error string in the design is present in `garmin_companion`. `git diff --check` passed on this diff. Unittest discovery was not run; no application source changed. No GUI was launched and no block device was opened.
+- Decisions and known limitations: the design is `docs/map-gui-design.md`. The installer, map backup, and planner have no cancel or progress callback, so the only new Cancel control is the review dialog before a write. The existing Maps Cancel button stays inspection-only. `writable_for_course=True` cannot mount an SD card or a reader. Replace stays a later task that needs the proposed read-only helpers and a separate writable-remount helper. There is no restore API. Working maps are not a target of this card.
+- Running processes / device or mount state: none started. No device access.
+- Blocker / input needed: coordinator review. Primary `tasks/README.md` still showed G003 unassigned at claim time; this worker did not edit the board, `STATUS.md`, or `PLAN.md`.
+- Exact next command or action: coordinator reviews `docs/map-gui-design.md` against the map modules and, if accepted, assigns proposed tasks A and B (read-only helpers, then writable remount / `MapInstallInterrupted`) before any `gui.py` edit. Task C is the GUI. Task D is the physical check and stays `needs-device`.
+- Integration commit and acceptance evidence (coordinator): pending.
