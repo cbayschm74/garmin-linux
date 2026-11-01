@@ -14,14 +14,14 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 - **G007 Maps → Replace / Resume is implemented and integrated.** It supports explicit map backup/checklists, verified map-backup selection, device/reader identity matching, ordered local IMG inputs, read-only planning, source/target review, guarded writable mounting, backup/readback checks, and resumable installation. Inspect remains separate and cancellable. Other map operations have no mid-operation Cancel; the window waits for them.
 - Review cancellation precedes remount/writes. Accepted-plan checking is enforced inside the final installer re-plan. Resume pins the internally reloaded state to consent. Cleanup refuses replacement-device identities. Changed plans remain visible but require fresh selection/review. Saved complete records do not establish current mount state.
 - Dark-palette page/review rendering was checked. Existing course GUI, operation guards, inspection cancellation, timer restoration, interrupted state, and synthetic real planner/installer round trips pass.
-- User previously confirmed fēnix GUI courses load/render and Edge CLI GPX courses appear. **Edge GUI course hardware acceptance remains G002.** Previously installed OpenMTBMap maps render on both devices; the user has now confirmed a real GUI map backup completed successfully. GUI map replacement/install acceptance remains pending.
+- User previously confirmed fēnix GUI courses load/render and Edge CLI GPX courses appear. **G002 is now user-validated:** Edge GPX GUI transfer succeeded, and the course appears and renders on the Edge map. Previously installed OpenMTBMap maps render on both devices; the user has now confirmed a real GUI map backup completed successfully. GUI map replacement/install acceptance remains pending.
 - Kubuntu launcher/icon already uses this main checkout; reopen the app to load changes. Omarchy laptop environment, packaging, USB checks, and shell widget remain unverified (last reported Omarchy 4.0.4-1).
 
 ## Next / ownership
 
 - **G012: done.** Map backup progress, automatic dropdown selection, explicit saved-checksum and target-match results implemented. User has tested the updated copy progress and both verification checks and confirmed the improved feedback works. No new workers assigned.
 - **G007, G005/G006 and support G009/G010/G011: done.**
-- **G002 — active:** mounted Edge internal/SD detected; prepared GPX (3,279 points) passed read-only transfer preflight. User next selects it in Courses → Local file, reviews/sends to Edge internal, then safely unmounts SD and confirms on-device course loading. No transfer or mount change performed by Codex during preflight.
+- **G002 — done:** user confirmed the GUI-transferred course appears correctly and renders on the Edge map. The latest local Edge internal data backup independently passed all 24 file hashes/sizes. Active navigation remains untested.
 - **G008 — needs-device:** plan physical Maps GUI validation only after the user chooses exact target/old/new images and backup/recovery readiness. Do not rewrite working maps merely to test the UI.
 - **G004 — needs-host:** verify the actual Omarchy laptop environment before packaging/shell integration.
 - Firmware, automatic account sync, and licensed Garmin map downloads remain feasibility gates, not implemented Express parity. Edge post-reset Wi-Fi setup reportedly required Express; unresolved and separate.
@@ -29,6 +29,10 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 ## Latest change — G012 backup feedback
 
 Copy/readback callbacks now drive a visible two-phase progress bar with current file, bytes/percentage, measured I/O speed, and elapsed time (updated even between reads). Completion waits for verified publication; failures cannot show 100%. Saved backups appear/are selected in the dropdown automatically. A dedicated saved-backup verification button reports green PASS/red FAIL; target identity/filename matching is separately labeled and does not imply a checksum comparison. Other map jobs show busy animation. Ten new synthetic/offscreen tests cover counts, publication failures, signal delivery, timing/rate, automatic selection, and pass/fail distinctions. Full suite: 218 passed; compilation/diff checks and dark-palette feedback inspection passed. No real storage was opened during development. The user subsequently confirmed successful use of copy progress and both verification checks, and found the bar/information much clearer. This confirms backup/verification UI acceptance; map replacement remains G008.
+
+## G002 device acceptance — 2026-11-01
+
+The user confirmed the prepared GPX transferred through the GUI and displays correctly on the Edge map. A separate local-only check verified all 24 files (3,189,936 bytes) in the latest complete Edge internal backup. No further device write/read was performed. G002 is closed; physical map installation remains a separate G008 test with explicitly selected images.
 
 ## Orca coordination and review evidence
 

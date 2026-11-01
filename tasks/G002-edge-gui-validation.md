@@ -2,7 +2,7 @@
 
 ## Assignment
 
-- State: active — read-only preflight passed, awaiting user GUI transfer
+- State: done — user confirmed GUI transfer, course visibility and map rendering
 - Owner / session: user operates GUI/device; Codex coordinates and records results
 - Branch / worktree / base commit: main at a5b5135, /home/cbayschm/garmin-linux
 - Depends on: user and stable Edge USB connection; selected local GPX
@@ -33,3 +33,10 @@ Unstarted; no new device action authorized by the organizational task. Next: arr
 Fresh scan confirmed a mounted Edge 1000 internal GARMIN Flash and mounted Edge SD. The existing prepared 3,279-point GPX passed inspect_course and review_edge_transfer against the freshly detected internal volume. The inspection was read-only; both mount state and device files were left untouched (internal volume is currently mounted writable). No private source path, coordinates, hash, or persistent device identifier is recorded here.
 
 Next: user chooses that prepared GPX in Courses → Local file, reviews Edge internal target and sends through the real app. Then confirm verified backup/copy/unmount, safely unmount SD, disconnect/power on, and check course visibility/loading/rendering. No GUI transfer or on-device acceptance has yet been reported. Maps remain outside this test; no other device operator/worker is assigned.
+
+
+## Acceptance — 2026-11-01
+
+The user followed the GUI transfer and confirmed the course appears correctly on the Edge and renders on its map. This closes G002's course-transfer/device-loading acceptance. Source implementation baseline: e9d76eb; read-only preflight recorded in 38a2486. No additional device access or write was performed by Codex after confirmation.
+
+Post-check of the latest complete local Edge internal data backup (created 2026-11-01 05:22 UTC): all 24 manifest entries (3,189,936 bytes) passed size and SHA-256 verification. This was a local saved-backup audit, not another device read or a separate observation of unmount. The app's guarded transfer path handles copy verification/unmount; user acceptance covers successful GUI use and on-device map rendering. Active navigation along the course remains untested. Map installation remains G008; it is not part of this acceptance.

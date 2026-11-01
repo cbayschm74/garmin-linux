@@ -23,3 +23,8 @@ Last checked: 2026-10-15. This note separates Garmin's published instructions fr
 On 2026-10-15, a recorded October Edge ride was prepared privately as GPX and converted through the GUI to a 3,279-point FIT course named Edge Oct 11. Source positions and generated FIT were independently compared, then the reviewed GUI workflow made a fresh verified watch backup, copied and hash-verified the course, and safely unmounted. The user confirmed it appears, loads correctly, and renders on the fēnix map. Active navigation along the route has not been tested.
 
 Before writing a course, detect the current model and volume, make a fresh complete backup, check the GPX/FIT preview, ensure the destination filename is absent, copy only into a documented or validated inbox, compare the copied hash, and safely unmount. Do not claim success until the course appears in the device menu.
+
+
+## 2026-11-01 — Edge GPX GUI acceptance
+
+The prepared 3,279-point Edge Oct 11 GPX passed read-only preflight against the connected Edge internal volume. The user then used Courses → Local file → Review Edge transfer → Send course and confirmed the course appears correctly on the Edge and renders on its map. G002 is complete. The latest complete local Edge internal data backup was independently checked afterward: all 24 entries (3,189,936 bytes) passed their recorded sizes and SHA-256 hashes. No extra device access was needed for this audit. Active navigation along this course was not tested, and this result does not validate map replacement (G008).
