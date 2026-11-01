@@ -13,7 +13,7 @@ Validate every proposed command against argparse/source or --help (no actual wri
 
 - Updated: 2026-11-01 (worker session, UTC date from the dispatch)
 - State / owner: `review`. Worker does not mark `done`. Coordinator reviews, tests, and integrates.
-- Branch / worktree: `task/G016-recovery-guide` at `/home/cbayschm/orca/workspaces/garmin-linux/G016-recovery-guide`. Startup HEAD `ea2dab4e9e125cc16e941cbd6ffa595cf97de803`. Guide and this card are the commit under review.
+- Branch / worktree: `task/G016-recovery-guide` at `/home/cbayschm/orca/workspaces/garmin-linux/G016-recovery-guide`. Startup HEAD `ea2dab4e9e125cc16e941cbd6ffa595cf97de803`. Guide commit `c4cacfbb0a3fe1027587bc265e33fc043cc53404`. This card’s hash line is the follow-up commit.
 - Changed files: `docs/recovery-and-troubleshooting.md` (new), `tasks/G016-recovery-guide.md`. No source edits. No uncommitted work intended after the commit.
 - Checks run:
   - `python3 -m garmin_companion --help` and `--help` for `install-desktop`, `resume-map-install`, `install-maps`, `backup`, `backup-maps`, `plan-map-install`, `inspect-map`, `import-edge-course`, `import-fenix-course`, `export-activity`, `gui`, and `scan`. All exited 0. No `scan` without `--help`, no mount, no GUI, no backup root, no device path.
