@@ -59,3 +59,11 @@ Completed on primary `main`, 2026-11-01, source base `134c760`, claim
   data backup, independent verification and safe unmount are now hardware-tested.
 - Next: user can unplug the Edge; observe disconnected widget state, then connect
   fēnix separately for a newly scoped acceptance run. Always re-detect paths.
+
+### Disconnect acceptance
+
+User unplugged the Edge and SD after verified safe unmount on 2026-11-01.
+Fresh detector scan returns zero Garmin volumes; standalone status and the live
+bar IPC both report disconnected/count 0/“No Garmin USB storage”. The live status
+was observed without forcing a refresh, confirming the automatic transition.
+No mount operation or source access occurred. Next: connect fēnix separately.

@@ -32,8 +32,11 @@ and no mounts. Edge remains physically connected and is safe to unplug; the bar
 correctly still reports USB presence. No source content, maps or firmware changed,
 no GUI launch/transfer, no operation remains active beyond intended bar polling.
 Private detailed evidence stays outside Git. [Device notes](docs/device-compatibility.md).
-**Next:** observe disconnected bar state after unplugging, then scope fēnix USB
-acceptance separately. Human live-bar/menu/GUI acceptance and packaging remain open.
+User subsequently unplugged the Edge: fresh detector scan returns zero volumes;
+standalone and live bar status both report disconnected/count 0 without a forced
+refresh. Automatic physical disconnect transition is now verified.
+**Next:** connect fēnix separately for freshly scoped USB acceptance.
+Human live-bar/menu/GUI acceptance and packaging remain open.
 
 **Omarchy desktop integration complete (G017–G020, 2026-11-01).** All three T3
 workers have completed; their scoped commits were independently reviewed and

@@ -210,5 +210,6 @@ On 2026-11-01 the connected Edge 1000 and SD card were detected by both the live
 bar IPC and standalone command as connected / **2 Garmin USB volumes**. This
 remained correct after both filesystems were safely unmounted: USB presence is
 independent of mount status. Source/core read-only backups also passed, separately
-recorded in [device compatibility](device-compatibility.md). Physical disconnect
-transition and fēnix status are not yet observed.
+recorded in [device compatibility](device-compatibility.md). The user subsequently disconnected the Edge: fresh detector and standalone status
+reported zero volumes, and the live bar had automatically transitioned to
+disconnected/count 0 without a forced refresh. fēnix status remains untested.

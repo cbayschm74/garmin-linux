@@ -35,6 +35,8 @@ Only observations made directly on the connected hardware are marked **Observed*
 - Both sibling volumes safely unmounted and re-observed with matching identities
   and no mounts. Device still connected at handoff. Bar status correctly shows
   connected / 2 USB volumes even after unmount; the bar does not report mount mode.
+- After the user disconnected the Edge, a fresh scan returned zero volumes and
+  both standalone/live bar status automatically reported disconnected/count 0.
 - No source file content changed. Maps/firmware were outside copy scope; no GUI
   launch or course/map transfer was performed. This validates real Edge core USB,
   backup and unmount behavior on Omarchy, not GUI or fēnix acceptance.
