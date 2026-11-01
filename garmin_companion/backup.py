@@ -118,17 +118,20 @@ def inventory(volume: GarminVolume) -> Inventory:
     return Inventory(volume, sorted(files, key=lambda file: file.relative_path))
 
 
-def _sha256(path: Path, check_cancel=None) -> str:
+def _sha256(path: Path, check_cancel=None, *, progress=None) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
         for chunk in iter(lambda: stream.read(COPY_CHUNK), b""):
             if check_cancel and check_cancel():
                 raise InterruptedError('Backup cancelled')
             digest.update(chunk)
+            if progress:
+                progress(len(chunk))
     return digest.hexdigest()
 
 
-def _copy_verified(source: Path, target: Path, expected: FileEntry, *, check_cancel=None, progress=None) -> str:
+def _copy_verified(source: Path, target: Path, expected: FileEntry, *, check_cancel=None, progress=None,
+                   verification_progress=None) -> str:
     before = source.stat()
     if before.st_size != expected.size_bytes or before.st_mtime_ns != expected.mtime_ns:
         raise ValueError(f"Source changed since inventory: {expected.relative_path}")
@@ -147,7 +150,14 @@ def _copy_verified(source: Path, target: Path, expected: FileEntry, *, check_can
     after = source.stat()
     if (after.st_size, after.st_mtime_ns) != (before.st_size, before.st_mtime_ns):
         raise ValueError(f"Source changed during copy: {expected.relative_path}")
-    if target.stat().st_size != expected.size_bytes or _sha256(target, check_cancel) != digest.hexdigest():
+    if target.stat().st_size != expected.size_bytes:
+        raise ValueError(f"Copy verification failed: {expected.relative_path}")
+    if verification_progress:
+        verification_progress(0)
+        verified_digest = _sha256(target, check_cancel, progress=verification_progress)
+    else:
+        verified_digest = _sha256(target, check_cancel)
+    if verified_digest != digest.hexdigest():
         raise ValueError(f"Copy verification failed: {expected.relative_path}")
     return digest.hexdigest()
 

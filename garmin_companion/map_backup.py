@@ -10,6 +10,7 @@ import tempfile
 from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
+from time import monotonic
 
 from .backup import FileEntry, _copy_verified, _mount_id, _mounted_source, _slug
 from .detector import GarminVolume, scan
@@ -119,7 +120,8 @@ def read_map_backup_index(path: Path) -> dict:
             'file_count': count, 'total_bytes': total, 'names': names}
 
 
-def backup_maps(volume: GarminVolume, names: list[str], destination_root: Path) -> tuple[Path, list[FileEntry]]:
+def backup_maps(volume: GarminVolume, names: list[str], destination_root: Path, *,
+                progress=None) -> tuple[Path, list[FileEntry]]:
     """Copy named top-level Garmin IMGs, then publish a complete manifest."""
     source = _mounted_source(volume)
     if volume.filesystem.lower() not in {'vfat', 'fat', 'msdos'}:
@@ -141,6 +143,17 @@ def backup_maps(volume: GarminVolume, names: list[str], destination_root: Path) 
             raise ValueError('Map backup destination cannot be on a Garmin device')
     destination_root.mkdir(parents=True, exist_ok=True, mode=0o700)
     total_bytes = sum(entry.size_bytes for entry in entries)
+    copied_bytes = verified_bytes = 0
+    phase_started = monotonic()
+
+    def report(phase, entry, index, file_done):
+        if progress:
+            progress(dict(phase=phase, filename=Path(entry.relative_path).name if entry else '',
+                          file_index=index, file_count=len(entries), file_bytes_done=file_done,
+                          file_bytes_total=entry.size_bytes if entry else 0, total_bytes=total_bytes,
+                          copied_bytes=copied_bytes, verified_bytes=verified_bytes,
+                          completed_bytes=copied_bytes + verified_bytes, total_work_bytes=2 * total_bytes,
+                          phase_elapsed_seconds=max(0, monotonic() - phase_started)))
     if shutil.disk_usage(destination_root).free < total_bytes + 16 * 1024 * 1024:
         raise ValueError('Not enough free space for map copies and a 16 MiB margin')
 
@@ -150,12 +163,32 @@ def backup_maps(volume: GarminVolume, names: list[str], destination_root: Path) 
     stage = Path(tempfile.mkdtemp(prefix=f'.incomplete-{name}-', dir=destination_root))
     try:
         files = []
-        for entry in entries:
+        for index, entry in enumerate(entries, 1):
             ensure_same_mount()
             relative = Path(entry.relative_path)
-            digest = _copy_verified(source / relative, stage / relative, entry)
+            file_copied = file_verified = 0
+            phase_started = monotonic()
+
+            def copied(delta):
+                nonlocal copied_bytes, file_copied
+                copied_bytes += delta
+                file_copied += delta
+                report('copying', entry, index, file_copied)
+
+            def verified(delta):
+                nonlocal verified_bytes, file_verified, phase_started
+                if delta == 0:
+                    phase_started = monotonic()
+                verified_bytes += delta
+                file_verified += delta
+                report('verifying', entry, index, file_verified)
+
+            report('copying', entry, index, 0)
+            callbacks = dict(progress=copied, verification_progress=verified) if progress else {}
+            digest = _copy_verified(source / relative, stage / relative, entry, **callbacks)
             files.append({**asdict(entry), 'sha256': digest})
         ensure_same_mount()
+        report('finalizing', None, len(entries), 0)
         manifest = {'purpose': 'Garmin map backup', 'created_utc': datetime.now(timezone.utc).isoformat(),
                     'model': volume.model, 'device_name': volume.device_name, 'label': volume.label,
                     'volume_uuid': volume_uuid, 'volume_size_bytes': volume.size_bytes,

@@ -12,12 +12,12 @@ Coordinator maintains this table in the primary checkout. Worker copies are snap
 | G006 | Map remount, consent checks, and recovery errors | done | Coordinator accepted | G003 done; separate scope from G005 |
 | G007 | Maps GUI replacement/resume | done | Codex coordinator | Main merge `5fd876d`; 208 tests pass |
 | G008 | Physical Maps GUI validation | needs-device | unassigned | G007 + agreed files/device/operator |
-
 | G009 | G007 independent review | done | Grok; coordinator accepted | Findings fixed/documented; report integrated |
 | G010 | G007 offscreen GUI tests | done | MiniMax M3 / OMP; accepted | 27 GUI tests integrated; worker released |
 | G011 | G007 workflow/integration tests | done | MiMo Pro / China Token Plan; accepted | 31 workflow tests integrated |
+| G012 | Map backup progress and verification feedback | done | Codex coordinator | 218 tests; progress, auto-selection, PASS/FAIL |
 
-Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G003](G003-map-gui-design.md), [G004](G004-omarchy-validation.md), [G005](G005-map-selection-helpers.md), [G006](G006-map-install-guards.md), [G007](G007-maps-gui.md), [G008](G008-map-gui-device-validation.md), [G009](G009-map-gui-review.md), [G010](G010-map-gui-tests.md), [G011](G011-map-workflow-tests.md).
+Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G003](G003-map-gui-design.md), [G004](G004-omarchy-validation.md), [G005](G005-map-selection-helpers.md), [G006](G006-map-install-guards.md), [G007](G007-maps-gui.md), [G008](G008-map-gui-device-validation.md), [G009](G009-map-gui-review.md), [G010](G010-map-gui-tests.md), [G011](G011-map-workflow-tests.md), [G012](G012-map-backup-feedback.md).
 
 ## States
 
@@ -30,7 +30,7 @@ Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G
 3. Worker changes its card and assigned files. It reports `review`, commit, checks, and limitations to the coordinator. It does not edit other cards, this board, or project status.
 4. Coordinator reviews and integrates the task, reruns relevant checks, and updates the board, `STATUS.md`, and milestone checkboxes. Clear ownership only after verifying the previous agent has stopped.
 
-G005/G006/G007 and support tasks G009/G010/G011 are complete. No new worker is assigned. G002 and G008 need a selected device/test scope; G004 needs the Omarchy laptop. Synthetic acceptance does not authorize rewriting working maps.
+G005/G006/G007 and support tasks G009/G010/G011 are complete. G012 is complete; no source/GUI worker is assigned. G002 and G008 need a selected device/test scope; G004 needs the Omarchy laptop. Synthetic acceptance does not authorize rewriting working maps.
 
 ## Completed orchestration
 

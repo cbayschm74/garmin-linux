@@ -9,21 +9,26 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 ## Current verified baseline
 
 - Primary checkout `/home/cbayschm/garmin-linux`, branch `main`. G007 source merged as `5fd876d`; use Git for current HEAD because final tests/documentation follow that merge.
-- **208 tests pass on main**, with Python compilation and diff checks. Fixtures use temporary storage, mocked USB/UDisks, and offscreen Qt; these are not physical map-install results.
+- **218 tests pass on main**, with Python compilation and diff checks. Fixtures use temporary storage, mocked USB/UDisks, and offscreen Qt; these are not physical map-install results.
 - Shared Python core/PyQt6 app supports detection, selected-data backups/catalog, activity summaries/export, activity-to-course preparation, GPX/FIT preview/conversion, and reviewed Edge GPX / fēnix FIT transfers.
 - **G007 Maps → Replace / Resume is implemented and integrated.** It supports explicit map backup/checklists, verified map-backup selection, device/reader identity matching, ordered local IMG inputs, read-only planning, source/target review, guarded writable mounting, backup/readback checks, and resumable installation. Inspect remains separate and cancellable. Other map operations have no mid-operation Cancel; the window waits for them.
 - Review cancellation precedes remount/writes. Accepted-plan checking is enforced inside the final installer re-plan. Resume pins the internally reloaded state to consent. Cleanup refuses replacement-device identities. Changed plans remain visible but require fresh selection/review. Saved complete records do not establish current mount state.
 - Dark-palette page/review rendering was checked. Existing course GUI, operation guards, inspection cancellation, timer restoration, interrupted state, and synthetic real planner/installer round trips pass.
-- User previously confirmed fēnix GUI courses load/render and Edge CLI GPX courses appear. **Edge GUI course hardware acceptance remains G002.** Previously installed OpenMTBMap maps render on both devices; the new map GUI has not been used on hardware.
+- User previously confirmed fēnix GUI courses load/render and Edge CLI GPX courses appear. **Edge GUI course hardware acceptance remains G002.** Previously installed OpenMTBMap maps render on both devices; the user has now confirmed a real GUI map backup completed successfully. GUI map replacement/install acceptance remains pending.
 - Kubuntu launcher/icon already uses this main checkout; reopen the app to load changes. Omarchy laptop environment, packaging, USB checks, and shell widget remain unverified (last reported Omarchy 4.0.4-1).
 
 ## Next / ownership
 
-- **G007, G005/G006 and support G009/G010/G011: done.** No new workers assigned.
+- **G012: done.** Map backup progress, automatic dropdown selection, explicit saved-checksum and target-match results implemented. User confirmed the preceding physical backup finished before changes. No new workers assigned.
+- **G007, G005/G006 and support G009/G010/G011: done.**
 - **G002 — needs-device:** validate Edge GPX GUI course transfer with a selected local GPX, one device operator, verified backup/copy/unmount, and user on-device course loading confirmation.
 - **G008 — needs-device:** plan physical Maps GUI validation only after the user chooses exact target/old/new images and backup/recovery readiness. Do not rewrite working maps merely to test the UI.
 - **G004 — needs-host:** verify the actual Omarchy laptop environment before packaging/shell integration.
 - Firmware, automatic account sync, and licensed Garmin map downloads remain feasibility gates, not implemented Express parity. Edge post-reset Wi-Fi setup reportedly required Express; unresolved and separate.
+
+## Latest change — G012 backup feedback
+
+Copy/readback callbacks now drive a visible two-phase progress bar with current file, bytes/percentage, measured I/O speed, and elapsed time (updated even between reads). Completion waits for verified publication; failures cannot show 100%. Saved backups appear/are selected in the dropdown automatically. A dedicated saved-backup verification button reports green PASS/red FAIL; target identity/filename matching is separately labeled and does not imply a checksum comparison. Other map jobs show busy animation. Ten new synthetic/offscreen tests cover counts, publication failures, signal delivery, timing/rate, automatic selection, and pass/fail distinctions. Full suite: 218 passed; compilation/diff checks and dark-palette feedback inspection passed. No real storage was opened for this change; reopen the app to load it.
 
 ## Orca coordination and review evidence
 

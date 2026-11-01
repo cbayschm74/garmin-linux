@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 import subprocess
+from time import monotonic
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
@@ -12,7 +13,7 @@ from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QAbstractItemView, QApplication, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFrame, QHeaderView, QHBoxLayout, QLabel,
-    QListWidget, QListWidgetItem, QPlainTextEdit, QMainWindow, QMessageBox, QPushButton, QScrollArea, QStackedWidget, QSizePolicy,
+    QListWidget, QListWidgetItem, QPlainTextEdit, QProgressBar, QMainWindow, QMessageBox, QPushButton, QScrollArea, QStackedWidget, QSizePolicy,
     QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget,
 )
 
@@ -21,7 +22,7 @@ from .courses import course_library, inspect_course
 from .map_inspect import inspect_map
 from .desktop import DESKTOP_ID, ICON_PATH, LAUNCHER_NAME
 from .detector import GarminVolume, scan
-from .backup_catalog import BackupSummary, list_backups
+from .backup_catalog import BackupSummary, list_backups, inspect_backup
 from .backup import backup as create_backup, select_volume, _mount_id, _mounted_source
 from .mount_control import (capture_volume, change_mount, remount_writable_for_map_install,
                             guarded_unmount, _read_only)
@@ -348,15 +349,27 @@ class MapJobWorker(QThread):
     """Non-cancellable map jobs retain structured recovery errors."""
     results = pyqtSignal(object)
     failed = pyqtSignal(object)
+    progress = pyqtSignal(object)
 
-    def __init__(self, action, parent):
+    def __init__(self, action, parent, *, report_progress=False):
         super().__init__(parent)
         self.action = action
         self.outcome = None
+        self.report_progress = report_progress
+        self._last_progress = 0.0
+        self._last_phase = None
+
+    def _report(self, event):
+        now = monotonic()
+        phase = (event['phase'], event['filename'])
+        if (phase != self._last_phase or now - self._last_progress >= 0.1
+                or event['file_bytes_done'] == event['file_bytes_total']):
+            self.progress.emit(dict(event))
+            self._last_progress, self._last_phase = now, phase
 
     def run(self):
         try:
-            self.results.emit(self.action())
+            self.results.emit(self.action(self._report) if self.report_progress else self.action())
         except Exception as exc:
             self.failed.emit(exc)
 
@@ -534,6 +547,11 @@ class CompanionWindow(QMainWindow):
         self._course_worker: CourseScanWorker | None = None
         self._courses_loaded = False
         self._map_job_worker: MapJobWorker | None = None
+        self._map_progress_latest = None
+        self._map_progress_timer = QTimer(self)
+        self._map_progress_timer.setInterval(500)
+        self._map_progress_timer.timeout.connect(self._render_map_progress)
+        self._map_show_progress = False
         self._map_selection = None
         self._map_review = None
         self._map_worker: MapInspectWorker | None = None
@@ -770,10 +788,26 @@ class CompanionWindow(QMainWindow):
         self.map_tabs.addTab(self._map_inspect_page(), 'Inspect')
         self.map_tabs.addTab(self._map_replace_page(), 'Replace / Resume')
         layout.addWidget(self.map_tabs)
+        layout.addWidget(self.map_verification_status)
+        self.map_job_progress = QProgressBar()
+        self.map_job_progress.setMinimumHeight(25)
+        self.map_job_progress.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.map_job_progress.setStyleSheet(
+            'QProgressBar { background: white; color: #183b41; border: 1px solid #b6cccd; border-radius: 4px; } '
+            'QProgressBar::chunk { background: #9ed7c4; }')
+        self.map_job_progress.setRange(0, 1000)
+        self.map_job_progress.setVisible(False)
+        layout.addWidget(self.map_job_progress)
         layout.addWidget(self.map_replace_status)
         self.map_replace_status.setVisible(False)
-        self.map_tabs.currentChanged.connect(lambda index: self.map_replace_status.setVisible(index == 1))
+        self.map_verification_status.setVisible(False)
+        self.map_tabs.currentChanged.connect(self._map_feedback_visibility)
         return page
+
+    def _map_feedback_visibility(self, index):
+        self.map_replace_status.setVisible(index == 1)
+        self.map_verification_status.setVisible(index == 1)
+        self.map_job_progress.setVisible(index == 1 and self._map_show_progress)
 
     def _map_inspect_page(self) -> QWidget:
         page = QWidget()
@@ -833,13 +867,21 @@ class CompanionWindow(QMainWindow):
         self.map_backup_choice = QComboBox()
         self.map_target_choice = QComboBox()
         self.map_backup_choice.currentIndexChanged.connect(self._invalidate_map_selection)
+        self.map_backup_choice.currentIndexChanged.connect(lambda: self._set_map_verification(
+            None, 'Saved backup: select Verify saved map backup for a fresh checksum check.'))
         self.map_target_choice.currentIndexChanged.connect(self._invalidate_map_selection)
         self.map_backup_volume.currentIndexChanged.connect(self._clear_map_backup_names)
         layout.addWidget(self.map_backup_choice)
+        self.map_verify_backup_button = QPushButton('Verify saved map backup')
+        self.map_verify_backup_button.clicked.connect(self.verify_saved_map_backup)
+        layout.addWidget(self.map_verify_backup_button)
         layout.addWidget(self.map_target_choice)
-        self.map_check_target = QPushButton('Check target and backup')
+        self.map_check_target = QPushButton('Check target match')
         self.map_check_target.clicked.connect(self.check_map_target)
         layout.addWidget(self.map_check_target)
+        self.map_target_result = _label('Target match: not checked.')
+        self.map_target_result.setTextFormat(Qt.TextFormat.PlainText)
+        layout.addWidget(self.map_target_result)
         self.map_target_details = _label('Refresh, select a backup and mounted target, then check their match.', kind='pageIntro')
         self.map_target_details.setTextFormat(Qt.TextFormat.PlainText)
         layout.addWidget(self.map_target_details)
@@ -873,6 +915,10 @@ class CompanionWindow(QMainWindow):
         self.map_replace_status.setTextFormat(Qt.TextFormat.PlainText)
         self.map_replace_status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         layout.addWidget(self.map_replace_status)
+        self.map_verification_status = _label('Saved backup: no verification selected.')
+        self.map_verification_status.setTextFormat(Qt.TextFormat.PlainText)
+        self.map_verification_status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(self.map_verification_status)
         self.map_plan_details = QPlainTextEdit()
         self.map_plan_details.setReadOnly(True)
         self.map_plan_details.setMinimumHeight(200)
@@ -889,6 +935,7 @@ class CompanionWindow(QMainWindow):
                       for i in range(self.map_backup_names.count()))
         self.map_backup_button.setEnabled(bool(getattr(self, '_map_backup_listing', None)) and checked)
         self.map_check_target.setEnabled(bool(self.map_target_choice.currentData() and self.map_backup_choice.currentData()))
+        self.map_verify_backup_button.setEnabled(bool(self.map_backup_choice.currentData()))
         self.map_plan_button.setEnabled(bool(self._map_selection and not self._map_selection['missing']
                                              and self.map_new_images.rowCount()))
         self.map_review_button.setEnabled(self._map_review is not None)
@@ -907,17 +954,19 @@ class CompanionWindow(QMainWindow):
         self._map_selection = None
         self._invalidate_map_plan()
         self.map_target_details.setText('Selection changed. Check target and backup again.')
+        self._set_map_result(self.map_target_result, None, 'Target match: not checked.')
 
     def _clear_map_backup_names(self, *args):
         self.map_backup_names.clear()
         self._map_backup_listing = None
         self._update_map_controls()
 
-    def _run_map_job(self, action, completed, message):
+    def _run_map_job(self, action, completed, message, *, backup_progress=False, kind='map'):
         if self._map_operations_busy():
             self.map_replace_status.setText('Wait for the current device or map operation to finish.')
             return
-        worker = MapJobWorker(action, self)
+        worker = MapJobWorker(action, self, report_progress=backup_progress)
+        worker.kind = kind
         worker.timer_was_active = self._refresh_timer.isActive()
         self._refresh_timer.stop()
         self._map_job_worker = worker
@@ -925,6 +974,15 @@ class CompanionWindow(QMainWindow):
         self.map_choose_button.setEnabled(False)
         self.refresh_button.setEnabled(False)
         self.map_replace_status.setText(message)
+        self._map_job_message = message
+        self._map_progress_latest = None
+        self._map_progress_started = monotonic()
+        self._map_phase_key = None
+        self._map_show_progress = True
+        self.map_job_progress.setRange(0, 0)
+        self._map_feedback_visibility(self.map_tabs.currentIndex())
+        self._map_progress_timer.start()
+        worker.progress.connect(self._show_map_progress)
         worker.results.connect(lambda result: setattr(worker, 'outcome', (True, result)))
         worker.failed.connect(lambda error: setattr(worker, 'outcome', (False, error)))
         worker.finished.connect(lambda: self._map_job_finished(worker, completed))
@@ -934,6 +992,7 @@ class CompanionWindow(QMainWindow):
         worker.start()
 
     def _map_job_finished(self, worker, completed):
+        self._map_progress_timer.stop()
         self._map_job_worker = None
         self.map_replace_panel.setEnabled(True)
         self.map_choose_button.setEnabled(True)
@@ -944,15 +1003,92 @@ class CompanionWindow(QMainWindow):
         self.refresh_devices()
         if worker.outcome:
             ok, value = worker.outcome
+            self.map_job_progress.setRange(0, 1000)
+            self.map_job_progress.setValue(1000 if ok else 0)
+            self.map_job_progress.setFormat('Complete' if ok else 'Operation failed')
             if ok:
                 try:
                     completed(value)
                 except Exception as exc:
                     self._map_job_failed(exc)
             else:
+                if worker.kind == 'verify-backup':
+                    self._set_map_verification(False, f'Verification failed: {value}')
+                elif worker.kind == 'map-backup':
+                    self._set_map_verification(False, f'Backup failed: {value}')
+                elif worker.kind == 'target-check':
+                    self.map_target_details.setText(f'Target check FAILED: {value}')
+                    self._set_map_result(self.map_target_result, False, f'Target check FAILED: {value}')
                 self._map_job_failed(value)
 
+    def _show_map_progress(self, event):
+        key = (event['phase'], event['filename'])
+        if key != self._map_phase_key:
+            self._map_phase_key = key
+            self._map_phase_started = monotonic()
+        self._map_progress_latest = event
+        self._map_progress_received = monotonic()
+        self._render_map_progress()
+
+    def _render_map_progress(self):
+        if self._map_job_worker is None:
+            return
+        elapsed = max(0, int(monotonic() - self._map_progress_started))
+        clock = f'{elapsed // 3600:02}:{elapsed // 60 % 60:02}:{elapsed % 60:02}'
+        event = self._map_progress_latest
+        if event is None:
+            self.map_replace_status.setText(f'{self._map_job_message}\nElapsed {clock}')
+            return
+        total = event['total_work_bytes']
+        fraction = min(0.999, event['completed_bytes'] / total) if total else 0
+        self.map_job_progress.setRange(0, 1000)
+        self.map_job_progress.setValue(int(fraction * 1000))
+        self.map_job_progress.setFormat(f'{fraction:.1%} overall · copy + checksum verification')
+        if event['phase'] == 'finalizing':
+            text = 'Finalizing verified backup and publishing COMPLETE marker…'
+        else:
+            done, size = event['file_bytes_done'], event['file_bytes_total']
+            phase_elapsed = event.get('phase_elapsed_seconds', self._map_progress_received - self._map_phase_started)
+            phase_elapsed += max(0, monotonic() - self._map_progress_received)
+            speed = done / max(0.001, phase_elapsed) / 1024**2
+            phase = 'Copying' if event['phase'] == 'copying' else 'Verifying saved copy'
+            text = (f'{phase}: {event["filename"]} ({event["file_index"]}/{event["file_count"]})\n'
+                    f'{done / 1024**2:,.1f} / {size / 1024**2:,.1f} MiB · '
+                    f'{done / size:.1%} of file · ' if size else f'{phase}: {event["filename"]} · ')
+            text += f'{speed:,.1f} MiB/s'
+        self.map_replace_status.setText(f'{text}\nElapsed {clock}')
+
+    def _set_map_verification(self, passed, message):
+        self._set_map_result(self.map_verification_status, passed, message)
+
+    @staticmethod
+    def _set_map_result(label, passed, message):
+        colors = ('#24633c', '#e6f4ea') if passed is True else ('#992626', '#fde9e9') if passed is False else ('#334f60', '#e8f0f5')
+        label.setStyleSheet(
+            f'color: {colors[0]}; background: {colors[1]}; font-weight: 600; padding: 8px; border-radius: 5px;')
+        label.setText(message)
+
+    def verify_saved_map_backup(self):
+        path = self.map_backup_choice.currentData()
+        if not path or self._map_operations_busy():
+            return
+        self._set_map_verification(None, 'Verification running — checking saved map sizes and SHA-256 hashes…')
+        def done(result):
+            passed = result.kind == 'Maps' and result.status == 'verified'
+            self._set_map_verification(passed, 'Verification PASSED — saved map backup sizes and SHA-256 hashes match.'
+                                      if passed else f'Verification FAILED — {result.detail}')
+            self.map_replace_status.setText(f'Checked: {path}\n{result.detail}\n'
+                                           'This verifies the saved backup; it does not compare current device contents.')
+            if not passed:
+                self.map_job_progress.setValue(0)
+                self.map_job_progress.setFormat('Verification failed')
+        self._run_map_job(lambda: inspect_backup(Path(path)), done,
+                          'Verifying saved map backup; reading all saved map bytes…', kind='verify-backup')
+
     def _map_job_failed(self, error):
+        self.map_job_progress.setRange(0, 1000)
+        self.map_job_progress.setValue(0)
+        self.map_job_progress.setFormat('Operation failed')
         self._invalidate_map_plan()
         if isinstance(error, MapPlanChanged) and hasattr(error, 'volume'):
             self.map_plan_details.setPlainText(
@@ -1040,17 +1176,26 @@ class CompanionWindow(QMainWindow):
         if not listing or not names:
             self.map_replace_status.setText('Load filenames and check at least one map to back up.')
             return
-        def save():
+        def save(progress):
             volume = select_volume(listing[0].path)
             _map_identity_matches(volume, listing[0], listing[1])
-            return backup_maps(volume, names, self._backup_root)
+            return backup_maps(volume, names, self._backup_root, progress=progress)
         def done(result):
             path, entries = result
             self._backups_loaded = False
+            index = self.map_backup_choice.count()
+            self.map_backup_choice.addItem(f'New verified backup · {listing[0].model} · {listing[0].label} · '
+                                          f'{len(entries)} files · {sum(e.size_bytes for e in entries) / 1024**2:.1f} MiB · {path}', path)
+            self.map_backup_choice.setCurrentIndex(index)
+            self._set_map_verification(True, 'Backup verification PASSED — all selected maps copied and SHA-256 verified.')
+            self.map_job_progress.setFormat('100% — backup verified')
             self.map_replace_status.setText(f'Verified map backup: {path}\n{len(entries)} files · '
                 f'{sum(e.size_bytes for e in entries):,} bytes. Device files left in place. '
-                'The app has no restore command. Refresh choices to select this backup.')
-        self._run_map_job(save, done, 'Copying and verifying selected maps; keep the window open…')
+                'The app has no restore command. New backup selected; no Refresh needed.')
+        if not self._map_operations_busy():
+            self._set_map_verification(None, 'Backup running — checksum verification is not complete yet.')
+        self._run_map_job(save, done, 'Copying and verifying selected maps; keep the window open…',
+                          backup_progress=True, kind='map-backup')
 
     def check_map_target(self):
         path, backup = self.map_target_choice.currentData(), self.map_backup_choice.currentData()
@@ -1063,13 +1208,16 @@ class CompanionWindow(QMainWindow):
             volume = selection['volume']
             reader = ('\nUSB reader matched by backup UUID, size, and label.'
                       if volume.status == 'backup-matched-reader' else '')
-            self.map_target_details.setText(f'{volume.model} · {volume.label} · {volume.path}\n'
+            summary = 'Target match PASSED' if not selection['missing'] else 'Target check FAILED — backed-up map filenames are missing'
+            self._set_map_result(self.map_target_result, not selection['missing'], summary)
+            self.map_target_details.setText(f'{summary}\n{volume.model} · {volume.label} · {volume.path}\n'
                 f'{volume.mountpoint} · {volume.filesystem} · {volume.size_bytes:,} bytes · {volume.status}'
                 f'{reader}\nMissing maps: {", ".join(selection["missing"]) or "none"}\n'
-                f'Left untouched: {", ".join(selection["extra"]) or "none"}')
+                f'Left untouched: {", ".join(selection["extra"]) or "none"}\n'
+                'Identity and filenames checked. Device file contents are checked during replacement planning.')
             self._update_map_controls()
             self.map_replace_status.setText('Target checked. Choose new local images to create a plan.')
-        self._run_map_job(lambda: _map_selection(path, Path(backup)), show, 'Matching backup and target identity…')
+        self._run_map_job(lambda: _map_selection(path, Path(backup)), show, 'Matching backup and target identity…', kind='target-check')
 
     def choose_map_images(self):
         paths, _ = QFileDialog.getOpenFileNames(self, 'Add local map images', str(Path.home() / 'Downloads'),
@@ -1890,6 +2038,7 @@ class CompanionWindow(QMainWindow):
         self.backup_refresh_button.setEnabled(True)
 
     def closeEvent(self, event) -> None:
+        self._map_progress_timer.stop()
         if self._map_job_worker is not None:
             self._map_job_worker.wait()
         if self._activity_course_worker is not None:
