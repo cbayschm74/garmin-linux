@@ -6,6 +6,7 @@ working directory, so a shell-based or differently shaped call fails the test.
 """
 
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -317,7 +318,8 @@ class SetupHelperTests(unittest.TestCase):
         self.patched_tools({})
         with patch.object(linux_setup, '_run_command', runner):
             code, out, _ = self.run_main(['install', '--prefix', str(self.prefix)])
-        self.assertEqual(code, 0)
+        self.assertEqual(code, 1)
+        self.assertIn('PARTIAL SETUP', out)
         self.assertIn('NOT ready for device work', out)
         self.assertIn('sudo apt install udisks2', out)
         self.assertNotIn('sudo', ' '.join(arguments[0] for arguments, _ in runner.calls))
@@ -386,6 +388,27 @@ class SetupHelperTests(unittest.TestCase):
         self.assertTrue(os.access(script, os.X_OK))
         source = script.read_text(encoding='utf-8')
         self.assertIn('parents[1]', source)
+
+    def test_the_script_runs_from_an_arbitrary_working_directory(self):
+        script = REPO_ROOT / 'tools' / 'setup-linux.py'
+        result = subprocess.run([sys.executable, str(script), 'check'], cwd=self.root,
+                                capture_output=True, text=True)
+        self.assertIn(result.returncode, (0, 1), result.stderr)
+        self.assertIn('Garmin Linux Companion setup check', result.stdout)
+        self.assertIn(f'Checkout: {REPO_ROOT}', result.stdout)
+        self.assertNotIn('Traceback', result.stderr)
+
+    def test_the_script_leaves_no_bytecode_cache_in_the_checkout(self):
+        copy = self.root / 'copied checkout'
+        (copy / 'tools').mkdir(parents=True)
+        shutil.copytree(REPO_ROOT / 'garmin_companion', copy / 'garmin_companion',
+                        ignore=shutil.ignore_patterns('__pycache__'))
+        shutil.copy2(REPO_ROOT / 'tools' / 'setup-linux.py', copy / 'tools' / 'setup-linux.py')
+        (copy / 'requirements.txt').write_text('garmin-fit-sdk==21.217.0\n', encoding='utf-8')
+        result = subprocess.run([sys.executable, str(copy / 'tools' / 'setup-linux.py'), 'check'],
+                                cwd=self.root, capture_output=True, text=True)
+        self.assertIn(result.returncode, (0, 1), result.stderr)
+        self.assertEqual(sorted(path.name for path in (copy / 'garmin_companion').rglob('__pycache__')), [])
 
 
 if __name__ == '__main__':

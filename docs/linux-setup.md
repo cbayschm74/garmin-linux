@@ -20,7 +20,8 @@ argument list, so a checkout or prefix path containing spaces is fine.
 ### `check`
 
 Reports the current state and changes nothing. It does not create files, does
-not use the network, and does not start the application or a device scan.
+not use the network, does not write bytecode caches into the checkout or the
+system packages, and does not start the application or a device scan.
 
 - the checkout and the interpreter that would be used
 - the checkout environment (`.venv`) and whether it is a recognized environment
@@ -67,9 +68,10 @@ registered. Failures are reported as a single line, never as a traceback.
 
 The install never uses `sudo`, never installs into the system interpreter, and
 never touches a device, the backup root or the activity cache. When
-`udisksctl` is missing the setup still finishes, but the result states that
-the checkout is not ready for device work and prints the package command to
-run; the helper does not run it for you.
+`udisksctl` is missing the application is still installed, but the run reports
+`PARTIAL SETUP` and exits non-zero, because the checkout is not ready for
+device work. The package command to run is printed as guidance only; the
+helper does not run it for you.
 
 ### `uninstall`
 

@@ -12,6 +12,9 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+# Set before the import so a check never leaves bytecode caches in the checkout.
+sys.dont_write_bytecode = True
+
 CHECKOUT = Path(__file__).resolve().parents[1]
 if str(CHECKOUT) not in sys.path:
     sys.path.insert(0, str(CHECKOUT))

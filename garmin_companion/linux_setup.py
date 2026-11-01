@@ -342,14 +342,15 @@ def run_install(checkout: Path, prefix: Path) -> int:
         else:
             print(f'  [OPTIONAL MISSING] {item.name}: not found (optional)')
     missing_tools = [item for item in tools if item.required and item.path is None]
-    if missing_tools:
-        print('Result: setup finished, but this checkout is NOT ready for device work.')
-        for item in missing_tools:
-            print(f'  - {TOOL_GUIDANCE.get(item.name, item.name)}')
-    else:
-        print('Result: setup finished and this checkout is ready to use.')
     print('')
     print(HOST_VALIDATION_NOTE)
+    if missing_tools:
+        print('Result: PARTIAL SETUP - the application is installed, but this checkout is NOT '
+              'ready for device work.')
+        for item in missing_tools:
+            print(f'  - {TOOL_GUIDANCE.get(item.name, item.name)}')
+        return 1
+    print('Result: setup finished and this checkout is ready to use.')
     return 0
 
 
@@ -397,8 +398,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     checkout = PROJECT_ROOT
     prefix = _resolve_prefix(args.prefix)
-    if args.command == 'check':
-        return run_check(checkout, prefix)
-    if args.command == 'install':
-        return run_install(checkout, prefix)
-    return run_uninstall(checkout, prefix)
+    try:
+        if args.command == 'check':
+            return run_check(checkout, prefix)
+        if args.command == 'install':
+            return run_install(checkout, prefix)
+        return run_uninstall(checkout, prefix)
+    except (OSError, ValueError, subprocess.CalledProcessError) as exc:
+        _fail(f'the {args.command} command could not finish: {exc}')
+        return 1
