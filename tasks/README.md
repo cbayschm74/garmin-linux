@@ -7,7 +7,7 @@ Coordinator maintains this table in the primary checkout. Worker copies are snap
 | G001 | Review existing cache/course hardening candidate | done | G001 worker; coordinator accepted | Integrated as `051695d`; 115 tests pass |
 | G002 | Validate Edge GPX GUI transfer on hardware | done | User confirmed; Codex recorded | Course appears/renders; local backup independently verified |
 | G003 | Design the Maps GUI installation flow | done | G003 worker; coordinator accepted with corrections | Design integrated; no GUI code |
-| G004 | Validate Omarchy environment and integration prerequisites | needs-host | unassigned | Access to Omarchy laptop |
+| G004 | Validate Omarchy environment and integration prerequisites | done | Codex coordinator | Host verified; 288 tests and temporary-data offscreen GUI pass |
 | G005 | Read-only map selection helpers | done | Coordinator accepted | G003 done |
 | G006 | Map remount, consent checks, and recovery errors | done | Coordinator accepted | G003 done; separate scope from G005 |
 | G007 | Maps GUI replacement/resume | done | Codex coordinator | Main merge `5fd876d`; 208 tests pass |
@@ -35,7 +35,7 @@ Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G
 3. Worker changes its card and assigned files. It reports `review`, commit, checks, and limitations to the coordinator. It does not edit other cards, this board, or project status.
 4. Coordinator reviews and integrates the task, reruns relevant checks, and updates the board, `STATUS.md`, and milestone checkboxes. Clear ownership only after verifying the previous agent has stopped.
 
-G005/G006/G007 and support tasks G009/G010/G011 are complete. G012 is complete; no source/GUI worker is assigned. G002 and G008 are user-validated; G013 feedback improvements are complete; G004 needs the Omarchy laptop. Synthetic acceptance does not authorize rewriting working maps.
+G005/G006/G007 and support tasks G009/G010/G011 are complete. G012 is complete; no source/GUI worker is assigned. G002 and G008 are user-validated; G013 feedback improvements are complete; G004 host validation is complete; Omarchy physical USB and shell integration remain pending. Synthetic acceptance does not authorize rewriting working maps.
 
 ## Completed orchestration
 

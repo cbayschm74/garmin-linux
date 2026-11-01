@@ -24,7 +24,7 @@ For coordinated work, use the task-specific resume prompt in `docs/agent-workflo
 ### 0. Establish the project and inspect the actual devices
 
 - [x] Create a Git repository with a short README, license choice, and ignore rules for personal data.
-- [ ] On Kubuntu and Omarchy, record Python/Qt availability and the installed Omarchy shell version.
+- [x] On Kubuntu and Omarchy, record Python/Qt availability and the installed Omarchy shell version. G004 verified Omarchy 4.0.6-1, system Python 3.14.8, PyQt 6.11.0 / Qt 6.12.0 and Quickshell 0.3.2.r7.g2b4501a-1; see `docs/omarchy-setup.md`.
 - [x] Connect the Edge 1000 and fēnix 5X individually on Kubuntu. Record USB mode, mount layout, visible Garmin directory structure, and free space without copying personal data into Git.
 - [ ] Confirm USB and mount behavior for both models on Omarchy when the laptop is available.
 - **Done when:** a short device compatibility note exists for both models and both operating systems.

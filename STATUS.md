@@ -15,13 +15,27 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 - Review cancellation precedes remount/writes. Accepted-plan checking is enforced inside the final installer re-plan. Resume pins the internally reloaded state to consent. Cleanup refuses replacement-device identities. Changed plans remain visible but require fresh selection/review. Saved complete records do not establish current mount state.
 - Dark-palette page/review rendering was checked. Existing course GUI, operation guards, inspection cancellation, timer restoration, interrupted state, and synthetic real planner/installer round trips pass.
 - User previously confirmed fēnix GUI courses load/render and Edge CLI GPX courses appear. **G002 is now user-validated:** Edge GPX GUI transfer succeeded, and the course appears and renders on the Edge map. Previously installed OpenMTBMap maps render on both devices; the user has now confirmed a real GUI map backup completed successfully. The subsequent Chile GUI replacement also passed user acceptance (G008).
-- Kubuntu launcher/icon already uses this main checkout; reopen the app to load changes. Omarchy laptop environment, packaging, USB checks, and shell widget remain unverified (last reported Omarchy 4.0.4-1).
+- Kubuntu launcher/icon already uses this main checkout; reopen the app to load changes. G004 verified the Omarchy laptop environment (4.0.6-1), dependencies, all 288 tests, and temporary-data offscreen GUI rendering. Native Wayland/launcher acceptance, packaging, physical USB checks, and shell widget remain pending.
 
 ## Next / ownership
 
+**G004 completed on the Omarchy laptop (2026-11-01).** Actual host is Omarchy
+4.0.6-1 / Wayland, system Python 3.14.8, PyQt 6.11.0 / Qt 6.12.0, and Quickshell
+0.3.2.r7.g2b4501a-1. Installed missing Arch PyQt6/SIP and 7-Zip; created `.venv`
+with `/usr/bin/python` because mise's default `python3` is 3.15.2. Pinned FIT SDK
+installed; setup check, all 288 tests (no skips), compilation and diff checks pass.
+All five pages plus Maps Replace / Resume were rendered and inspected offscreen
+with temporary backup/cache roots and mocked scanners; empty states, background
+readers, disabled replacement without selection, and clean shutdown pass.
+Installed plugin docs/commands inspected; no launcher or shell configuration
+changed. No physical device or personal data accessed; no process remains active.
+See [Omarchy setup and reproduction](docs/omarchy-setup.md). Next: separately
+scope native Wayland/launcher acceptance, physical USB validation, and shell widget
+implementation; packaging remains open.
+
 Post-handoff verification: Codex independently reviewed MiniMax's G015 integration through `bfb5c45`. All 288 tests pass, compilation/diff checks pass, and the setup dependency check reports PASS. A fresh real CLI install/reinstall/remove cycle under a temporary prefix preserved unrelated synthetic data; an unmanaged binary target was safely refused without traceback or mutation. Corrected one stale historical-document link. No production source changes or physical device access. Read-only Orca records confirm all three tasks succeeded; G015 remains user-owned/retained. The run's consuming inbox is bound to MiniMax's coordinator session, so no ownership takeover was performed.
 
-Parallel setup wave (`run_e413c22b78ee`): **G014 done** (MiniMax M3 setup/check/uninstall helper, integrated and independently tested), **G016 done** (Grok recovery guide, reviewed/corrected and integrated), **G015 done** (MiMo Pro China Token Plan desktop lifecycle tests, integrated and independently verified). All three workers are settled. Coordinator owns integration/global docs. Actual Omarchy host validation remains G004.
+Parallel setup wave (`run_e413c22b78ee`): **G014 done** (MiniMax M3 setup/check/uninstall helper, integrated and independently tested), **G016 done** (Grok recovery guide, reviewed/corrected and integrated), **G015 done** (MiMo Pro China Token Plan desktop lifecycle tests, integrated and independently verified). All three workers are settled. Coordinator owns integration/global docs. Actual Omarchy host validation subsequently passed in G004; see above.
 
 - **G015 — done:** 41 independent desktop lifecycle tests are integrated in `tests/test_desktop.py`, and the independent review is recorded in [desktop lifecycle review](docs/desktop-lifecycle-review.md). All README launcher promises hold in synthetic runs: promised file layout and modes, launcher pinned to the checkout `.venv` with absolute `cd`/`exec`, desktop entry that decodes back to the literal launcher path (including `%` → `%%`), reinstall after a checkout move, uninstall that deletes only the three managed files, refusal of unmanaged/symlink/directory targets before any mutation, missing venv refused with the README hint, failed dependency probe publishing nothing, and `desktop-file-validate` failure aborting before writing. Four edge findings (F1–F4) are recorded without production changes: F1 a non-UTF-8 unmanaged file yields a raw codec message instead of the uniform refusal text (still refused before mutation; `UnicodeDecodeError` subclasses `ValueError`, which the CLI catches), F2 a literal tab in a path produces a spec-invalid entry (outside the promised quoting scope), F3 `update-desktop-database` failure raises after files already changed, F4 dependency-probe failure raises `CalledProcessError` instead of the missing-venv `ValueError`. No GUI launch, `~/.local` install, scan, or device access was involved.
 
@@ -30,7 +44,7 @@ Parallel setup wave (`run_e413c22b78ee`): **G014 done** (MiniMax M3 setup/check/
 - **G002 — done:** user confirmed the GUI-transferred course appears correctly and renders on the Edge map. The latest local Edge internal data backup independently passed all 24 file hashes/sizes. Active navigation remains untested.
 - **G008 — done:** user completed the small Chile GUI reinstall and confirmed the map appears correctly on the Edge. Local durable state independently reads `complete` for `chile_gmapsupp.img` → `chile_gui_test.img`; GUI completion follows readback and guarded SD unmount. Sibling storage was unmounted at preflight, not independently re-observed afterward. China maps were outside the replacement set.
 - **G013 — done:** destination editor has explicit readable text/background/selection colors. Planning, install and resume now report current-file byte percentages, phase, filename, measured speed and elapsed time. Flush/removal/unmount stages are explicitly labeled busy operations; percentages are per file, not an estimated overall total. Four new synthetic/offscreen checks cover full progress-enabled planning/install, readback failure preservation, progress rendering, and the dark-palette editor. Editor screenshot inspected. No physical device access for this change; reopen the app to load it.
-- **G004 — needs-host:** verify the actual Omarchy laptop environment before packaging/shell integration.
+- **G004 — done:** actual laptop environment/dependencies, 288 tests and temporary-data offscreen GUI verified. Physical USB, native Wayland/launcher and shell widget acceptance remain separate.
 - Laptop transfer: [moving to Omarchy](docs/moving-to-omarchy.md) gives bundle-clone instructions and the exact G004 resume prompt. Recreate `.venv` on the laptop; private backups/maps and Orca sessions are separate. A local Git bundle is a snapshot, not an ongoing shared remote.
 - Firmware, automatic account sync, and licensed Garmin map downloads remain feasibility gates, not implemented Express parity. Edge post-reset Wi-Fi setup reportedly required Express; unresolved and separate.
 
