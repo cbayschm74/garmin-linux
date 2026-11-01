@@ -128,7 +128,7 @@ For coordinated work, use the task-specific resume prompt in `docs/agent-workflo
 
 ### 9. Release and maintenance
 
-- [ ] Add install, upgrade, uninstall, backup-location, and troubleshooting instructions for both distros.
+- [x] Add checkout setup/check/install/update/uninstall guidance and source-verified recovery/troubleshooting instructions. G014/G016 integrated; actual Omarchy and clean-machine graphical validation remain separate gates.
 - [ ] Test clean install and upgrade on both machines, plus disconnects and malformed files.
 - [ ] Tag a first release describing supported features and known Garmin service limits.
 - **Done when:** the user can reinstall the app on either machine from the repository and recover their backed-up data.
