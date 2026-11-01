@@ -29,6 +29,8 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 
 ## Earlier change — G012 backup feedback
 
+G013 user acceptance: the user confirmed both destination filename readability and planning/install progress now display correctly in the app (implementation `eebbbc5`). No further device operation was performed to record this confirmation.
+
 Copy/readback callbacks now drive a visible two-phase progress bar with current file, bytes/percentage, measured I/O speed, and elapsed time (updated even between reads). Completion waits for verified publication; failures cannot show 100%. Saved backups appear/are selected in the dropdown automatically. A dedicated saved-backup verification button reports green PASS/red FAIL; target identity/filename matching is separately labeled and does not imply a checksum comparison. Other map jobs show busy animation. Ten new synthetic/offscreen tests cover counts, publication failures, signal delivery, timing/rate, automatic selection, and pass/fail distinctions. Full suite: 218 passed; compilation/diff checks and dark-palette feedback inspection passed. No real storage was opened during development. The user subsequently confirmed successful use of copy progress and both verification checks, and found the bar/information much clearer. This confirms backup/verification UI acceptance; the subsequent physical replacement result is recorded under G008 above.
 
 ## G002 device acceptance — 2026-11-01

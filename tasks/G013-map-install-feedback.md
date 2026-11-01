@@ -10,3 +10,5 @@ Destination editing now uses explicit readable foreground/background and selecti
 Verification: 222 unittest methods pass with mocked USB and temporary storage; compileall and diff checks pass. Added full progress-enabled real planner/installer round trip, failed readback preserving old map and resumable state, GUI progress/busy transitions and dark-palette live editor checks. Synthetic editor screenshot visually inspected. Physical acceptance of the preceding installer version belongs to G008; this change does not claim another hardware run.
 
 No physical storage opened or operation left running. User-owned untracked `mise.toml` preserved. Next: reopen the normal main-checkout app to use the feedback improvements; proceed with another project task without rewriting maps merely for UI acceptance.
+
+User acceptance: after reopening the app, the user confirmed both fixes display correctly: destination filename contrast and planning/install progress feedback. Implementation commit: `eebbbc5`.
