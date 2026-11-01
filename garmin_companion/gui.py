@@ -29,7 +29,7 @@ from .map_backup import backup_maps, list_map_images, read_map_backup_index, val
 from .map_identity import select_map_volume, list_usb_fat_mounts
 from .map_plan import plan_map_replacement
 from .map_install import (start_map_install, resume_map_install, load_map_install,
-                          MapInstallInterrupted, _require_reviewed_plan)
+                          MapInstallInterrupted, MapPlanChanged, _require_reviewed_plan)
 from .export import prepare_activity
 from .convert_course import convert_gpx_to_fit, MAX_POINTS
 from .course_transfer import CourseTransferReview, review_fenix_transfer, review_edge_transfer, send_course
@@ -476,6 +476,8 @@ def _execute_map_review(review, backup_root):
     except Exception as exc:
         if isinstance(exc, MapInstallInterrupted) or state_started:
             raise
+        if isinstance(exc, MapPlanChanged):
+            exc.volume = mounted or volume
         if original_read_only and mounted is not None and mounted_evidence is not None:
             if (mounted_evidence['uuid'], mounted_evidence['path']) != (review['evidence']['uuid'], review['evidence']['path']):
                 raise ValueError(f'{exc}\nSafe-unmount cleanup skipped: USB identity changed; '
@@ -485,6 +487,10 @@ def _execute_map_review(review, backup_root):
                 cleanup = result['message']
             except Exception as cleanup_error:
                 cleanup = f'Safe-unmount cleanup failed: {cleanup_error}. Mount state needs attention.'
+            if isinstance(exc, MapPlanChanged):
+                error = MapPlanChanged(f'{exc}\n{cleanup}', exc.plan)
+                error.volume = mounted
+                raise error from exc
             raise ValueError(f'{exc}\n{cleanup}') from exc
         if mounted is None or mounted_evidence is None:
             raise ValueError(f'{exc}\nMount transition or verification did not complete. Refresh Devices to check mount state.') from exc
@@ -948,6 +954,13 @@ class CompanionWindow(QMainWindow):
 
     def _map_job_failed(self, error):
         self._invalidate_map_plan()
+        if isinstance(error, MapPlanChanged) and hasattr(error, 'volume'):
+            self.map_plan_details.setPlainText(
+                'Changed plan captured before cleanup. The target may now be unmounted. '
+                'Mount read-only and check the target again before creating a fresh review.\n\n' +
+                _map_plan_text(dict(plan=error.plan, volume=error.volume)))
+            self._map_selection = None
+            self._update_map_controls()
         message = str(error)
         state_dir = getattr(error, 'state_dir', None)
         if state_dir is not None:
@@ -1123,8 +1136,11 @@ class CompanionWindow(QMainWindow):
         text = QPlainTextEdit()
         text.setReadOnly(True)
         target = review['volume']
+        phase = review['state']['phase'] if resume else None
+        resume_note = (f'Saved phase: {phase}. Selected old maps may already have been removed. '
+                       'Recovery follows this saved state.\n\n' if resume and phase != 'planned' else '')
         text.setPlainText(f'Target: {target.model} · {target.label} · {target.path}\n' + _map_plan_text(review) +
-            '\n\nOnly the listed old maps may be removed, after the first new image verifies. '
+            '\n\n' + resume_note + 'Only the listed old maps may be removed, after the first new image verifies. '
             'Other images and sidecar files stay in place. The app has no restore command. '
             'There is no mid-copy cancellation; keep the window open. '
             'The installer safely unmounts this volume; safely unmount sibling volumes before disconnecting. '
@@ -1138,8 +1154,12 @@ class CompanionWindow(QMainWindow):
         if dialog.exec() == QDialog.DialogCode.Accepted:
             self._map_review = None
             self.map_review_button.setEnabled(False)
-            self._run_map_job(lambda: _execute_map_review(review, self._backup_root), self._map_install_complete,
-                              'Replacing and verifying maps; old files remain until the first new image verifies. Keep the window open…')
+            message = (f'Resuming phase {phase}; selected old maps may already have been removed. Keep the window open…'
+                       if resume and phase != 'planned' else
+                       'Resuming planned replacement; old maps must still verify before staging. Keep the window open…'
+                       if resume else
+                       'Replacing and verifying maps; old files remain until the first new image verifies. Keep the window open…')
+            self._run_map_job(lambda: _execute_map_review(review, self._backup_root), self._map_install_complete, message)
 
     def choose_map_resume(self):
         directory = QFileDialog.getExistingDirectory(self, 'Resume map replacement', str(self._backup_root / 'MapInstalls'))
@@ -1180,6 +1200,8 @@ class CompanionWindow(QMainWindow):
     def inspect_map_file(self, path: Path) -> None:
         if self._map_operations_busy():
             return
+        self._inspect_timer_was_active = self._refresh_timer.isActive()
+        self._refresh_timer.stop()
         self.map_replace_panel.setEnabled(False)
         self._clear_layout(self.map_result_layout)
         self.map_summary.setText(f'Inspecting {path.name}…')
@@ -1233,6 +1255,8 @@ class CompanionWindow(QMainWindow):
         self.map_choose_button.setEnabled(True)
         self.map_cancel_button.setEnabled(False)
         self.map_replace_panel.setEnabled(True)
+        if self._inspect_timer_was_active:
+            self._refresh_timer.start()
         self._update_course_send()
         self.refresh_devices()
 

@@ -24,6 +24,14 @@ class MapInstallInterrupted(ValueError):
         self.state_dir = state_dir
 
 
+class MapPlanChanged(ValueError):
+    """A safe pre-state refusal with the newly computed plan for display."""
+
+    def __init__(self, message: str, plan: dict) -> None:
+        super().__init__(message)
+        self.plan = plan
+
+
 def _plan_projection(plan: dict) -> tuple:
     """The stable fields a reviewed plan must still match before any device write.
 
@@ -47,7 +55,7 @@ def _require_reviewed_plan(plan: dict, expected_plan: dict) -> None:
     if not isinstance(expected_plan, dict):
         raise ValueError('Reviewed map replacement plan is invalid')
     if _plan_projection(plan) != _plan_projection(expected_plan):
-        raise ValueError('Map replacement plan changed since it was reviewed; review it again before installing')
+        raise MapPlanChanged('Map replacement plan changed since it was reviewed; review it again before installing', plan)
 
 
 def _save(state_dir: Path, state: dict) -> None:
