@@ -148,3 +148,8 @@ These were reproduced on the same harness.
 The in-progress status label lives inside `map_replace_panel`, and `_run_map_job` disables that panel, so the long-running sentence is greyed out until the job finishes. `4d212f3` reparents `map_replace_status` above the tabs. Worth keeping. It is separate from the consent bugs above.
 
 No physical install, firmware, account, or USB operation was run. Synthetic results do not close G008.
+
+
+## Coordinator acceptance after the frozen review
+
+The report was accepted and its source findings independently checked. Confirmed safety fixes are regression-tested on the feature branch. Follow-up `f81d733` also addresses the three remaining presentation items: structured `MapPlanChanged` preserves the re-plan through cleanup and displays it without enabling stale consent; resume text uses the saved phase and acknowledges old maps may already be gone; Inspect now saves/stops/restores device refresh. Three focused Qt regressions cover these paths. Full feature suite: 187 tests passed. Resume's preservation of an existing install state remains deliberate policy. This acceptance is synthetic only; G008 remains pending.
