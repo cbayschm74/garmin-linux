@@ -35,3 +35,15 @@ All 317 Python tests pass without skips. Physical attached-device status and USB
 behavior, human menu/live-bar click and clean-machine graphical install remain
 separate acceptance. See [setup](omarchy-setup.md), [native validation](omarchy-native-validation.md),
 and [widget guide](omarchy-widget.md).
+
+## Physical Edge acceptance — G021, 2026-11-01
+
+Edge internal and SD detection, connected bar status, guarded read-only mounts,
+selected-data backup, independent source/saved size and SHA-256 checks, and both
+safe unmounts passed. Both volumes initially automounted read-write; all backup
+reads used subsequently verified read-only mounts. Internal: 26 files / 3,550,395
+bytes; SD: 96 files / 9,906,554 bytes. Private backups stay under `~/GarminBackups`.
+No source content, maps or firmware changed; no GUI launch or transfer. Both
+volumes were re-observed unmounted with unchanged identities, still physically
+connected at handoff. fēnix, actual disconnect status and human GUI acceptance
+remain pending. See [device notes](device-compatibility.md).

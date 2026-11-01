@@ -19,6 +19,26 @@ Only observations made directly on the connected hardware are marked **Observed*
 - The watch uses a singular `Garmin/Activity` folder, unlike the Edge 1000's `Garmin/Activities`. Direct file counts observed: 66 in `Activity`, 0 in `Courses`, 1 in `NewFiles`, 2 in `GPX`, 45 in `Metrics`, and 3 in `Sleep`. `BirdsEye`, `CustomMaps`, `Workouts`, and other system folders also exist.
 - No device file was changed or copied into the repository. The volume disappeared before an orderly unmount could be issued; the kernel logged a USB disconnect at 13:06. The cause (connector movement versus intentional unplugging) was not determined. Backup code must detect this and reject incomplete copies.
 
+## Edge 1000 on Omarchy — observed 2026-11-01
+
+- Actual Edge USB connection exposes two VFAT volumes: GARMIN Flash / GARMIN
+  (7,784,628,224 bytes) and GARMIN Card / GARMIN SD (32,006,733,824 bytes).
+  Internal XML reports Edge 1000, raw software-version field 1550. SD remains a
+  candidate without its own readable device description; both are detected.
+- Omarchy **automounted both read-write**. The coordinator authenticated current
+  USB identity/mount instances, guardedly unmounted both and remounted each
+  read-only through the app's core mount API. Actual mountinfo mode was checked.
+- Selected-data backups under private `~/GarminBackups` completed: internal
+  **26 files / 3,550,395 bytes**, SD **96 files / 9,906,554 bytes**. COMPLETE and
+  catalog verification passed. Separate source/saved-file size/SHA-256 checks
+  passed for every file; source UUID/mount evidence stayed unchanged.
+- Both sibling volumes safely unmounted and re-observed with matching identities
+  and no mounts. Device still connected at handoff. Bar status correctly shows
+  connected / 2 USB volumes even after unmount; the bar does not report mount mode.
+- No source file content changed. Maps/firmware were outside copy scope; no GUI
+  launch or course/map transfer was performed. This validates real Edge core USB,
+  backup and unmount behavior on Omarchy, not GUI or fēnix acceptance.
+
 ## fēnix 5X on Omarchy — pending
 
 - Inspect USB behavior and mount layout on the laptop when available. Do not assume its device path or automount behavior matches Kubuntu.
@@ -32,4 +52,4 @@ Only observations made directly on the connected hardware are marked **Observed*
 ## Desktop environments
 
 - **Kubuntu machine, observed:** Ubuntu 26.04.1 LTS with KDE Plasma workspace package 6.6.6, Python 3.14.4, Git 2.53.0, Qt 6.10.2 and PyQt6 6.10.2 available in the active Python environment. `PySide6` was not found. These were checked through command-line package and Python metadata; the Plasma GUI itself was not started in the tool session.
-- **Omarchy laptop, observed 2026-11-01:** Omarchy 4.0.6-1, Wayland, system Python 3.14.8 (mise default `python3` is 3.15.2), PyQt 6.11.0, Qt 6.12.0, Quickshell 0.3.2.r7.g2b4501a-1. Missing PyQt6 and 7-Zip installed; checkout venv uses `/usr/bin/python` and FIT SDK 21.217.0. All 288 synthetic tests pass without skips; temporary-data offscreen GUI renders and empty-state/background-worker checks pass. Native Wayland GUI/desktop-entry launch and installed shell-widget checks subsequently passed in G017/G018. Garmin USB behavior and human live-bar/menu click acceptance remain pending. See [Omarchy setup](omarchy-setup.md) and [widget guide](omarchy-widget.md).
+- **Omarchy laptop, observed 2026-11-01:** Omarchy 4.0.6-1, Wayland, system Python 3.14.8 (mise default `python3` is 3.15.2), PyQt 6.11.0, Qt 6.12.0, Quickshell 0.3.2.r7.g2b4501a-1. Missing PyQt6 and 7-Zip installed; checkout venv uses `/usr/bin/python` and FIT SDK 21.217.0. All 288 synthetic tests pass without skips; temporary-data offscreen GUI renders and empty-state/background-worker checks pass. Native Wayland GUI/desktop-entry launch and installed shell-widget checks subsequently passed in G017/G018. Edge core USB/read-only backup/unmount subsequently passed in G021; fēnix USB and human live-bar/menu click acceptance remain pending. See [Omarchy setup](omarchy-setup.md) and [widget guide](omarchy-widget.md).

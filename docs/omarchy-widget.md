@@ -203,3 +203,12 @@ Unit tests cover zero volumes, several volumes, malformed JSON, timeout,
 startup failure, and a non-zero lsblk exit. They mock lsblk and refuse leaked
 volume identifiers. Validation checks the manifest only. It does not load QML
 or start the shell.
+
+## Physical Edge status acceptance — G021
+
+On 2026-11-01 the connected Edge 1000 and SD card were detected by both the live
+bar IPC and standalone command as connected / **2 Garmin USB volumes**. This
+remained correct after both filesystems were safely unmounted: USB presence is
+independent of mount status. Source/core read-only backups also passed, separately
+recorded in [device compatibility](device-compatibility.md). Physical disconnect
+transition and fēnix status are not yet observed.
