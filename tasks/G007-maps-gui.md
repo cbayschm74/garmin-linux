@@ -20,7 +20,7 @@ All GUI cases in the accepted design, including stale identity/state/source reje
 
 ## Handoff
 
-Unstarted, blocked on integrated G005/G006 APIs and tests. Next: coordinator verifies both dependencies, records agreed signatures, then assigns a fresh worktree from integrated main.
+Implementation checkpoint 34fb9a9 is complete pending final worker report/test integration. G005/G006 are integrated on main. G007 runs in /home/cbayschm/garmin-G007-maps-gui; 184 tests pass, compilation/diff checks pass, dark-palette page and review dialog were visually checked. No device access. M3 delivered 0171dd3, integrated as 59ce57f, and its worker is released. Grok is finishing G009; MiMo G011 is strengthening workflow tests through China Token Plan. Next: collect their exact scoped commits and lifecycle reports, independently verify, merge accepted feature into main, and update board/status/milestones. Preserve primary untracked mise.toml and all other worktrees.
 
 
 ## Coordinator parallel test/review scope
