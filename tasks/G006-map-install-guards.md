@@ -2,7 +2,7 @@
 
 ## Assignment
 
-- State: review — worker finished, awaiting coordinator integration
+- State: done — coordinator accepted — worker finished, awaiting coordinator integration
 - Owner / session: G006 worker agent (omp), branch `task/G006-map-install-guards`
 - Branch / worktree / base commit: `task/G006-map-install-guards` in `/home/cbayschm/orca/workspaces/garmin-linux/G006-map-install-guards`, base `83b7c2f` (current main, including the accepted G003 design)
 - Depends on: G003 (done); independent of G005
@@ -79,3 +79,8 @@ No physical device was attached, mounted, read, or written. No `udisksctl`, `lsb
 ### Next action
 
 Coordinator: review `git show e77b12a` in `/home/cbayschm/orca/workspaces/garmin-linux/G006-map-install-guards`, integrate into `main`, and rerun the standard checks. Then G007 can start once G005 is also integrated.
+
+
+## Coordinator acceptance — 2026-11-01
+
+Integrated source as `c4a6abe` and worker handoff. Independently reran each worker suite and the combined main suite. Combined acceptance: 143 tests pass after a focused G006 pre-mount metadata revalidation correction and regression test. No physical device access.

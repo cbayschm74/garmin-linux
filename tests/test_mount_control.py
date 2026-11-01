@@ -291,3 +291,20 @@ class MountControlTests(unittest.TestCase):
                 control.remount_writable_for_map_install(volume, evidence)
         commands = [call.args[0] for call in run.call_args_list]
         self.assertEqual([command[1] for command in commands], ['unmount'])
+
+
+    def test_metadata_changed_between_unmount_and_mount_is_refused(self):
+        volume = self.mounted()
+        for field, value in (('size', 999999), ('label', 'OTHER'), ('fstype', 'ext4')):
+            with self.subTest(field=field):
+                record = BlockRecord(self.record, '/media/test')
+                def run(command, **kwargs):
+                    record.mounted = False
+                    record.base[field] = value
+                with patch.object(control, '_block_record', side_effect=record), \
+                     patch.object(control, '_read_only', return_value=True), \
+                     patch.object(control.subprocess, 'run', side_effect=run) as commands:
+                    evidence = control.capture_volume(volume)
+                    with self.assertRaisesRegex(ValueError, 'changed after the unmount'):
+                        control.remount_writable_for_map_install(volume, evidence)
+                    self.assertEqual(commands.call_count, 1)

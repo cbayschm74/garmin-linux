@@ -117,7 +117,11 @@ def remount_writable_for_map_install(volume: GarminVolume, evidence: dict) -> Ga
     if volume.mountpoint:
         _unmount_verified(volume, evidence)
         record = _block_record(evidence['path'])
-        if record.get('uuid') != evidence['uuid'] or record.get('path') != evidence['path']:
+        if (record.get('uuid') != evidence['uuid'] or record.get('path') != evidence['path']
+                or not record.get('usb') or record.get('size') != volume.size_bytes
+                or record.get('label') != volume.label
+                or str(record.get('fstype') or '').lower() != volume.filesystem.lower()
+                or any(record.get('mountpoints') or [])):
             raise ValueError('USB volume changed after the unmount; Refresh to check its state')
     command = ['udisksctl', 'mount', '-b', evidence['path'], '--no-user-interaction', '-o', 'rw']
     try:

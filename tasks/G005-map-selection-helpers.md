@@ -2,7 +2,7 @@
 
 ## Assignment
 
-- State: review
+- State: done — coordinator accepted
 - Owner / session: Grok session 01a19505-e656-7393-b2a4-2cf95a67bc03
 - Branch / worktree / base commit: `task/G005-map-selection` at `/home/cbayschm/orca/workspaces/garmin-linux/G005-map-selection`, base `83b7c2f7910b97b2b176caa6fcd804f911bfa585`
 - Depends on: G003 (done)
@@ -35,3 +35,8 @@ Synthetic tests cover normal listing, empty folders, spaces/case, symlinks/non-f
 - Blocker / input needed: coordinator review. G006 may proceed in parallel; its files were not touched.
 - Exact next command or action: review this branch, then integrate before G007. Do not merge from this worktree.
 - Integration commit and acceptance evidence (coordinator): pending.
+
+
+## Coordinator acceptance — 2026-11-01
+
+Integrated source as `3fd9716` and worker handoff. Independently reran each worker suite and the combined main suite. Combined acceptance: 143 tests pass after a focused G006 pre-mount metadata revalidation correction and regression test. No physical device access.

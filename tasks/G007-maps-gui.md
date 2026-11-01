@@ -2,9 +2,9 @@
 
 ## Assignment
 
-- State: blocked
-- Owner / session: unassigned
-- Branch / worktree / base commit: create only after dependencies are integrated
+- State: active
+- Owner / session: Codex coordinator
+- Branch / worktree: task/G007-maps-gui at /home/cbayschm/garmin-G007-maps-gui; base is the coordinator claim commit
 - Depends on: G005 and G006
 - Device access: none; offscreen Qt and synthetic storage only
 
