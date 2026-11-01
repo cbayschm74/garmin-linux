@@ -60,7 +60,7 @@ Cancel on the review dialog returns before remount and before any device write.
 
 `install-maps` and **Replace selected maps** write `state.json` before the first device write. After that, a failure is an interrupted install. The dialog title is **Map replacement failed**, or **Maps verified, unmount failed** when the images hashed and only the unmount failed. The text includes the state directory and `Use Resume interrupted replacement; keep the saved state and local images.`
 
-Reconnect, refresh, and select the current mounted target. Resume from that state directory. Do not start a second replacement over the same maps while the state directory still exists. Do not delete the state directory, the source IMGs, the complete backup, device partials, or old maps as a way to clear the error.
+Reconnect, refresh, and select the current mounted target. Resume from that state directory. Do not start a second replacement over the same maps while an interrupted install remains unresolved. Completed state directories are retained as history and do not block later reviewed replacements. Do not delete the state directory, the source IMGs, the complete backup, device partials, or old maps as a way to clear the error.
 
 A replacement that has not yet saved state fails like any other pre-write check. If the app had already switched the reviewed volume to writable and the identity is unchanged, it tries an ordinary unmount and reports that cleanup. If the USB identity changed, it skips that unmount and tells you to refresh Devices.
 
@@ -92,7 +92,7 @@ Phases in the review text:
 | `installing` | Remaining images are being published from their staging files. |
 | `complete` | The local record says the install finished. |
 
-Opening **Resume interrupted replacement…** on a `complete` record does not mount, hash, or unmount anything. The status says the local record is already complete and does not prove the current mount state. CLI `resume-map-install` returns the same way: it reports `complete` and does not touch the device.
+Opening **Resume interrupted replacement…** on a `complete` record does not mount, hash, or unmount anything. The status says the local record is already complete and does not prove the current mount state. The CLI first validates the supplied current volume against the saved backup, even for a complete record. It then returns `complete` without hashing images, mounting or unmounting. Use the GUI to inspect a completed record without checking a connected target.
 
 For any earlier phase, resume looks at the files:
 
@@ -142,7 +142,7 @@ The code does not record whether the link is USB 2. Large images are expected to
 
 A device-data backup percent can hold still during the per-file checksum of the saved copy. A map job’s percent can hold still on a busy flush, removal, or unmount stage. Those pauses are part of the reported phase.
 
-There is no timer that marks a copy or hash as stalled. Hash and copy calls run until the read finishes or the mount disappears. Mount and unmount calls time out after 30 seconds. An archive listing times out after 120 seconds. If a copy or hash phase stops increasing its byte count for a long time and the speed falls toward zero, the transfer is no longer advancing. Leave the window open until it either continues, times out a mount command, or reports a disconnect. Unplugging the cable ends the operation as a failed or interrupted job and starts the disconnect rules above.
+There is no timer that marks a copy or hash as stalled. Hash and copy calls run until the read finishes or the mount disappears. Mount and unmount calls time out after 30 seconds. An archive listing times out after 120 seconds. If a copy or hash phase stops increasing its byte count for a long time and the speed falls toward zero, no new byte progress is being reported; that alone cannot distinguish a blocked read/write from a failed device. Leave the window open until it either continues, times out a mount command, or reports a disconnect. Unplugging the cable ends the operation as a failed or interrupted job and starts the disconnect rules above.
 
 A dropped cable is reported as a disconnect, remount, or disappeared mount. The operation publishes `COMPLETE`, and saves install phase `complete`, only after its own checks have finished. Closing the window is not a Cancel button for a map job. Leave it open until the job reports success or an error.
 
@@ -204,7 +204,7 @@ That install is local to the checkout. It does not install desktop packages and 
 
 Project notes describe the menu launcher on Kubuntu and say the Omarchy laptop was not validated. For this task, the coordinator checked the current worker host on 2026-11-01 and reported Ubuntu 26.04.1 LTS, Python 3.14.4, PyQt/Qt 6.10.2, and FIT SDK 21.217.0, with `udisksctl` and `7z` available. This guide did not repeat that check. The Omarchy laptop is still unverified. Do not infer its shell version or assume those packages are installed there.
 
-The portable setup helper is a separate task and is not part of this checkout. Recovery here uses the commands above.
+The integrated [Linux setup helper](linux-setup.md) can check dependencies without changing files, reinstall the launcher, or remove it while preserving data. Recovery of an interrupted device operation still uses the reviewed paths above.
 
 ## Command names
 
