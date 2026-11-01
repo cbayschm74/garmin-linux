@@ -212,4 +212,12 @@ remained correct after both filesystems were safely unmounted: USB presence is
 independent of mount status. Source/core read-only backups also passed, separately
 recorded in [device compatibility](device-compatibility.md). The user subsequently disconnected the Edge: fresh detector and standalone status
 reported zero volumes, and the live bar had automatically transitioned to
-disconnected/count 0 without a forced refresh. fēnix status remains untested.
+disconnected/count 0 without a forced refresh. fēnix subsequently passed connected-state acceptance in G022.
+
+## Physical fēnix status acceptance — G022
+
+On 2026-11-01 a separately connected fēnix 5X in Mass Storage mode was detected
+by both standalone status and live bar as connected / **1 Garmin USB volume**.
+Read-only data backup/independent verification/safe unmount also passed. The bar
+correctly retains connected status while the unmounted watch remains on USB;
+physical disconnect observation follows the user unplugging it.

@@ -26,18 +26,18 @@ For coordinated work, use the task-specific resume prompt in `docs/agent-workflo
 - [x] Create a Git repository with a short README, license choice, and ignore rules for personal data.
 - [x] On Kubuntu and Omarchy, record Python/Qt availability and the installed Omarchy shell version. G004 verified Omarchy 4.0.6-1, system Python 3.14.8, PyQt 6.11.0 / Qt 6.12.0 and Quickshell 0.3.2.r7.g2b4501a-1; see `docs/omarchy-setup.md`.
 - [x] Connect the Edge 1000 and fēnix 5X individually on Kubuntu. Record USB mode, mount layout, visible Garmin directory structure, and free space without copying personal data into Git.
-- [ ] Confirm USB and mount behavior for both models on Omarchy. G021 verified Edge internal/SD detection, initial writable automount, guarded read-only mounting, selected-data backup/source-and-copy hash verification, and safe unmount; fēnix remains pending.
+- [x] Confirm USB and mount behavior for both models on Omarchy. G021/G022 verified Edge internal/SD and fēnix detection, initial writable automounts, guarded read-only mounting, selected-data backup/source-and-copy hash verification, and safe unmount.
 - **Done when:** a short device compatibility note exists for both models and both operating systems.
 
 ### 1. Safe device detection and backup
 
 - [x] Build a small command-line core that lists candidate Garmin USB volumes and explains why each was detected; verified on Kubuntu with Edge 1000.
 - [x] Validate the detector with the fēnix 5X on Kubuntu.
-- [ ] Validate the detector on Omarchy. Edge internal/SD passed G021; fēnix remains pending.
+- [x] Validate the detector on Omarchy. Edge internal/SD and fēnix passed G021/G022.
 - [x] Implement read-only inventory and timestamped backup of activity, course, and device metadata files, preserving originals and checking copy integrity. Verified on both Edge 1000 volumes on Kubuntu.
 - [x] Require an explicit current Garmin volume, refuse destination paths on Garmin mounts, and handle disconnects and insufficient disk space clearly. Synthetic failure checks and live Edge backup passed.
 - [x] Validate backup on the fēnix 5X on Kubuntu; successful copy, independent hash check, and orderly unmount completed on 2026-10-02.
-- [ ] Validate the tool on Omarchy and document a verified device restore procedure. Edge read-only data backup and guarded unmount passed G021; fēnix and restore remain pending.
+- [ ] Validate the tool on Omarchy and document a verified device restore procedure. Edge and fēnix read-only data backup and guarded unmount passed G021/G022; restore remains pending.
 - **Done when:** both devices can be detected and backed up on Linux, with a restore-by-copy procedure documented. No device write is required for this milestone.
 
 ### 2. Activity library

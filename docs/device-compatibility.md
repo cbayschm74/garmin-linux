@@ -41,9 +41,25 @@ Only observations made directly on the connected hardware are marked **Observed*
   launch or course/map transfer was performed. This validates real Edge core USB,
   backup and unmount behavior on Omarchy, not GUI or fēnix acceptance.
 
-## fēnix 5X on Omarchy — pending
+## fēnix 5X on Omarchy — observed 2026-11-01
 
-- Inspect USB behavior and mount layout on the laptop when available. Do not assume its device path or automount behavior matches Kubuntu.
+- User connected the watch separately in Mass Storage mode. One VFAT filesystem
+  labeled GARMIN on `fenix5x Flash`, 15,690,891,264 bytes. Mounted device XML
+  identifies `fenix 5x`, raw software-version field 2500.
+- Omarchy automounted read-write. Coordinator pinned current USB UUID/metadata/
+  mount instance, guardedly unmounted and mounted read-only through existing
+  app APIs; mountinfo mode verified before inventory/copy.
+- Private selected-data backup completed: **81 files / 3,105,639 bytes** under
+  `~/GarminBackups`. COMPLETE/catalog verification passes. Independent re-reads
+  of every source and saved file match all manifest sizes and SHA-256 hashes;
+  source UUID/mount evidence stayed fixed.
+- Guarded unmount and fresh re-observation confirm unchanged USB identity with
+  no mountpoint/mount ID. Watch still connected at handoff, safe to unplug.
+  Standalone and live bar correctly report connected / 1 volume, even unmounted.
+- No connector disconnect occurred during this run; that does not establish
+  disconnect-during-copy resilience. No source content writes, maps/firmware,
+  GUI or transfer operations. Real core detection/read-only backup/unmount now
+  passes on both target models under Omarchy; human GUI acceptance remains open.
 
 ## fēnix 5X backup validation on Kubuntu — observed 2026-10-02
 
@@ -54,4 +70,4 @@ Only observations made directly on the connected hardware are marked **Observed*
 ## Desktop environments
 
 - **Kubuntu machine, observed:** Ubuntu 26.04.1 LTS with KDE Plasma workspace package 6.6.6, Python 3.14.4, Git 2.53.0, Qt 6.10.2 and PyQt6 6.10.2 available in the active Python environment. `PySide6` was not found. These were checked through command-line package and Python metadata; the Plasma GUI itself was not started in the tool session.
-- **Omarchy laptop, observed 2026-11-01:** Omarchy 4.0.6-1, Wayland, system Python 3.14.8 (mise default `python3` is 3.15.2), PyQt 6.11.0, Qt 6.12.0, Quickshell 0.3.2.r7.g2b4501a-1. Missing PyQt6 and 7-Zip installed; checkout venv uses `/usr/bin/python` and FIT SDK 21.217.0. All 288 synthetic tests pass without skips; temporary-data offscreen GUI renders and empty-state/background-worker checks pass. Native Wayland GUI/desktop-entry launch and installed shell-widget checks subsequently passed in G017/G018. Edge core USB/read-only backup/unmount subsequently passed in G021; fēnix USB and human live-bar/menu click acceptance remain pending. See [Omarchy setup](omarchy-setup.md) and [widget guide](omarchy-widget.md).
+- **Omarchy laptop, observed 2026-11-01:** Omarchy 4.0.6-1, Wayland, system Python 3.14.8 (mise default `python3` is 3.15.2), PyQt 6.11.0, Qt 6.12.0, Quickshell 0.3.2.r7.g2b4501a-1. Missing PyQt6 and 7-Zip installed; checkout venv uses `/usr/bin/python` and FIT SDK 21.217.0. All 288 synthetic tests pass without skips; temporary-data offscreen GUI renders and empty-state/background-worker checks pass. Native Wayland GUI/desktop-entry launch and installed shell-widget checks subsequently passed in G017/G018. Edge and fēnix core USB/read-only backup/unmount subsequently passed in G021/G022; human live-bar/menu click acceptance remains pending. See [Omarchy setup](omarchy-setup.md) and [widget guide](omarchy-widget.md).

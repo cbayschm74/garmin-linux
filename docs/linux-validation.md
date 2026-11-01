@@ -47,3 +47,15 @@ No source content, maps or firmware changed; no GUI launch or transfer. Both
 volumes were re-observed unmounted with unchanged identities, still physically
 connected at handoff. fēnix, actual disconnect status and human GUI acceptance
 remain pending. See [device notes](device-compatibility.md).
+
+## Physical fēnix acceptance — G022, 2026-11-01
+
+Single fēnix Mass Storage volume detected; standalone/live bar connected/count 1.
+Initial writable automount was guardedly unmounted and remounted read-only.
+Private selected-data backup: **81 files / 3,105,639 bytes**. COMPLETE/catalog and
+independent source/saved size/SHA-256 checks passed. Guarded unmount succeeded;
+fresh re-observation confirms same USB UUID with no mountpoint/mount ID. Watch
+still connected at handoff, safe to unplug. No source content writes, maps,
+firmware, GUI or transfer operation. Both models now pass real core USB/backup/
+unmount acceptance. Human GUI/menu/bar selection, restore and clean-install
+validation remain separate. Source baseline remains 317 tests; docs-only run.

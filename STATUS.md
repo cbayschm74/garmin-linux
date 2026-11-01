@@ -15,9 +15,25 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 - Review cancellation precedes remount/writes. Accepted-plan checking is enforced inside the final installer re-plan. Resume pins the internally reloaded state to consent. Cleanup refuses replacement-device identities. Changed plans remain visible but require fresh selection/review. Saved complete records do not establish current mount state.
 - Dark-palette page/review rendering was checked. Existing course GUI, operation guards, inspection cancellation, timer restoration, interrupted state, and synthetic real planner/installer round trips pass.
 - User previously confirmed fēnix GUI courses load/render and Edge CLI GPX courses appear. **G002 is now user-validated:** Edge GPX GUI transfer succeeded, and the course appears and renders on the Edge map. Previously installed OpenMTBMap maps render on both devices; the user has now confirmed a real GUI map backup completed successfully. The subsequent Chile GUI replacement also passed user acceptance (G008).
-- Kubuntu launcher/icon already uses this main checkout; reopen the app to load changes. G004 verified the Omarchy laptop environment (4.0.6-1), dependencies, all 288 tests, and temporary-data offscreen GUI rendering. G017 native Wayland/desktop-entry launch and G018 installed shell widget checks pass. Edge core USB/read-only backup/unmount passed G021. Human menu/bar click acceptance, packaging and fēnix USB checks remain pending.
+- Kubuntu launcher/icon already uses this main checkout; reopen the app to load changes. G004 verified the Omarchy laptop environment (4.0.6-1), dependencies, all 288 tests, and temporary-data offscreen GUI rendering. G017 native Wayland/desktop-entry launch and G018 installed shell widget checks pass. Edge core USB/read-only backup/unmount passed G021. fēnix core USB/read-only backup/unmount also passed G022. Human menu/bar click acceptance and packaging remain pending.
 
 ## Next / ownership
+
+**G022 fēnix physical USB acceptance passed on Omarchy (2026-11-01).** Separately
+connected watch detected in Mass Storage as one VFAT GARMIN volume; mounted XML
+reports fēnix 5X/raw software 2500. Standalone/live bar connected/count 1. Initial
+writable automount was guardedly unmounted and remounted read-only; actual mode
+and USB identity/mount evidence checked. New private backup under `~/GarminBackups`:
+**81 files / 3,105,639 bytes**. COMPLETE/catalog and independent source/saved
+size/SHA-256 checks all pass. Guarded final unmount succeeded and fresh observation
+confirms same USB identity with no mountpoint/mount ID. Watch remains connected
+at handoff and is safe to unplug. No source content writes, maps/firmware,
+GUI/transfer operation, or active operation beyond intended bar polling.
+Both target models now pass physical core detection/read-only backup/unmount on
+Omarchy. Private evidence outside Git; [device notes](docs/device-compatibility.md).
+**Next:** observe fēnix disconnected status after unplugging. Human live GUI/menu/
+bar acceptance, packaging and restore validation remain open; no claim of physical
+GUI acceptance follows from these core/API device checks.
 
 **G021 Edge physical USB acceptance passed on Omarchy (2026-11-01).** User
 connected the Edge 1000 with SD. Internal GARMIN Flash and GARMIN Card SD detected;

@@ -29,7 +29,7 @@ Coordinator maintains this table in the primary checkout. Worker copies are snap
 
 | G021 | Edge 1000 physical USB acceptance on Omarchy | done | Codex coordinator / sole device operator | [Card](G021-edge-omarchy-usb.md) |
 
-| G022 | fēnix 5X physical USB acceptance on Omarchy | active | Codex coordinator / sole device operator | [Card](G022-fenix-omarchy-usb.md) |
+| G022 | fēnix 5X physical USB acceptance on Omarchy | done | Codex coordinator / sole device operator | [Card](G022-fenix-omarchy-usb.md) |
 
 Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G003](G003-map-gui-design.md), [G004](G004-omarchy-validation.md), [G005](G005-map-selection-helpers.md), [G006](G006-map-install-guards.md), [G007](G007-maps-gui.md), [G008](G008-map-gui-device-validation.md), [G009](G009-map-gui-review.md), [G010](G010-map-gui-tests.md), [G011](G011-map-workflow-tests.md), [G012](G012-map-backup-feedback.md), [G013](G013-map-install-feedback.md), [G014](G014-linux-setup.md), [G015](G015-desktop-lifecycle-tests.md), [G016](G016-recovery-guide.md).
 
@@ -44,7 +44,7 @@ Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G
 3. Worker changes its card and assigned files. It reports `review`, commit, checks, and limitations to the coordinator. It does not edit other cards, this board, or project status.
 4. Coordinator reviews and integrates the task, reruns relevant checks, and updates the board, `STATUS.md`, and milestone checkboxes. Clear ownership only after verifying the previous agent has stopped.
 
-G005/G006/G007 and support tasks G009/G010/G011 are complete. G012 is complete; no source/GUI worker is assigned. G002 and G008 are user-validated; G013 feedback improvements are complete; G004 host validation is complete; Omarchy shell integration is complete; Edge USB detection/read-only backup/unmount passed in G021; fēnix USB and human live-bar/menu acceptance remain pending. Synthetic acceptance does not authorize rewriting working maps.
+G005/G006/G007 and support tasks G009/G010/G011 are complete. G012 is complete; no source/GUI worker is assigned. G002 and G008 are user-validated; G013 feedback improvements are complete; G004 host validation is complete; Omarchy shell integration is complete; Edge and fēnix USB detection/read-only backup/unmount passed in G021/G022; human live-bar/menu acceptance remains pending. Synthetic acceptance does not authorize rewriting working maps.
 
 ## Completed orchestration
 
