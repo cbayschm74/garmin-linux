@@ -2,7 +2,7 @@
 
 Reviewer: Grok. Base: `daff55a1510bf2d00d5bcf9a71378b9b8f5ee3a3` (`Checkpoint G007 map workflows and assign independent GUI review and tests`) on branch `G009-map-gui-review`. Compared with `docs/map-gui-design.md` (accepted 2026-11-01, including the coordinator review record). No source fix is included.
 
-The reproductions below are against `daff55a`. After those runs, `task/G007-maps-gui` moved to `34fb9a9`. This report records the original findings and the disposition of each one. The tip was read, not retested. The coordinator asked for no further broad testing.
+The reproductions below are against `daff55a`. The frozen comparison tip is `task/G007-maps-gui` at `34fb9a9`. This report records the original findings and the disposition of each one. Behavior on `34fb9a9` was read from source and was not re-run; anything not executed against that commit is unverified.
 
 ## Disposition at `34fb9a9`
 
