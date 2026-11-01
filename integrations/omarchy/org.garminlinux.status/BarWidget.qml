@@ -38,7 +38,7 @@ BarWidget {
     return configured
   }
 
-  readonly property string labelText: vertical ? "G" : (displayText !== "" ? displayText : "G")
+  readonly property string labelText: vertical ? "\uf287" : "\uf287 " + (displayText !== "" ? displayText : "Garmin")
   readonly property string visibleTooltip: {
     var command = launchCommand()
     if (command.length === 0) return statusTooltip
@@ -161,6 +161,10 @@ BarWidget {
       applyLocal("Status command timed out")
       return
     }
+    if (exitCode !== 0) {
+      applyLocal("Status command failed")
+      return
+    }
     var parsed = parseStatus(pendingStdout !== "" ? pendingStdout : statusOut.text)
     if (!parsed) {
       applyLocal(exitCode === 0 ? "Status command returned malformed JSON" : "Status command failed")
@@ -228,9 +232,24 @@ BarWidget {
       waitForEnd: true
       onStreamFinished: root.pendingStdout = String(text || "")
     }
+    // A failed exec can return to stopped without an exited signal. Defer
+    // until after normal exited delivery so a successful exit keeps its code.
+    onRunningChanged: if (!running && !root.statusSettled) Qt.callLater(function() {
+      if (!statusProcess.running && !root.statusSettled) root.finishStatus(1)
+    })
     onExited: function(exitCode) {
       root.finishStatus(exitCode)
     }
+  }
+
+  // Diagnostics expose only the same sanitized state rendered on the bar.
+  IpcHandler {
+    target: "org.garminlinux.status"
+    function status(): string {
+      return JSON.stringify({state: root.statusState, volume_count: root.volumeCount,
+                             text: root.displayText, tooltip: root.statusTooltip})
+    }
+    function refresh(): void { root.broadcast("refresh") }
   }
 
   WidgetButton {

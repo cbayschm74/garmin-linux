@@ -2,7 +2,7 @@
 
 ## Assignment
 
-- State: review
+- State: done
 - Owner / session: Grok via T3 Code
 - Branch / worktree: `t3/omarchy-widget` at `/home/cbayschm/.t3/worktrees/garmin-linux/t3-1ededd61`
 - Base commit: `a878612af7faccb8b534a05320d59457ee5f13c6`
@@ -54,3 +54,27 @@ Worker completion is **review**. No device access, no user-config or shell.json 
 ### Next
 
 Coordinator reviews the branch, then follows `docs/omarchy-widget.md`: validate, copy the plugin, rescan, enable, and `omarchy bar set` the generated `statusCommand`, `workingDirectory`, and `launchCommand`. Confirm disconnected versus error, a mocked or real read-only count, and left click on the shared launcher. Do not mark device acceptance from these synthetic tests.
+
+## Coordinator acceptance
+
+- Worker commits independently reviewed and integrated as `08d9692` / `73c5ecf`.
+  Coordinator fixed failed command startup/nonzero result handling, added read-only
+  status/refresh IPC and a USB glyph, reduced lsblk columns and sanitized encoding/
+  unexpected-node failures. Added `tools/check_omarchy_widget.py` and one regression.
+- Primary checkout: 317 tests OK, no skips; compilation/diff checks pass; installed
+  manifest validation passes. Seven real Quickshell runtime scenarios pass,
+  including failed exec and SIGTERM-ignoring watchdog escalation. Left-click
+  handler safely launches native GUI through the temporary-data harness.
+- Live install staged/validated/atomically published with ownership marker and
+  private pre-install snapshot. Async plugin discovery and JSON-array IPC quirks
+  resolved without packaged shell changes. Disable restores original config exactly;
+  re-enable/configuration/placement pass; unrelated settings remain identical.
+- Installed source matches primary checkout. Enabled right/index 0 with 30-second
+  bounded read-only metadata polls, ordinary primary launcher click target. No
+  physical storage or personal Garmin data accessed; no test process remains.
+- Pending acceptance: human live-bar click, real attached-device status/USB work,
+  vertical bar rendering. No production feature is called hardware-validated.
+- Evidence/reproduction/rollback: `docs/omarchy-widget.md`. Final coordinator commit
+  is the commit containing this acceptance (`git log -1 --format=%H -- tasks/G018-omarchy-widget.md`).
+- Next: user may open Garmin Linux Companion from the bar/menu; schedule explicit
+  single-device detection/read-only backup/safe-unmount acceptance separately.

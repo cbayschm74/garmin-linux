@@ -26,4 +26,12 @@ A separate isolated lifecycle smoke check used `desktop.install_desktop()` under
 
 ## Omarchy laptop
 
-The user previously reported Omarchy 4.0.4-1. Its current installed version, Python/Qt, USB behavior and shell/plugin interfaces have not been observed. G004 remains the host validation gate. Portable setup and launcher tests on Kubuntu do not establish that the Omarchy shell plugin works.
+Observed 2026-11-01: Omarchy 4.0.6-1, system Python 3.14.8, PyQt 6.11.0 / Qt
+6.12.0. G004 dependencies/offscreen checks pass; G017 native Wayland GLib desktop
+launch passes with temporary data and the expected compositor app ID. G018 is
+installed/enabled on the bar; source review, seven runtime failure/success
+scenarios, safe native launch-handler check, enable/disable and placement pass.
+All 317 Python tests pass without skips. Physical attached-device status and USB
+behavior, human menu/live-bar click and clean-machine graphical install remain
+separate acceptance. See [setup](omarchy-setup.md), [native validation](omarchy-native-validation.md),
+and [widget guide](omarchy-widget.md).

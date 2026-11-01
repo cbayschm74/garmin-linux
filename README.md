@@ -40,7 +40,7 @@ python3 tools/setup-linux.py uninstall
 
 `check` is read-only and does not scan devices. `install` creates or reuses this checkout's `.venv`, installs pinned Python requirements and registers a user-local launcher. It never installs OS packages automatically. After updating the checkout, rerun `install`; it does not update Git itself. `uninstall` leaves the checkout, virtual environment, backups and cache in place.
 
-See [Linux setup](docs/linux-setup.md), [host validation](docs/linux-validation.md), and [recovery and troubleshooting](docs/recovery-and-troubleshooting.md). Omarchy laptop and clean-machine graphical installation checks remain pending; the existing Kubuntu launcher remains usable.
+See [Linux setup](docs/linux-setup.md), [host validation](docs/linux-validation.md), and [recovery and troubleshooting](docs/recovery-and-troubleshooting.md). Omarchy host/dependency and native temporary-data GUI checks now pass; see [Omarchy setup](docs/omarchy-setup.md) and [native validation](docs/omarchy-native-validation.md). Clean-machine graphical installation remains pending.
 
 ## Kubuntu application menu and taskbar
 
@@ -50,7 +50,7 @@ Install the launcher from this checkout:
 .venv/bin/python -m garmin_companion install-desktop
 ```
 
-Open **Garmin Linux Companion** from the application menu, then right-click its taskbar icon and choose the pin option. The installer writes a launch script under `~/.local/bin`, a desktop entry under `~/.local/share/applications`, and an SVG icon under `~/.local/share/icons/hicolor/scalable/apps`. It uses this checkout's `.venv` and works when launched from another directory. Rerun the installer after moving the checkout. Omarchy shell integration remains pending.
+Open **Garmin Linux Companion** from the application menu, then right-click its taskbar icon and choose the pin option. The installer writes a launch script under `~/.local/bin`, a desktop entry under `~/.local/share/applications`, and an SVG icon under `~/.local/share/icons/hicolor/scalable/apps`. It uses this checkout's `.venv` and works when launched from another directory. Rerun the installer after moving the checkout. On the Omarchy laptop, the [Garmin status widget](docs/omarchy-widget.md) is installed on the right bar and opens the same launcher. Physical USB acceptance on that laptop remains pending.
 
 Remove the launcher and icon with:
 

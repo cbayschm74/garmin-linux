@@ -128,7 +128,8 @@ use different archive-package names.
   `desktop-file-validate` and `update-desktop-database` on the path.
 - The existing Kubuntu launcher has previously been used. This new helper is
   checked with isolated prefixes; a clean-machine graphical installation and
-  actual Omarchy laptop validation remain pending. G004 tracks the laptop.
+  clean-machine validation remain pending. Actual Omarchy environment/native GUI
+  and widget checks subsequently passed in G004/G017/G018; see [host validation](linux-validation.md).
 
 ## Troubleshooting
 

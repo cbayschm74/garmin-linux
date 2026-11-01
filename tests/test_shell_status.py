@@ -204,6 +204,13 @@ class ShellStatusTests(unittest.TestCase):
         self.assertEqual(payload["state"], "error")
         self.assert_clean(payload)
 
+    def test_bad_encoding_and_wrong_node_types_are_sanitized(self):
+        with patch.object(shell_status.subprocess, "run", side_effect=UnicodeError("private-label")):
+            self.assertEqual(shell_status.read_status()["state"], "error")
+        payload = self.query([_disk("/dev/sdb", fstype="vfat", type={"bad": "private-label"})])
+        self.assertEqual(payload["state"], "error")
+        self.assertNotIn("private-label", json.dumps(payload))
+
     def test_status_does_not_open_files(self):
         def blocked_open(*args, **kwargs):
             raise AssertionError(args)

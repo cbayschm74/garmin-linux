@@ -23,7 +23,7 @@ Coordinator maintains this table in the primary checkout. Worker copies are snap
 | G016 | Recovery and troubleshooting guide | done | Grok | Source-verified docs; no devices |
 
 | G017 | Native Wayland GUI and launcher validation | done | Codex coordinator | [Card](G017-omarchy-native-validation.md) |
-| G018 | Omarchy Garmin bar widget | active | Grok via T3 Code | [Card](G018-omarchy-widget.md) |
+| G018 | Omarchy Garmin bar widget | done | Grok via T3 Code | [Card](G018-omarchy-widget.md) |
 | G019 | Independent GUI smoke tests | done | MiniMax M3 via T3 Code | [Card](G019-omarchy-smoke-tests.md) |
 | G020 | Independent desktop and widget integration review | done | MiMo 2.6 Pro via T3 Code | [Card](G020-omarchy-integration-review.md) |
 
@@ -40,7 +40,7 @@ Cards: [G001](G001-review-hardening.md), [G002](G002-edge-gui-validation.md), [G
 3. Worker changes its card and assigned files. It reports `review`, commit, checks, and limitations to the coordinator. It does not edit other cards, this board, or project status.
 4. Coordinator reviews and integrates the task, reruns relevant checks, and updates the board, `STATUS.md`, and milestone checkboxes. Clear ownership only after verifying the previous agent has stopped.
 
-G005/G006/G007 and support tasks G009/G010/G011 are complete. G012 is complete; no source/GUI worker is assigned. G002 and G008 are user-validated; G013 feedback improvements are complete; G004 host validation is complete; Omarchy physical USB and shell integration remain pending. Synthetic acceptance does not authorize rewriting working maps.
+G005/G006/G007 and support tasks G009/G010/G011 are complete. G012 is complete; no source/GUI worker is assigned. G002 and G008 are user-validated; G013 feedback improvements are complete; G004 host validation is complete; Omarchy shell integration is complete; physical USB and human live-bar/menu acceptance remain pending. Synthetic acceptance does not authorize rewriting working maps.
 
 ## Completed orchestration
 

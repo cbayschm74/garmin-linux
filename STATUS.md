@@ -9,15 +9,35 @@ Read `AGENTS.md`, [task board](tasks/README.md), and the assigned card. [Orca wo
 ## Current verified baseline
 
 - Primary checkout `/home/cbayschm/garmin-linux`, branch `main`. G007 source merged as `5fd876d`; use Git for current HEAD because final tests/documentation follow that merge.
-- **303 tests pass**, with Python compilation and diff checks. Fixtures use temporary storage, mocked USB/UDisks, and offscreen Qt; physical acceptance is recorded separately below.
+- **317 tests pass**, with Python compilation and diff checks. Fixtures use temporary storage, mocked USB/UDisks, and offscreen Qt; physical acceptance is recorded separately below.
 - Shared Python core/PyQt6 app supports detection, selected-data backups/catalog, activity summaries/export, activity-to-course preparation, GPX/FIT preview/conversion, and reviewed Edge GPX / fēnix FIT transfers.
 - **G007 Maps → Replace / Resume is implemented and integrated.** It supports explicit map backup/checklists, verified map-backup selection, device/reader identity matching, ordered local IMG inputs, read-only planning, source/target review, guarded writable mounting, backup/readback checks, and resumable installation. Inspect remains separate and cancellable. Other map operations have no mid-operation Cancel; the window waits for them.
 - Review cancellation precedes remount/writes. Accepted-plan checking is enforced inside the final installer re-plan. Resume pins the internally reloaded state to consent. Cleanup refuses replacement-device identities. Changed plans remain visible but require fresh selection/review. Saved complete records do not establish current mount state.
 - Dark-palette page/review rendering was checked. Existing course GUI, operation guards, inspection cancellation, timer restoration, interrupted state, and synthetic real planner/installer round trips pass.
 - User previously confirmed fēnix GUI courses load/render and Edge CLI GPX courses appear. **G002 is now user-validated:** Edge GPX GUI transfer succeeded, and the course appears and renders on the Edge map. Previously installed OpenMTBMap maps render on both devices; the user has now confirmed a real GUI map backup completed successfully. The subsequent Chile GUI replacement also passed user acceptance (G008).
-- Kubuntu launcher/icon already uses this main checkout; reopen the app to load changes. G004 verified the Omarchy laptop environment (4.0.6-1), dependencies, all 288 tests, and temporary-data offscreen GUI rendering. Native Wayland/launcher acceptance, packaging, physical USB checks, and shell widget remain pending.
+- Kubuntu launcher/icon already uses this main checkout; reopen the app to load changes. G004 verified the Omarchy laptop environment (4.0.6-1), dependencies, all 288 tests, and temporary-data offscreen GUI rendering. G017 native Wayland/desktop-entry launch and G018 installed shell widget checks pass. Human menu/bar click acceptance, packaging and physical USB checks remain pending.
 
 ## Next / ownership
+
+**Omarchy desktop integration complete (G017–G020, 2026-11-01).** All three T3
+workers have completed; their scoped commits were independently reviewed and
+integrated. `org.garminlinux.status` is installed/enabled on the right bar, index 0,
+with a USB icon, 30-second bounded read-only metadata polling, sanitized status,
+and click target `~/.local/bin/garmin-linux-companion` from primary main. Current
+live status is disconnected/count 0. Seven actual Quickshell runtime scenarios
+pass; the left-click signal/handler safely launched the native temporary-data GUI
+through the generated desktop entry and closed cleanly. Failed exec/nonzero
+status handling was corrected during coordinator review. All 317 tests pass with
+no skips, compilation/diff/manifest checks pass. Disable restored the original
+parsed shell config exactly; re-enable/placement pass and unrelated settings
+remain unchanged. Private rollback snapshot:
+`~/.local/state/garmin-linux/omarchy-20261101-181745/`.
+No test process remains; the enabled widget intentionally continues polling.
+No physical storage or personal Garmin data accessed. Reproduction, installed CLI
+compatibility notes and rollback: [widget guide](docs/omarchy-widget.md).
+**Next:** human live-bar/menu click acceptance, then explicitly scoped physical
+USB detection/read-only backup/safe-unmount checks on each Garmin separately.
+Packaging and vertical-bar visual acceptance remain open.
 
 **G017 and G019 complete (2026-11-01).** Native Wayland GUI launch through the
 actual generated desktop entry (`gio launch`, temporary install prefix) passed
@@ -30,8 +50,7 @@ compilation/diff checks pass. Reproducible harness: `tools/gui_smoke.py`;
 [evidence](docs/omarchy-native-validation.md). No physical device access or
 smoke process remains. G020's independent MiMo review is accepted and integrated; source identity and
 quoting checks agree with native acceptance. Its plugin ownership/rollback
-checklist will guide G018 installation. G018 (Grok widget) remains active in an
-isolated T3 worktree; await its completion notification, do not reuse its scope.
+checklist will guide G018 installation. G018 subsequently passed coordinator source/runtime/live-shell acceptance; all T3 tasks are now complete. Worker worktrees are retained as evidence.
 
 **G004 completed on the Omarchy laptop (2026-11-01).** Actual host is Omarchy
 4.0.6-1 / Wayland, system Python 3.14.8, PyQt 6.11.0 / Qt 6.12.0, and Quickshell

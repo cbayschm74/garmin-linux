@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any
 
 LSBLK_TIMEOUT_SECONDS = 5
-LSBLK_COLUMNS = "NAME,PATH,VENDOR,MODEL,TRAN,FSTYPE,LABEL,SIZE,MOUNTPOINTS,TYPE"
+LSBLK_COLUMNS = "NAME,VENDOR,TRAN,FSTYPE,TYPE"
 _MAX_NODES = 256
 _MAX_VOLUMES = 32
 _VOLUME_TYPES = {"disk", "part"}
@@ -126,9 +126,14 @@ def read_status() -> dict[str, Any]:
         return _error(_TIMEOUT)
     except OSError:
         return _error(_START)
+    except UnicodeError:
+        return _error(_UNEXPECTED)
     if completed.returncode != 0:
         return _error(_FAILED)
-    return status_from_lsblk(completed.stdout)
+    try:
+        return status_from_lsblk(completed.stdout)
+    except (TypeError, ValueError, RecursionError):
+        return _error(_UNEXPECTED)
 
 
 def command_bundle(
