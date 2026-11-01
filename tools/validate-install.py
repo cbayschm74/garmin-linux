@@ -625,8 +625,9 @@ def working_directory() -> Path:
 def build_environment(artifacts: Path) -> tuple[dict, list[str]]:
     """Return the sanitized environment and the names that were removed."""
     environment = dict(os.environ)
-    stripped = [name for name in STRIPPED_ENVIRONMENT if name in environment]
-    for name in STRIPPED_ENVIRONMENT:
+    stripped = [name for name in environment if name in STRIPPED_ENVIRONMENT
+                or name.startswith(('PYTHON', 'PIP_'))]
+    for name in stripped:
         environment.pop(name, None)
     home = artifacts / 'home'
     for path in (home, artifacts / 'tmp', artifacts / 'run'):

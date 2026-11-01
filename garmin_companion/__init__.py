@@ -1,3 +1,8 @@
-"""Local, read-only Garmin device discovery."""
+"""Shared Garmin Linux companion package."""
 
-__version__ = "0.1.0"
+from pathlib import Path as _Path
+
+try:
+    __version__ = (_Path(__file__).resolve().parents[1] / 'VERSION').read_text(encoding='ascii').strip()
+except OSError:
+    __version__ = '0+unknown'

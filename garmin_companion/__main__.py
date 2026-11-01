@@ -8,12 +8,14 @@ import subprocess
 import sys
 from pathlib import Path
 
+from . import __version__
 from .backup import backup, inventory, select_volume
 from .detector import scan
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Local Garmin device tools")
+    parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser('gui', help='open Garmin Linux Companion desktop app')
     desktop_command = commands.add_parser('install-desktop', help='install or remove the user-local desktop launcher')

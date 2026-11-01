@@ -223,8 +223,7 @@ def build_release(
     ``output_dir`` must already exist and must not be a symlink. Existing
     archive or checksum names are left untouched. ``ref`` defaults to
     ``HEAD``. ``version`` overrides the archive version for a commit that
-    has no ``VERSION`` file; it does not change the bytes stored for that
-    file when the commit has one.
+    has no ``VERSION`` file; it must match that file when the commit has one.
     """
 
     repository = _require_directory(Path(repo), 'repository')
@@ -242,6 +241,8 @@ def build_release(
             raise ReleaseError('the commit has no VERSION file; pass --version to override')
         chosen = version_from_blob(blobs['VERSION'])
     else:
+        if 'VERSION' in blobs and version_from_blob(blobs['VERSION']) != override:
+            raise ReleaseError('version override must match the tracked VERSION file')
         chosen = override
     root, archive_name, checksum_name = _archive_names(chosen)
     archive_bytes = _render_archive(root, chosen, commit, blobs, selected, timestamp)

@@ -24,7 +24,7 @@ The Kubuntu system Python has PyQt6 (`python3-pyqt6`). Create the project enviro
 .venv/bin/python -m garmin_companion gui
 ```
 
-The Devices page refreshes every 15 seconds or when you press **Refresh**. It reads the same USB scan as the CLI and shows connected, unmounted volumes without mounting them. The Backups page reads immediate backup directories under `~/GarminBackups`, checks each complete manifest's file sizes and SHA-256 hashes, and distinguishes verified, incomplete, and damaged copies. The Activities page reads verified FIT files from complete backups and offers sortable date, sport, duration, distance, and device columns. The Courses page shows course names, types, formats, point counts, and source devices; select a row to see its saved file path. Backup, activity, and course checks run in the background. Older manual backups stored elsewhere are not listed. The Maps page lets you choose a local IMG, EXE, 7z, or ZIP file and inspect its header or archive contents, size, and SHA-256. It shows checksum progress and supports cancellation; archives are listed without extraction or execution. Kubuntu launcher setup is described below; Omarchy packaging remains pending.
+The Devices page refreshes every 15 seconds or when you press **Refresh**. It reads the same USB scan as the CLI and shows connected, unmounted volumes without mounting them. The Backups page reads immediate backup directories under `~/GarminBackups`, checks each complete manifest's file sizes and SHA-256 hashes, and distinguishes verified, incomplete, and damaged copies. The Activities page reads verified FIT files from complete backups and offers sortable date, sport, duration, distance, and device columns. The Courses page shows course names, types, formats, point counts, and source devices; select a row to see its saved file path. Backup, activity, and course checks run in the background. Older manual backups stored elsewhere are not listed. The Maps page lets you choose a local IMG, EXE, 7z, or ZIP file and inspect its header or archive contents, size, and SHA-256. It shows checksum progress and supports cancellation; archives are listed without extraction or execution. Kubuntu launcher setup is described below; portable source packaging and lifecycle checks are described in the [release guide](docs/portable-release.md).
 
 The first Activities load decodes each distinct FIT file and can take several seconds. Later loads reuse decoded metadata from a private cache at `~/.cache/garmin-linux/activity-decoded.json`; each backup FIT file is still checked against its saved size and SHA-256 before its cached summary is displayed. The cache contains activity dates and summary metrics, so keep it private. Incomplete or malformed cached summaries are ignored and decoded again from the verified FIT files. Delete that file to force a fresh decode. No backup or device file is changed by the cache.
 
@@ -36,6 +36,8 @@ once after updating the app to load theme support. See [GUI theming](docs/gui-th
 for fallback behavior and verified light/dark checks.
 
 ## Setup, updates and recovery
+
+Versioned source archive installation, upgrade, rollback and isolated lifecycle validation are covered in the [portable release guide](docs/portable-release.md).
 
 The portable checkout helper checks dependencies, sets up the local virtual environment and launcher, or removes the launcher while preserving data:
 

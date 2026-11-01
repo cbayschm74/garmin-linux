@@ -63,6 +63,10 @@ INCLUDED = {
 
 
 class PolicyTests(unittest.TestCase):
+    def test_runtime_version_matches_the_canonical_version_file(self):
+        from garmin_companion import __version__
+        self.assertEqual(__version__, (Path(__file__).resolve().parents[1] / 'VERSION').read_text().strip())
+
     def test_version_accepts_the_release_forms(self):
         for value in ('0.1.0', '0.1.0a1', '0.1.0b2', '1.2.3rc4', '10.0.0'):
             self.assertEqual(release.validate_version(value), value)
@@ -196,17 +200,14 @@ class ArchiveTests(unittest.TestCase):
             built.checksum.name,
         ]))
 
-    def test_version_override_keeps_committed_bytes(self):
+    def test_version_override_cannot_contradict_committed_version(self):
         self._seed()
         self.repo.commit('with version', when='2026-01-15T00:00:00Z')
-        built = release.build_release(self.repo.root, self.output, version='0.9.1')
-        files = _files(built.archive)
-        root = 'garmin-linux-0.9.1'
-        self.assertEqual(built.version, '0.9.1')
-        self.assertEqual(files[f'{root}/VERSION'], b'0.1.0a1\n')
-        document = json.loads(files[f'{root}/RELEASE.json'])
-        self.assertEqual(document['version'], '0.9.1')
-        self.assertEqual(document['files']['VERSION'], hashlib.sha256(b'0.1.0a1\n').hexdigest())
+        with self.assertRaisesRegex(release.ReleaseError, 'tracked VERSION'):
+            release.build_release(self.repo.root, self.output, version='0.9.1')
+        self.assertEqual(list(self.output.iterdir()), [])
+        built = release.build_release(self.repo.root, self.output, version='0.1.0a1')
+        self.assertEqual(built.version, '0.1.0a1')
 
     def test_older_commit_without_version_needs_an_override(self):
         self.repo.write('README.md', b'OLD\n')
