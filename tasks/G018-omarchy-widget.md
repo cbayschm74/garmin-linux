@@ -24,7 +24,7 @@ Worker completion is **review**. No device access, no user-config or shell.json 
 - Branch: `t3/omarchy-widget`
 - Worktree: `/home/cbayschm/.t3/worktrees/garmin-linux/t3-1ededd61`
 - Base: `a878612af7faccb8b534a05320d59457ee5f13c6`
-- Commit: the commit that adds this handoff on `t3/omarchy-widget`
+- Commit: `c0137234e3b39567ad879854d0ca137213335d06` (`G018: add a read-only Omarchy Garmin status widget`). The commit that records this hash is the branch HEAD after it.
 
 ### Files
 
