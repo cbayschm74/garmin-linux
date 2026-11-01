@@ -4,6 +4,8 @@ An early-stage, unofficial Linux companion for Garmin devices. The first targets
 
 The project will start with safe USB detection, backups, activity files, and courses. Garmin Connect integration, firmware delivery, and licensed map downloads each require separate feasibility checks; see [PLAN.md](PLAN.md). The [Connect sync assessment](docs/connect-sync-feasibility.md) records account paths and API limits; the [firmware assessment](docs/firmware-feasibility.md) records observed device versions and official update routes; the [map assessment](docs/map-feasibility.md) covers Garmin Express and user-downloaded OpenMTBMap maps. This project is not affiliated with Garmin.
 
+The Omarchy bar widget that shows the USB count is separate: https://github.com/cbayschm74/omarchy-garmin-status. Installing that widget does not install this app. See [the widget guide](docs/omarchy-widget.md).
+
 For planning and viewing tracks alongside this app, see the [Linux route editor comparison](docs/route-editors.md).
 
 ## Working with agents in Orca

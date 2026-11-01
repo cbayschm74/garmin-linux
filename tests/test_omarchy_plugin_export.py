@@ -52,6 +52,7 @@ class ExportTests(unittest.TestCase):
         self.assertIn('omarchy plugin disable org.garminlinux.status', readme)
         self.assertIn('omarchy plugin remove org.garminlinux.status', readme)
         self.assertIn('lsblk', readme)
+        self.assertIn('https://github.com/cbayschm74/garmin-linux', readme)
         self.assertIn('not listed at plugins.omarchy.org', readme)
         for path in destination.iterdir():
             info = path.lstat()

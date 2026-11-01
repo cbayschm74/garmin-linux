@@ -263,7 +263,9 @@ The running shell kept the previous widget until `omarchy restart shell`.
 After that restart the bar reported one Garmin USB device and two storage
 volumes, with no paths or labels.
 
-The listing submission is
+The plugin README links to the companion repository,
+https://github.com/cbayschm74/garmin-linux. The widget does not install that
+app. The listing submission is
 https://github.com/omacom/omarchy-plugin-marketplace/issues/13553,
 category `Hardware`, tags `bar` and `system`, with no preview image. It is
 waiting for maintainer approval. Automated validation passed at that

@@ -73,3 +73,6 @@ must delete only that plugin.
   `1 Garmin USB device · 2 storage volumes`.
 - No device write. Other bar widgets were left in place. The companion
   launcher and `~/GarminBackups` were not removed.
+- The companion repository is public at
+  https://github.com/cbayschm74/garmin-linux. The plugin README links to it
+  and says the widget does not install the app.

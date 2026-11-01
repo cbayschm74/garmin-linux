@@ -36,6 +36,12 @@ Automated validation passed at that commit, including the marketplace
 security baseline. Listing still waits for maintainer approval.
 [Widget guide](docs/omarchy-widget.md).
 
+**The companion itself is public (2026-11-01).** https://github.com/cbayschm74/garmin-linux
+is this checkout's `main`. The local bundle remote remains `origin`. The
+`github` remote tracks the public repository. The status plugin README links
+to that repository and states that installing the widget does not install
+the app.
+
 **G030 plugin export is ready on Omarchy (2026-11-01).** The bar widget can be
 exported as its own directory with `manifest.json` at the root, a README that
 covers companion and `lsblk` dependencies, install, and removal, and the MIT
